@@ -1,0 +1,1 @@
+future me, please use sqlacodegen to generate the schemas from the sqlite db. alternatively, if you want the sqlalchemy to be the source of truth, use drizzle-kit pull to do the same in the other direction: generate the drizzle stuff directly from the db.  

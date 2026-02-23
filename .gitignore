@@ -1,3 +1,7 @@
 notes.txt
-
+modes.txt
 *.db
+.env*
+
+*.db*
+kaikki.org-dictionary-English-words.jsonl*
