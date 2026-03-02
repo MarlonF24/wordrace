@@ -7,7 +7,7 @@ export default defineConfig({
   dialect: "sqlite",
   casing: "snake_case",
   dbCredentials: {
-    url: `file:${Bun.env.DICTIONARY_DB_PATH}`,
+    url: `file:${process.env.DICTIONARY_DB_PATH}`,
   },
 });
 

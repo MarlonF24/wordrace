@@ -10,12 +10,18 @@
   },
   "dependencies": {
     "@eslint-community/eslint-utils": "^4.9.1",
+    "@libsql/client": "^0.17.0",
     "ajv": "^8.18.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
     "drizzle-orm": "^1.0.0-beta.15-859cf75",
+    "lucide-react": "^0.575.0",
     "next": "16.1.6",
     "pg": "^8.18.0",
+    "radix-ui": "^1.4.3",
     "react": "19.2.3",
     "react-dom": "19.2.3",
+    "tailwind-merge": "^3.5.0",
     "wink-eng-lite-web-model": "^1.8.1",
     "wink-nlp": "^2.4.0"
   },
