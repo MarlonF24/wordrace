@@ -18,8 +18,5 @@
     "ui": "@/components/ui",
     "lib": "@/lib",
     "hooks": "@/hooks"
-  },
-  "registries": {
-    "@bundui": "https://bundui.io/r/{name}.json"
   }
 }

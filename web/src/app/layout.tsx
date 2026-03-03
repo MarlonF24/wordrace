@@ -1,17 +1,19 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Space_Grotesk, Manrope } from "next/font/google";
 import { getPlayerId } from "@/lib/server/utils";
 import { DATA_DB } from "@/lib/db";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const spaceGrotesk = Space_Grotesk({
+  variable: "--font-space-grotesk",
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const manrope = Manrope({
+  variable: "--font-manrope",
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
 });
 
 export const metadata: Metadata = {
@@ -37,11 +39,11 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col min-h-screen bg-background text-foreground`}
+        className={`${manrope.variable} ${spaceGrotesk.variable} antialiased flex flex-col min-h-screen bg-background text-foreground`}
       >
-        <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
-          <div className="container flex h-16 items-center px-4">
-            <h1 className="text-xl font-bold tracking-tight">WordRace</h1>
+        <header className="sticky top-0 z-50 w-full border-b border-white bg-chart-1 text-nav-foreground">
+          <div className="container flex h-14 items-center justify-center px-6 max-w-6xl mx-auto">
+            <span className="text-2xl font-black tracking-tight uppercase">WordRace</span>
           </div>
         </header>
         {children}
