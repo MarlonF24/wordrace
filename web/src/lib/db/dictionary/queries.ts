@@ -43,6 +43,6 @@ export async function getGlosses(word: string) {
     return glosses;
 }
 
-console.log(await getGlosses("2"));
+console.log(await getGlosses("apple"));
 
 

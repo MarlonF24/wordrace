@@ -9,7 +9,6 @@ export default function WelcomePage() {
     <main className="flex-1 flex items-center justify-center px-6 py-12">
       <div className="grid lg:grid-cols-[1fr_360px] gap-14 w-full max-w-5xl items-center">
 
-        {/* Hero */}
         <div className="flex flex-col gap-6 text-center lg:text-left">
 
           <h1 className="text-5xl md:text-6xl lg:text-7xl font-black tracking-tighter leading-[0.95] text-foreground">
@@ -42,7 +41,6 @@ export default function WelcomePage() {
           </div>
         </div>
 
-        {/* Game Card */}
         <Card
           id="start-race"
           className="justify-self-center w-[360px] border-2 shadow-[6px_6px_0px_0px_var(--shadow-color)] bg-card"

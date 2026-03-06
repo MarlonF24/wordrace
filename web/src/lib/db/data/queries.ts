@@ -14,17 +14,14 @@ export async function createPlayer(playerID: string) {
 
 export async function createGame(playerID: string, startWord: string, targetWord: string) {
     
-    const gameId = crypto.randomUUID();
-    
-    await DATA_DB.db.insert(DATA_DB.gameTable).values({
-        id: gameId,
-        start: startWord,
-        target: targetWord,
-    })
+    const [game] = await DATA_DB.db.insert(DATA_DB.gameTable).values({
+        startWord,
+        targetWord,
+    }).returning()
 
-    await joinGame(playerID, gameId);
+    await joinGame(playerID, game.id);
 
-    return gameId;
+    return game
 }
 
 export async function joinGame(playerId: string, gameId: string) {
