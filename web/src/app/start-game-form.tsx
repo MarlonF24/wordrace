@@ -10,7 +10,7 @@ import { startGameFormAction } from "./start-game-action";
 
 export default function StartGameForm() {
   
-  const [state, formAction, isPending] = useActionState(startGameFormAction, null); 
+  const [_, formAction, isPending] = useActionState((prevState: unknown, formData: FormData) => startGameFormAction(formData), null); 
   
   return ( 
         <form className="flex flex-col gap-4" action={formAction}>

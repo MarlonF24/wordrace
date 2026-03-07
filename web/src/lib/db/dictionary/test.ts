@@ -1,4 +1,4 @@
-import { getGlosses } from "./queries";
+import { getGlosses } from "./service";
 
 const words = ["eaten"];
 

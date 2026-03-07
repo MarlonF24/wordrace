@@ -5,8 +5,7 @@ import { DATA_DB } from "@/lib/db";
 import { getPlayerId } from "@/lib/server/utils";
 
 
-
-export const startGameFormAction = async (prevState: unknown, formData: FormData) => {
+export const startGameFormAction = async (formData: FormData) => {
     const startWord = formData.get("startWord")!.toString();
     const targetWord = formData.get("targetWord")!.toString();
 
@@ -14,7 +13,7 @@ export const startGameFormAction = async (prevState: unknown, formData: FormData
 
     console.debug("Starting game with start word:", startWord, "and target word:", targetWord, "for player ID:", playerId);
 
-    const game = await DATA_DB.createGame(playerId, startWord, targetWord);
+    const game = await DATA_DB.createGameAction(playerId, startWord, targetWord);
 
     redirect(`/game/${game.id}`);
 } 

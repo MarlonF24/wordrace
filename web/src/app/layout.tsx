@@ -33,7 +33,7 @@ export default async function RootLayout({
   const player = await DATA_DB.db.query.playerTable.findFirst({where: {id: playerId}});
   
   if (!player) {
-    await DATA_DB.createPlayer(playerId);
+    await DATA_DB.createPlayerAction(playerId);
   }
 
   return (
