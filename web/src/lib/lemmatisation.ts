@@ -4,12 +4,44 @@ import model from 'wink-eng-lite-web-model';
 const nlp = winkNLP(model);
 const { its } = nlp;
 
-export function getLemmaInContext(sentence: string, targetWordIdx: number) {
+export type Token = {
+    value: string;
+    precedingSpaces: string;
+    isPunctuation: boolean;
+    wordIdx?: number;
+    index: number;
+}
+
+export function tokenize(text: string): Token[] {
+    const doc = nlp.readDoc(text);
+    const tokens = doc.tokens();
+    let wordIdxCounter = 0;
+    const result: Token[] = [];
+
+    tokens.each((t, i) => {
+        const isPunct = t.out(its.pos) === 'PUNCT';
+        result.push({
+            value: t.out(its.value),
+            precedingSpaces: t.out(its.precedingSpaces),
+            isPunctuation: isPunct,
+            wordIdx: isPunct ? undefined : wordIdxCounter++,
+            index: i
+        });
+    });
+
+    return result;
+}
+
+export function getLemmaInContext(sentence: string, targetTokenIdx: number) {
     const doc = nlp.readDoc(sentence);
     const tokens = doc.tokens();
 
-    if (targetWordIdx < 0 || targetWordIdx >= tokens.length()) throw new RangeError("targetWordIdx is out of bounds");
-    const targetToken = tokens.itemAt(targetWordIdx);
+    if (targetTokenIdx < 0 || targetTokenIdx >= tokens.length()) {
+        throw new RangeError(`targetTokenIdx ${targetTokenIdx} is out of bounds (length: ${tokens.length()})`);
+    }
+    
+    const targetToken = tokens.itemAt(targetTokenIdx);
+    
   return {
     word: targetToken.out(its.value),
     // @ts-expect-error some weird issue where .lemma is has the wrong type, but it works at runtime

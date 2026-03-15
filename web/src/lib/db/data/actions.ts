@@ -1,5 +1,5 @@
 "use server"
-// server action version of the db service functions
+
 import * as service from "./service";
 
 export const createPlayerAction = async (playerID: string) => {
@@ -14,6 +14,12 @@ export const joinGameAction = async (playerId: string, gameId: string, admin: bo
     await service.joinGame(playerId, gameId, admin);
 }
 
-export const addRaceStepAction = async (gameId: string, playerId: string, newWord: string) => {
-    return await service.addRaceStep(gameId, playerId, newWord);
+import { revalidatePath } from "next/cache";
+
+export async function addRaceStepAction(gameId: string, playerId: string, sentence: string, wordIdx: number) {
+    const result = await service.addRaceStep(gameId, playerId, sentence, wordIdx);
+    revalidatePath(`/game/${gameId}`);
+    return result;
 }
+
+    

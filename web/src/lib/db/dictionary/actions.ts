@@ -2,6 +2,6 @@
 
 import * as queries from "./service";
 
-export const getGlossesAction = async (word: string) => {
-    return await queries.getGlosses(word);
+export const getSensesAction = async (word: string) => {
+    return await queries.getSenses(word);
 }

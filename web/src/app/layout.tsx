@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Space_Grotesk, Manrope } from "next/font/google";
 import { getPlayerId } from "@/lib/server/utils";
 import { DATA_DB } from "@/lib/db";
+import { PlayerIdProvider } from "@/components/context/playerId";
 import "./globals.css";
 
 const spaceGrotesk = Space_Grotesk({
@@ -46,7 +47,9 @@ export default async function RootLayout({
             <span className="text-2xl font-black tracking-tight uppercase">WordRace</span>
           </div>
         </header>
-        {children}
+        <PlayerIdProvider value={playerId}>
+          {children}
+        </PlayerIdProvider>
       </body>
     </html>
   );

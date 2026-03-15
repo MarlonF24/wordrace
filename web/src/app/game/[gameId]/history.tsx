@@ -23,40 +23,43 @@ function formattedTimeTaken(current: RaceStep, previous: RaceStep) {
 }
 
 export function History({ currentLinks }: { currentLinks: RaceStep[] }) {
-
     if (!currentLinks) return null
 
-    return (
-        <Card className="h-full min-w-80 w-80 border-2 shadow-[4px_4px_0px_0px_var(--shadow-color)] bg-card flex flex-col overflow-hidden rounded-[0]">
-            <CardHeader className="flex-none border-b-2 border-border pb-4 bg-muted/20 px-6 py-4">
-                <CardTitle className="text-xl font-bold uppercase tracking-tight">History ({currentLinks.length})</CardTitle>
-            </CardHeader>
-            <CardContent className="flex-1 overflow-y-auto p-0">
-                <div className="flex flex-col w-full">
-                    {currentLinks.map((step, index) => {
-                        const isStart = index === 0
-                        const timeTaken = !isStart
-                            ? formattedTimeTaken(step, currentLinks[index - 1])
-                            : "Start"
+    // We render items in reverse order inside a flex-col-reverse container
+    const reversedLinks = [...currentLinks].reverse();
 
-                        return (
-                            <div
-                                key={index}
-                                className={cn(
-                                    "px-6 py-3 border-b border-border last:border-0 hover:bg-muted/50 transition-colors flex justify-between items-center group/item",
-                                    isStart && "bg-muted/30"
-                                )}
-                            >
-                                <span className="font-bold text-lg uppercase truncate max-w-[140px]" title={step.word}>
-                                    {step.word}
-                                </span>
-                                <span className="text-xs font-mono font-bold text-muted-foreground bg-secondary px-2 py-1 rounded border border-border shadow-[1px_1px_0px_0px_var(--shadow-color)] group-hover/item:bg-background transition-colors">
-                                    {timeTaken}
-                                </span>
-                            </div>
-                        )
-                    })}
-                </div>
+    return (
+        <Card className="h-full w-full md:w-80 border-2 bg-card flex flex-col overflow-hidden rounded-none">
+            <CardHeader className="flex-none border-b-2 border-border p-4">
+                <CardTitle className="text-xl font-bold uppercase tracking-tight px-2">History ({currentLinks.length})</CardTitle>
+            </CardHeader>
+            <CardContent className="flex-1 overflow-y-auto p-0 flex flex-col">
+                {reversedLinks.map((step, index) => {
+                    const isStart = index === reversedLinks.length - 1
+                    
+                    const previousStep = reversedLinks[index + 1]
+                    
+                    const timeTaken = previousStep
+                        ? formattedTimeTaken(step, previousStep)
+                        : "Start"
+
+                    return (
+                        <div
+                            key={step.timestamp.toString() + index}
+                            className={cn(
+                                "px-6 py-3 border-b border-border flex justify-between items-center shrink-0",
+                                isStart && "bg-muted/30"
+                            )}
+                        >
+                            <span className="font-bold text-lg uppercase truncate max-w-[140px]" title={step.word}>
+                                {step.word}
+                            </span>
+                            <span className="text-xs font-mono font-bold text-muted-foreground bg-secondary px-2 py-1 rounded border border-border">
+                                {timeTaken}
+                            </span>
+                        </div>
+                    )
+                })}
             </CardContent>
         </Card>
     )
