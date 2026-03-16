@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "data-db:push": "drizzle-kit push",
-    "dic-db:push": "drizzle-kit push --config=drizzle-dictionary.config.ts"  
+    "dic-db:push": "drizzle-kit push --config=drizzle-dictionary.config.ts"
   },
   "dependencies": {
     "@eslint-community/eslint-utils": "^4.9.1",

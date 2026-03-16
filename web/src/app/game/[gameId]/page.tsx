@@ -1,9 +1,8 @@
 
 import { DATA_DB } from "@/lib/db";
 import { getPlayerId } from "@/lib/server/utils";
-import { History } from "./history";
-import { DefinitionDisplay } from "./definitionCard";
 import { getSenses } from "@/lib/db/dictionary/service";
+import { RaceLane } from "./race-lane";
 
 
 export default async function GamePage({
@@ -27,16 +26,31 @@ export default async function GamePage({
         throw new Error("Game or player link not found");
     }
 
-    let links: DATA_DB.RaceStep[] = gamePlayerLink.links ?? [];
-
-    if (links.length == 0) {
-        const firstStep = await DATA_DB.addRaceStep(game.id, gamePlayerLink.playerId, game.startWord, 0);
-        links = [firstStep];
+    // Initialize start links if empty
+    let startLinks: DATA_DB.RaceStep[] = gamePlayerLink.startLinks ?? [];
+    if (startLinks.length === 0) {
+        const firstStep = await DATA_DB.addRaceStep(game.id, gamePlayerLink.playerId, game.startWord, 0, "start");
+        startLinks = [firstStep];
     }
 
-    const currentWord = links[links.length - 1].word;
+    // Initialize target links if collide mode and empty
+    let targetLinks: DATA_DB.RaceStep[] = gamePlayerLink.targetLinks ?? [];
+    if (game.mode === "collide" && targetLinks.length === 0) {
+        const firstStep = await DATA_DB.addRaceStep(game.id, gamePlayerLink.playerId, game.targetWord, 0, "target");
+        targetLinks = [firstStep];
+    }
 
-    const sensesPromise = getSenses(currentWord);
+    const startWord = startLinks[startLinks.length - 1].word;
+    const startSensesPromise = getSenses(startWord);
+    
+    // We intentionally ignore type mismatch for non-collide mode as it won't be used
+    // But to satisfy TS, we can just promise resolve empty array casted correctly
+    const targetWord = targetLinks.length > 0 ? targetLinks[targetLinks.length - 1].word : "";
+    const targetSensesPromise = game.mode === "collide" && targetWord 
+        ? getSenses(targetWord) 
+        : Promise.resolve([]);
+
+    const [startSenses, targetSenses] = await Promise.all([startSensesPromise, targetSensesPromise]);
 
 
     return (
@@ -49,9 +63,9 @@ export default async function GamePage({
                     </span>
                 </div>
                 
-                <div className="flex-1 h-px bg-border max-w-md mx-auto relative">
-                     <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-background px-2 text-xs text-muted-foreground font-mono">
-                        TO
+                <div className="flex-1 h-px bg-border max-w-md mx-auto relative hidden md:block">
+                     <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-background px-2 text-xs text-muted-foreground font-mono uppercase">
+                        {game.mode === "collide" ? "COLLIDE" : "TO"}
                      </span>
                 </div>
 
@@ -63,17 +77,43 @@ export default async function GamePage({
                 </div>
             </header>
 
-            <div className="flex-1 flex flex-col-reverse md:flex-row min-h-0 divide-y-2 divide-y-reverse md:divide-y-0 md:divide-x-2 divide-border">
-                <aside className="h-48 md:h-full flex-none w-full md:w-80">
-                    <History currentLinks={links} />
-                </aside>
-                
-                <div key={currentWord} className="flex-1 min-w-0 bg-background relative overflow-y-auto">
-                     <DefinitionDisplay 
-                        word={currentWord} 
-                        sensesPromise={sensesPromise} 
-                     />
-                </div>
+            <div className="flex-1 min-h-0 flex flex-row overflow-hidden relative">
+                {game.mode === "collide" ? (
+                    <>
+                        <div className="flex-1 min-w-0 border-r-2 border-border relative">
+                             <div className="absolute inset-0">
+                                <RaceLane 
+                                    initialLinks={startLinks}
+                                    initialSenses={startSenses}
+                                    side="start"
+                                    isMirrored={false}
+                                />
+                             </div>
+                        </div>
+                        <div className="flex-1 min-w-0 relative">
+                            <div className="absolute inset-0">
+                                <RaceLane 
+                                    initialLinks={targetLinks}
+                                    initialSenses={targetSenses}
+                                    side="target"
+                                    isMirrored={true}
+                                />
+                            </div>
+                        </div>
+                        
+                        {/* Mobile Collide Indicator/Separator */}
+                        <div className="absolute left-1/2 top-0 bottom-0 w-0.5 bg-border z-10 md:hidden pointer-events-none"></div>
+                    </>
+                ) : (
+                    <div className="w-full h-full">
+                         <RaceLane 
+                            initialLinks={startLinks}
+                            initialSenses={startSenses}
+                            side="start"
+                            isMirrored={false}
+                        />
+                    </div>
+                )}
             </div>
         </div>
     )

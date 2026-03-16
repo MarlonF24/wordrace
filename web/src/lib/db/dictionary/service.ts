@@ -112,7 +112,7 @@ export function processSenses(senses: string[][]): GlossNode[] {
 
 // const test = await getSenses("apple");
 
-// console.log(await getSenses("apply"));
+// console.log(await getSenses("apple"));
 
 
 

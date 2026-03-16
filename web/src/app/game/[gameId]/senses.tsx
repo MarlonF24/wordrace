@@ -1,22 +1,17 @@
 "use client";
 
-import { useTransition, use, useState, useEffect, useCallback } from "react";
+import { useTransition, useState, useEffect, useCallback } from "react";
 import { Badge } from "@/components/ui/badge";
 import { type getSenses, type GlossNode } from "@/lib/db/dictionary/service";
-import { addRaceStepAction } from "@/lib/db/data/actions";
-import { useGameId, usePlayerId } from "@/components/context";
 import { cn } from "@/lib/utils";
 
 export function SensesDisplay({
-    sensesPromise
+    senses,
+    onWordClick
 }: {
-    sensesPromise: ReturnType<typeof getSenses>;
+    senses: Awaited<ReturnType<typeof getSenses>>;
+    onWordClick: (sentence: string, wordIdx: number) => Promise<void>;
 }) {
-    const gameId = useGameId();
-    const playerId = usePlayerId();
-
-    const senses = use(sensesPromise);
-
     const [isPending, startTransition] = useTransition();
     const [error, setError] = useState<string | null>(null);
 
@@ -32,7 +27,7 @@ export function SensesDisplay({
         setError(null);
         startTransition(async () => {
             try {
-                await addRaceStepAction(gameId, playerId, sentence, wordIdx);
+                await onWordClick(sentence, wordIdx);
             } catch (e) {
                 if (e instanceof Error) {
                     setError(e.message);
@@ -41,7 +36,7 @@ export function SensesDisplay({
                 }
             }
         });
-    }, [gameId, playerId]);
+    }, [onWordClick]);
 
     if (!senses || senses.length === 0) {
         return (
@@ -54,14 +49,14 @@ export function SensesDisplay({
     }
 
     return (
-        <div className="relative">
+        <div className="relative h-full">
             {error && (
                 <div className="fixed bottom-4 right-4 bg-destructive text-destructive-foreground px-4 py-2 rounded-md shadow-lg border-2 border-primary z-50 animate-in fade-in slide-in-from-bottom-2">
                     <p className="text-sm font-bold uppercase tracking-tight">{error}</p>
                 </div>
             )}
             <div className={cn(
-                "space-y-8 transition-all duration-300", 
+                "space-y-8 transition-all duration-300 pb-20", 
                 isPending && "opacity-50 pointer-events-none grayscale-[0.5]"
             )}>
                 {senses.map((entry, i) => (
@@ -91,6 +86,7 @@ export function SensesDisplay({
         </div>
     );
 }
+
 
 
 function RenderTextWithButtons({

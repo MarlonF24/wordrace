@@ -22,18 +22,20 @@ function formattedTimeTaken(current: RaceStep, previous: RaceStep) {
     return `${minutes}m ${seconds}s`
 }
 
-export function History({ currentLinks }: { currentLinks: RaceStep[] }) {
+export function History({ currentLinks, className }: { currentLinks: RaceStep[], className?: string }) {
     if (!currentLinks) return null
 
     // We render items in reverse order inside a flex-col-reverse container
     const reversedLinks = [...currentLinks].reverse();
 
     return (
-        <Card className="h-full w-full md:w-80 border-2 bg-card flex flex-col overflow-hidden rounded-none">
-            <CardHeader className="flex-none border-b-2 border-border p-4">
-                <CardTitle className="text-xl font-bold uppercase tracking-tight px-2">History ({currentLinks.length})</CardTitle>
+        <Card className={cn("h-full w-full border-r-2 bg-card flex flex-col overflow-hidden rounded-none border-l-0 border-y-0", className)}>
+            <CardHeader className="flex-none border-b-2 border-border p-3 md:p-4">
+                <CardTitle className="text-sm md:text-xl font-bold uppercase tracking-tight px-0 md:px-2 truncate">
+                    History <span className="text-muted-foreground ml-1">({currentLinks.length})</span>
+                </CardTitle>
             </CardHeader>
-            <CardContent className="flex-1 overflow-y-auto p-0 flex flex-col">
+            <CardContent className="flex-1 overflow-y-auto p-0 flex flex-col scrollbar-thin">
                 {reversedLinks.map((step, index) => {
                     const isStart = index === reversedLinks.length - 1
                     
@@ -47,14 +49,14 @@ export function History({ currentLinks }: { currentLinks: RaceStep[] }) {
                         <div
                             key={step.timestamp.toString() + index}
                             className={cn(
-                                "px-6 py-3 border-b border-border flex justify-between items-center shrink-0",
+                                "px-3 py-2 md:px-6 md:py-3 border-b border-border flex justify-between items-center gap-2 shrink-0 group hover:bg-muted/50 transition-colors",
                                 isStart && "bg-muted/30"
                             )}
                         >
-                            <span className="font-bold text-lg uppercase truncate max-w-[140px]" title={step.word}>
+                            <span className="font-bold text-sm md:text-lg uppercase truncate flex-1 min-w-0" title={step.word}>
                                 {step.word}
                             </span>
-                            <span className="text-xs font-mono font-bold text-muted-foreground bg-secondary px-2 py-1 rounded border border-border">
+                            <span className="text-[10px] md:text-xs font-mono font-bold text-muted-foreground bg-secondary px-1.5 py-0.5 rounded border border-border opacity-60 group-hover:opacity-100 transition-opacity">
                                 {timeTaken}
                             </span>
                         </div>

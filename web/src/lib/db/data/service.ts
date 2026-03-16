@@ -1,5 +1,5 @@
 import {db} from "./db";
-import {playerTable, gameTable, gamePlayerLink, type RaceStep} from "./schema";
+import {playerTable, gameTable, gamePlayerLink, type RaceStep, type GameMode} from "./schema";
 import { DICTIONARY_DB } from "@/lib/db";
 import { getLemmaInContext } from "@/lib/lemmatisation";
 import { eq, and, sql } from "drizzle-orm";
@@ -13,12 +13,15 @@ export async function createPlayer(playerID: string) {
     })
 }
 
-export async function createGame(playerID: string, startWord: string, targetWord: string) {
+export async function createGame(playerID: string, startWord: string, targetWord: string, mode: GameMode = "normal") {
     
     const [game] = await db.insert(gameTable).values({
         startWord: getLemmaInContext(startWord, 0).lemma,
         targetWord: getLemmaInContext(targetWord, 0).lemma,
+        mode: mode,
     }).returning()
+
+    console.debug("Created game with start word:", game.startWord, "and target word:", game.targetWord, "for player ID:", playerID);
 
     await joinGame(playerID, game.id, true);
 
@@ -35,7 +38,7 @@ export async function joinGame(playerId: string, gameId: string, admin: boolean 
 }
 
 
-export async function  addRaceStep(gameId: string, playerId: string, sentence: string, wordIdx: number) {
+export async function  addRaceStep(gameId: string, playerId: string, sentence: string, wordIdx: number, side: "start" | "target" = "start") {
     const { lemma } = getLemmaInContext(sentence, wordIdx);
     const cleanLemma = lemma.replace(/[.,/#!$%^&*;:{}=\-_`~()]/g, "").toLowerCase();
         
@@ -62,15 +65,25 @@ export async function  addRaceStep(gameId: string, playerId: string, sentence: s
     };
 
     // update DB
-    await db.update(gamePlayerLink)
-    .set({
-      links: sql`COALESCE(${gamePlayerLink.links}, '[]'::jsonb) || ${JSON.stringify([newStep])}::jsonb`,
-    })
-    .where(and(
-      eq(gamePlayerLink.gameId, gameId),
-      eq(gamePlayerLink.playerId, playerId)
-    )
-    );
+    if (side === "start") {
+        await db.update(gamePlayerLink)
+        .set({
+            startLinks: sql`COALESCE(${gamePlayerLink.startLinks}, '[]'::jsonb) || ${JSON.stringify([newStep])}::jsonb`,
+        })
+        .where(and(
+            eq(gamePlayerLink.gameId, gameId),
+            eq(gamePlayerLink.playerId, playerId)
+        ));
+    } else {
+        await db.update(gamePlayerLink)
+        .set({
+            targetLinks: sql`COALESCE(${gamePlayerLink.targetLinks}, '[]'::jsonb) || ${JSON.stringify([newStep])}::jsonb`,
+        })
+        .where(and(
+            eq(gamePlayerLink.gameId, gameId),
+            eq(gamePlayerLink.playerId, playerId)
+        ));
+    }
 
     return newStep;
 }
