@@ -1,118 +1,177 @@
 import { db } from "./db";
 import { tokenize, type Token } from "@/lib/lemmatisation";
 
-interface sense {
-    id: string;
-    senseid: string[];
-    glosses: string[];
-    links: [string, string][];
-}
+import {
+    type Sense, 
+    type Entry,
+    type EntryKey,
+    type ExclusiveEntryExtraFieldKey, 
+    type ExclusiveSenseExtraFieldKey, 
+    type SharedExtraFieldKey } from "./schema";
 
+import { isFalsy } from "@/lib/utils";
+ 
 
-export async function getDictionaryEntries(word: string) {
+// selection of fields to select from exclusive sense extra fields and shared extra fields
+export type QueryableExclusiveSenseExtraKey = Exclude<ExclusiveSenseExtraFieldKey, "links">;
+
+// selection of fields to select from exclusive entry extra fields
+export type QueryableExclusiveEntryExtraKey = Exclude<ExclusiveEntryExtraFieldKey, "etymology_text">;
+
+// selection of fields to select from shared extra fields
+export type QueryableSharedExtraKey = Exclude<SharedExtraFieldKey, "_">;
+
+type QueryableSenseKey = QueryableExclusiveSenseExtraKey | QueryableSharedExtraKey;
+type QueryableEntryKey = QueryableExclusiveEntryExtraKey | QueryableSharedExtraKey;
+
+type FixedEntryKey = "word" | "pos" | "senses";
+
+// as only the entry keys are available at runtime, we split it up to be able to filter  
+export async function getDictionaryEntries<
+    SH extends QueryableSharedExtraKey, 
+    E extends QueryableExclusiveEntryExtraKey, 
+    S extends QueryableExclusiveSenseExtraKey
+>(
+    word: string,
+    sharedExtraFields: SH[] = [],
+    exclusiveSenseExtraFields: S[] = [],
+    exclusiveEntryExtraFields: E[] = [],
+): 
+// we put out objects that have the necessary entry fields (i.e. "word", "pos", "senses"), potentially some additional entry fields that are specified accross the exlusiveEntryFields and senseFields (which may also apply at entry level [see ./schema.ts]), and where the senses field is an array of GlossNodes that potentially include fields specified in the senseFields
+
+Promise<Array< 
+    Pick<Entry, Exclude<FixedEntryKey, "senses">> & 
+    Partial<Pick<Entry, Extract<SH | S | E , EntryKey>>> & 
+    { senses: GlossNode<S | SH>[] }
+>> {
+
+    const selectedEntryExtraFields = [...sharedExtraFields, ...exclusiveEntryExtraFields]
+
+    const fixedKey: Record<FixedEntryKey, true> = {
+        word: true,
+        pos: true,
+        senses: true,
+    }
+
     const entries = await db.query.dictionary.findMany({
         columns: {
-            pos: true,
-            senses: true,
+            ...fixedKey,
+            ...Object.fromEntries(selectedEntryExtraFields.map(f => [f, true]))
         },
         where: {
             word: word,
         }
-    })
-
-    const parsedEntries = entries.map(entry => {
-        if (!entry.senses || !entry.pos) {
-            throw new Error("Invalid definition data: missing senses or pos: " + JSON.stringify(entry));
-        } 
-        const parsedSenses = JSON.parse(entry.senses) as sense[];
-        return {
-            pos: entry.pos,
-            senses: parsedSenses,
-        }
-    })
-
-    return parsedEntries;
-}
-
-export async function getSenses(word: string) {
-    const entries = await getDictionaryEntries(word);
-
-    const senses =  entries.map(entry => {
-        return {pos: entry.pos, senses: processSenses(entry.senses.map(s => s.glosses))};
     });
 
-    return senses;
+    const selectedSenseExtraFields = [...exclusiveSenseExtraFields, ...sharedExtraFields] 
+
+
+    const processesEntries = entries.map(entry => {
+        const { senses, ...rest } = entry;
+
+        // remove falsy values (e.g. null, "" or []; particularly [] is important as most columns return it if they don't have a value to not crash the json parsing [see ./schema.ts]) from the fields, just like they are removed in the .senses by processSenses down below. This allows to later simply print out present fields instead of having to check the values
+        const falsyCleanedRest = Object.fromEntries(Object.entries(rest).filter(([_, value]) => !isFalsy(value))) as Pick<Entry, Exclude<FixedEntryKey, "senses"> | Extract<SH | S | E, EntryKey>>; 
+
+        return {
+            senses: processSenses(senses, selectedSenseExtraFields), // for the sense fields we also need to include the shared extra fields as those can also be present on the sense level [see ./schema.ts]
+            ...falsyCleanedRest
+        };
+    });
+
+
+    return processesEntries;
 }
 
-export interface GlossNode {
+
+export type GlossNode<K extends QueryableSenseKey> = {
     text: string;
     tokens: Token[];
-    children: GlossNode[];
-}
+    children: GlossNode<K>[];
+    extraFields: Partial<Pick<Sense, K>>;
+}; // as the K fields are already partial in the Sense, Pick will also have them partial here
 
-export function processSenses(senses: string[][]): GlossNode[] {
-    /* Senses are in the following format, where each inner array represents a path of segments in the gloss tree,
-    this function processes that into a tree structure for easier rendering. For example, the following glosses:
 
-    glosses: [
-      [ "A common, firm, round fruit produced by a tree of the genus Malus.",
-        "The fruit of the tree Malus domestica, chiefly with a green, red, or yellow skin, cultivated in temperate climates for cidermaking, cooking, and eating."
-      ], [ "A common, firm, round fruit produced by a tree of the genus Malus.",
-        "Often with a qualifying word: any fruit or vegetable, or any other thing (such as a cone or gall) produced by a plant, especially if from a tree and similar to the fruit of Malus domestica (noun, sense 1.1)."
-      ], [ "A common, firm, round fruit produced by a tree of the genus Malus.",
-        "Something which resembles the fruit of Malus domestica (noun, sense 1.1) in shape (such as a ball, breast, or globe) or colour."
-      ]
-
-    Would be processed into the following tree structure:
+export function processSenses<S extends QueryableSenseKey>(senses: Sense[], fields: S[] = []): GlossNode<S>[] {
+    /*
+     Senses are hierarchical, with glosses potentially being subdefinitions of previous glosses. However, each gloss stores the complete information of its gloss path. We convert that into a tree, removing the redundant information by storing each shared bit on the highest possible shared parent.
     
-    [
-        {   
-            text: "A common, firm, round fruit produced by a tree of the genus Malus.",
-            children: [
-                {
-                    text: "The fruit of the tree Malus domestica, chiefly with a green, red, or yellow skin, cultivated in temperate climates for cidermaking, cooking, and eating.",
-                    children: []
-                },
-                {
-                    text: "Often with a qualifying word: any fruit or vegetable, or any other thing (such as a cone or gall) produced by a plant, especially if from a tree and similar to the fruit of Malus domestica (noun, sense 1.1).",
-                    children: []
-                },
-                {
-                    text: "Something which resembles the fruit of Malus domestica (noun, sense 1.1) in shape (such as a ball, breast, or globe) or colour.",
-                    children: []
-                }
-            ]
-        }
-    ]   
+     NOTE: the senses are ordered such that each sense is a child of the sense with one less gloss that was most recently encountered:
+    
+        Glosses: [A] -> root level  
+        Glosses: [A, B] -> child of A  
+        Glosses: [A, B, C] -> child of B  
+        Glosses: [D] -> root level (new branch -> A, B and C are never encountered again)  
+        Glosses: [D, E] -> child of D  
+
+    returns an array of root level gloss nodes, each with a children property that contains its child glosses, and so on. If carrying a value, each of the specified fields will be an additional 
     */
-    const root: GlossNode[] = [];
 
-    for (const glossPath of senses) {
-        let currentLevel = root;
-        
-        for (const segment of glossPath) {
-            // Check if this segment already exists at the current level
-            let node = currentLevel.find(n => n.text === segment);
-            
-            if (!node) {
-                node = { 
-                    text: segment, 
-                    tokens: tokenize(segment),
-                    children: [] 
-                };
-                currentLevel.push(node);
+    const rootLevel: GlossNode<S>[] = [];
+    const lastEncountered: {glossNode: GlossNode<S>, sense: Sense}[] = []; // stores the last encountered gloss node for level i at [][i]
+
+    for (const sense of senses) {
+        const depth = sense.glosses.length;
+        if (depth === 0) continue;
+
+            // Ensure all parent nodes in the gloss path exist to prevent dropping orphaned segments
+            for (let i = 1; i <= depth; i++) {
+                const text = sense.glosses[i - 1];
+
+                if (!lastEncountered[i] || lastEncountered[i].glossNode.text !== text) {
+                    const node: GlossNode<S> = { text, tokens: tokenize(text), children: [], extraFields: {} };
+
+                    if (i === 1) {
+                        rootLevel.push(node);
+                    } else {
+                        lastEncountered[i - 1].glossNode.children.push(node);
+                    }
+
+                    lastEncountered[i] = { glossNode: node, sense: {} as Sense };
+                    lastEncountered.length = i + 1; // Trim stale deeper branches
+                }
             }
-            
-            currentLevel = node.children;
-        }
-    }
 
-    return root;
+            lastEncountered[depth].sense = sense;
+            const parentSense = depth > 1 ? lastEncountered[depth - 1]?.sense : undefined;
+            const node = lastEncountered[depth].glossNode;
+
+            for (const key of fields) {
+                const val = sense[key];
+                const parentVal = parentSense ? parentSense[key] : [];
+
+                if (val === undefined) continue;
+
+                if (Array.isArray(val) && Array.isArray(parentVal)) {
+                    const pSet = new Set(parentVal.map(p => JSON.stringify(p)));
+                    const diff = val.filter(v => !pSet.has(JSON.stringify(v)));
+                    if (diff.length > 0) node.extraFields[key] = diff as Sense[S]; 
+                } 
+                else if (JSON.stringify(parentVal) !== JSON.stringify(val)) {
+                    node.extraFields[key] = val;
+                }
+            }
+        }
+
+    return rootLevel;
 }
 
-// const test = await getSenses("apple");
 
-// console.log(await getSenses("apple"));
 
+// const entries = await db.query.dictionary.findMany({
+//         columns: {
+//             rawData: false,
+//         },
+//         where: {
+//             word: "apple",
+//         }
+//     })
+
+
+
+// const entries = await getDictionaryEntries("apple", ["antonyms", "derived"]);
+
+// entries[0].senses[0].
+// entries[0].senses[0].examples;
+// console.log(entries);
 
 

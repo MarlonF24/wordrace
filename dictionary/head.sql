@@ -1,5 +1,5 @@
 -- SQLite
-SELECT word, pos, senses
+SELECT senses
 FROM dictionary
-WHERE word = 'apple'
+WHERE word = 'man'
 LIMIT 10;

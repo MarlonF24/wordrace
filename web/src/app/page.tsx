@@ -34,9 +34,9 @@ export default function WelcomePage() {
               asChild
               variant="outline"
               size="lg"
-              className="font-[family-name:var(--font-space-grotesk)] font-bold tracking-wide px-8 h-11 border-2 shadow-[4px_4px_0px_0px_var(--shadow-color)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all"
+              className="font-(family-name:--font-space-grotesk) font-bold tracking-wide px-8 h-11 border-2 shadow-[4px_4px_0px_0px_var(--shadow-color)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all"
             >
-              <Link href="/leaderboard">Leaderboard</Link>
+              {/* <Link href="/leaderboard">Leaderboard</Link> */}
             </Button>
           </div>
         </div>

@@ -8,3 +8,6 @@ export async function getPlayerId() {
 
   return playerId;
 }
+
+
+

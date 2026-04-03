@@ -1,9 +1,8 @@
 
 import { DATA_DB } from "@/lib/db";
 import { getPlayerId } from "@/lib/server/utils";
-import { getSenses } from "@/lib/db/dictionary/service";
 import { RaceLane } from "./race-lane";
-
+import { RaceStep, type SelectableEntriesReturn, getEntriesForGame } from "@/lib/db/data";
 
 export default async function GamePage({
     params,
@@ -13,18 +12,20 @@ export default async function GamePage({
     const { gameId } = await params;
     const playerId = await getPlayerId();
 
-    const [game, gamePlayerLink] = await Promise.all([
-        DATA_DB.db.query.gameTable.findFirst({
-            where: { id: gameId }
-        }),
+    const result = await 
         DATA_DB.db.query.gamePlayerLink.findFirst({
-            where: { gameId, playerId }
+            where: { gameId, playerId },
+            with: {
+                game: true,
+            }
         })
-    ]);
 
-    if (!game || !gamePlayerLink) {
+
+    if (!result || !result.game) {
         throw new Error("Game or player link not found");
     }
+
+    const { game, ...gamePlayerLink } = result;
 
     // Initialize start links if empty
     let startLinks: DATA_DB.RaceStep[] = gamePlayerLink.startLinks ?? [];
@@ -41,16 +42,48 @@ export default async function GamePage({
     }
 
     const startWord = startLinks[startLinks.length - 1].word;
-    const startSensesPromise = getSenses(startWord);
     
-    // We intentionally ignore type mismatch for non-collide mode as it won't be used
-    // But to satisfy TS, we can just promise resolve empty array casted correctly
-    const targetWord = targetLinks.length > 0 ? targetLinks[targetLinks.length - 1].word : "";
-    const targetSensesPromise = game.mode === "collide" && targetWord 
-        ? getSenses(targetWord) 
-        : Promise.resolve([]);
+    // grab extra fields that are enabled for this game
+    
+    const startEntriesPromise = getEntriesForGame(game, startWord);
+    
+    let raceLanes;
 
-    const [startSenses, targetSenses] = await Promise.all([startSensesPromise, targetSensesPromise]);
+    if (game.mode === "collide") {
+        if (targetLinks.length === 0) {
+            throw new Error("Target links should have been initialized for collide mode, found empty");
+        }
+
+        const targetWord = targetLinks[targetLinks.length - 1].word;
+
+        const targetEntriesPromise = getEntriesForGame(game, targetWord);
+
+        const [startEntries, targetEntries] = await Promise.all([startEntriesPromise, targetEntriesPromise]);
+        
+        raceLanes = (
+            <DoubleLane 
+                startLinks={startLinks}
+                targetLinks={targetLinks}
+                startEntries={startEntries}
+                targetEntries={targetEntries}
+            />
+        )
+
+    }  else {
+        const startEntries = await startEntriesPromise;
+
+        raceLanes = (
+            <div className="w-full h-full">
+                <RaceLane 
+                    initialLinks={startLinks}
+                    initialEntries={startEntries}
+                    side={"start"}
+                    isMirrored={false}
+                />
+            </div>
+        )
+    }
+
 
 
     return (
@@ -78,44 +111,39 @@ export default async function GamePage({
             </header>
 
             <div className="flex-1 min-h-0 flex flex-row overflow-hidden relative">
-                {game.mode === "collide" ? (
-                    <>
-                        <div className="flex-1 min-w-0 border-r-2 border-border relative">
-                             <div className="absolute inset-0">
-                                <RaceLane 
-                                    initialLinks={startLinks}
-                                    initialSenses={startSenses}
-                                    side="start"
-                                    isMirrored={false}
-                                />
-                             </div>
-                        </div>
-                        <div className="flex-1 min-w-0 relative">
-                            <div className="absolute inset-0">
-                                <RaceLane 
-                                    initialLinks={targetLinks}
-                                    initialSenses={targetSenses}
-                                    side="target"
-                                    isMirrored={true}
-                                />
-                            </div>
-                        </div>
-                        
-                        {/* Mobile Collide Indicator/Separator */}
-                        <div className="absolute left-1/2 top-0 bottom-0 w-0.5 bg-border z-10 md:hidden pointer-events-none"></div>
-                    </>
-                ) : (
-                    <div className="w-full h-full">
-                         <RaceLane 
-                            initialLinks={startLinks}
-                            initialSenses={startSenses}
-                            side="start"
-                            isMirrored={false}
-                        />
-                    </div>
-                )}
+                {raceLanes}
             </div>
         </div>
     )
-  
+}
+
+
+const DoubleLane = ({ startLinks, targetLinks, startEntries, targetEntries }: { startLinks: RaceStep[]; targetLinks: RaceStep[]; startEntries: SelectableEntriesReturn; targetEntries: SelectableEntriesReturn }) => {
+    return (
+        <>
+            <div className="flex-1 min-w-0 border-r-2 border-border relative">
+                 <div className="absolute inset-0">
+                    <RaceLane 
+                        initialLinks={startLinks}
+                        initialEntries={startEntries}
+                        side="start"
+                        isMirrored={false}
+                    />
+                 </div>
+            </div>
+            <div className="flex-1 min-w-0 relative">
+                <div className="absolute inset-0">
+                    <RaceLane 
+                        initialLinks={targetLinks}
+                        initialEntries={targetEntries}
+                        side="target"
+                        isMirrored={true}
+                    />
+                </div>
+            </div>
+            
+            {/* Mobile Collide Indicator/Separator */}
+            <div className="absolute left-1/2 top-0 bottom-0 w-0.5 bg-border z-10 md:hidden pointer-events-none"></div>
+        </>
+    )
 }

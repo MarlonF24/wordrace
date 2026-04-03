@@ -1,27 +1,41 @@
 import {db} from "./db";
-import {playerTable, gameTable, gamePlayerLink, type RaceStep, type GameMode} from "./schema";
+import {playerTable, gameTable, gamePlayerLink, type RaceStep, type GameMode, type SelectableExtraKey} from "./schema";
 import { DICTIONARY_DB } from "@/lib/db";
 import { getLemmaInContext } from "@/lib/lemmatisation";
 import { eq, and, sql } from "drizzle-orm";
 
+import { type InferSelectModel } from "drizzle-orm";
+
+import { 
+    SELECTABLE_EXCLUSIVE_SENSE_EXTRA_FIELDS, 
+    SELECTABLE_EXCLUSIVE_ENTRY_EXTRA_FIELDS, 
+    SELECTABLE_SHARED_EXTRA_FIELDS } from "./schema";
+
+import { getDictionaryEntries } from "../dictionary";
 
 export async function createPlayer(playerID: string) {
     
-    await db.insert(playerTable).values({
+    const [player] = await db.insert(playerTable).values({
         id: playerID,
         createdAt: new Date(),
-    })
+    }).returning();
+    return player;
 }
 
-export async function createGame(playerID: string, startWord: string, targetWord: string, mode: GameMode = "normal") {
+export async function createGame(playerID: string, startWord: string, targetWord: string, mode: GameMode = "normal", extraFields: SelectableExtraKey[] = []) {
+
     
+    const extraFieldsData = Object.fromEntries(extraFields.map(field => [field, true])) as { [K in SelectableExtraKey]?: true };
+
+
     const [game] = await db.insert(gameTable).values({
         startWord: getLemmaInContext(startWord, 0).lemma,
         targetWord: getLemmaInContext(targetWord, 0).lemma,
         mode: mode,
+        ...extraFieldsData
     }).returning()
 
-    console.debug("Created game with start word:", game.startWord, "and target word:", game.targetWord, "for player ID:", playerID);
+    console.debug("Created game with start word:", game.startWord, "and target word:", game.targetWord, "for player ID:", playerID, "with extra fields:", extraFields);
 
     await joinGame(playerID, game.id, true);
 
@@ -35,6 +49,15 @@ export async function joinGame(playerId: string, gameId: string, admin: boolean 
         playerId: playerId,
         admin: admin
     })
+}
+
+export async function getEntriesForGame(game: InferSelectModel<typeof gameTable>, word: string) {
+    const senseExtraFields = SELECTABLE_EXCLUSIVE_SENSE_EXTRA_FIELDS.filter(field => game[field]);
+    const extraEntryFields = SELECTABLE_EXCLUSIVE_ENTRY_EXTRA_FIELDS.filter(field => game[field]);
+    const sharedExtraFields = SELECTABLE_SHARED_EXTRA_FIELDS.filter(field => game[field]);
+
+
+    return getDictionaryEntries(word, sharedExtraFields, senseExtraFields, extraEntryFields);
 }
 
 

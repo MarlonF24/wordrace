@@ -1,37 +1,42 @@
 "use client"
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { type RaceStep } from "@/lib/db/data";
-import { type getSenses } from "@/lib/db/dictionary/service";
 import { History } from "./history";
-import { DefinitionDisplay } from "./definitionCard";
+import { EntriesDisplay } from "./entriesDisplay";
 import { addRaceStepAction } from "@/lib/db/data/actions";
-import { useGameId, usePlayerId } from "@/components/context";
+import { useGame, usePlayer } from "@/components/context";
+
+import { type SelectableEntriesReturn } from "@/lib/db/data/schema";
+
+
 
 export function RaceLane({
     initialLinks,
-    initialSenses,
+    initialEntries,
     side,
     isMirrored = false
 }: {
     initialLinks: RaceStep[];
-    initialSenses: Awaited<ReturnType<typeof getSenses>>;
+    initialEntries: SelectableEntriesReturn;
     side: "start" | "target";
     isMirrored?: boolean;
 }) {
-    const gameId = useGameId();
-    const playerId = usePlayerId();
+    const game = useGame();
+    const player = usePlayer();
     const [links, setLinks] = useState(initialLinks);
-    const [senses, setSenses] = useState(initialSenses);
+    const [entries, setEntries] = useState(initialEntries);
     
-    // Fallback if links are somehow empty, though they shouldn't be given page logic
-    const lastWord = links[links.length - 1]?.word;
+    const lastWord = links.at(-1)?.word;
 
-    const handleWordClick = async (sentence: string, wordIdx: number) => {
-        const result = await addRaceStepAction(gameId, playerId, sentence, wordIdx, side);
-        setLinks(prev => [...prev, result.step]);
-        setSenses(result.senses);
-    };
+    if (!lastWord) throw new Error("Links should always have at least one step with a word");
+
+    const handleWordClick = useCallback(async (sentence: string, wordIdx: number) => {
+        const { step, entries } = await addRaceStepAction(game, player.id, sentence, wordIdx, side);
+
+        setLinks(prev => [...prev, step]); // addRaceStepAction returns the lemmatised word that was actually added
+        setEntries(entries);
+    }, [game, player.id, side]);
 
     const historyComponent = (
         <aside className="hidden xl:block w-48 h-full overflow-hidden flex-none">
@@ -44,9 +49,9 @@ export function RaceLane({
 
     const definitionComponent = (
         <div key={lastWord} className="flex-1 min-w-0 bg-background relative overflow-hidden flex flex-col h-full">
-             <DefinitionDisplay 
+             <EntriesDisplay 
                 word={lastWord} 
-                senses={senses} 
+                entries={entries} 
                 onWordClick={handleWordClick}
              />
         </div>

@@ -2,6 +2,6 @@ notes.txt
 modes.txt
 *.db
 .env*
-
+*.sqlite
 *.db*
 kaikki.org-dictionary-English-words.jsonl*

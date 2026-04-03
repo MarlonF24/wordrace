@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { Space_Grotesk, Manrope } from "next/font/google";
 import { getPlayerId } from "@/lib/server/utils";
 import { DATA_DB } from "@/lib/db";
-import { PlayerIdProvider } from "@/components/context/playerId";
+import { PlayerProvider } from "@/components/context/playerId";
+
 import "./globals.css";
 
 const spaceGrotesk = Space_Grotesk({
@@ -31,11 +32,13 @@ export default async function RootLayout({
   // set up player ID and create player in DB if it doesn't exist
   const playerId = await getPlayerId();
 
-  const player = await DATA_DB.db.query.playerTable.findFirst({where: {id: playerId}});
+  let player = await DATA_DB.db.query.playerTable.findFirst({where: {id: playerId}});
   
   if (!player) {
-    await DATA_DB.createPlayerAction(playerId);
+    player = await DATA_DB.createPlayerAction(playerId);
   }
+
+
 
   return (
     <html lang="en">
@@ -47,9 +50,9 @@ export default async function RootLayout({
             <span className="text-2xl font-black tracking-tight uppercase">WordRace</span>
           </div>
         </header>
-        <PlayerIdProvider value={playerId}>
+        <PlayerProvider value={player}>
           {children}
-        </PlayerIdProvider>
+        </PlayerProvider>
       </body>
     </html>
   );

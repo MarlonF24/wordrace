@@ -1,44 +1,19 @@
 "use client";
 
-import { useTransition, useState, useEffect, useCallback } from "react";
 import { Badge } from "@/components/ui/badge";
-import { type getSenses, type GlossNode } from "@/lib/db/dictionary/service";
+import { type GlossNode } from "@/lib/db/dictionary/service";
 import { cn } from "@/lib/utils";
+import { useClickContext } from "./clickContext";
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
+import { ChevronDown } from "lucide-react";
+import { FIELDS_TO_PRINT, type SelectableEntriesReturn, type SelectableSenseKey, type ExtraEntryValue } from "@/lib/db/data/schema";
 
 export function SensesDisplay({
-    senses,
-    onWordClick
+    entries,
 }: {
-    senses: Awaited<ReturnType<typeof getSenses>>;
-    onWordClick: (sentence: string, wordIdx: number) => Promise<void>;
+    entries: SelectableEntriesReturn;
 }) {
-    const [isPending, startTransition] = useTransition();
-    const [error, setError] = useState<string | null>(null);
-
-    // Clear error after 3 seconds
-    useEffect(() => {
-        if (error) {
-            const timer = setTimeout(() => setError(null), 3000);
-            return () => clearTimeout(timer);
-        }
-    }, [error]);
-
-    const handleWordClick = useCallback((sentence: string, wordIdx: number) => {
-        setError(null);
-        startTransition(async () => {
-            try {
-                await onWordClick(sentence, wordIdx);
-            } catch (e) {
-                if (e instanceof Error) {
-                    setError(e.message);
-                } else {
-                    setError("An unexpected error occurred.");
-                }
-            }
-        });
-    }, [onWordClick]);
-
-    if (!senses || senses.length === 0) {
+    if (!entries || entries.length === 0) {
         return (
             <div className="flex items-center justify-center p-8 text-center min-h-[200px]">
                 <span className="text-muted-foreground uppercase text-xs font-bold tracking-widest">
@@ -50,16 +25,8 @@ export function SensesDisplay({
 
     return (
         <div className="relative h-full">
-            {error && (
-                <div className="fixed bottom-4 right-4 bg-destructive text-destructive-foreground px-4 py-2 rounded-md shadow-lg border-2 border-primary z-50 animate-in fade-in slide-in-from-bottom-2">
-                    <p className="text-sm font-bold uppercase tracking-tight">{error}</p>
-                </div>
-            )}
-            <div className={cn(
-                "space-y-8 transition-all duration-300 pb-20", 
-                isPending && "opacity-50 pointer-events-none grayscale-[0.5]"
-            )}>
-                {senses.map((entry, i) => (
+            <div className="space-y-8 pb-20">
+                {entries.map((entry, i) => (
                     <div key={i} className="flex flex-col gap-4">
                         <div className="flex items-center gap-2">
                             <Badge
@@ -75,7 +42,6 @@ export function SensesDisplay({
                                     key={j}
                                     node={node}
                                     index={j}
-                                    onWordClick={handleWordClick}
                                     depth={0}
                                 />
                             ))}
@@ -87,14 +53,12 @@ export function SensesDisplay({
     );
 }
 
-
-
-function RenderTextWithButtons({
+export function RenderTextWithButtons({
     tokens,
     fullText,
     onWordClick,
 }: {
-    tokens: GlossNode['tokens'],
+    tokens: GlossNode<SelectableSenseKey>['tokens'],
     fullText: string,
     onWordClick: (sentence: string, wordIdx: number) => void,
 }) {
@@ -122,21 +86,23 @@ function RenderTextWithButtons({
 function RenderGlossNode({
     node,
     index,
-    onWordClick,
     depth = 0
 }: {
-    node: GlossNode,
+    node: GlossNode<SelectableSenseKey>,
     index: number,
-    onWordClick: (sentence: string, wordIdx: number) => void,
     depth?: number
 }) {
+    const { onWordClick } = useClickContext();
     const isTopLevel = depth === 0;
     
     // Determine marker based on depth
     let marker = "";
     if (depth === 0) marker = `${index + 1}.`;
-    else if (depth === 1) marker = `${String.fromCharCode(97 + (index % 26))}.`; // a, b, c
+    else if (depth === 1) marker = `${String.fromCharCode(97 + (index % 26))}.`;
     else marker = "•";
+
+    const extraFieldsEntries = Object.entries(node.extraFields).filter(([_, v]) => v && (!Array.isArray(v) || v.length > 0));
+    const extraFieldsPresent = extraFieldsEntries.length > 0;
 
     return (
         <li className={cn("flex flex-col gap-1", !isTopLevel && "mt-1")}>
@@ -155,9 +121,57 @@ function RenderGlossNode({
                     />
                 </div>
             </div>
-            {node.children.length > 0 && (
+            
+            {extraFieldsPresent && (
+                <div className={cn("mt-2", isTopLevel ? "ml-8" : "ml-6")}>
+                    <Collapsible className="group/collapsible bg-muted/20 border-border/50 rounded-md border w-fit data-[state=open]:w-full transition-all duration-300">
+                        <CollapsibleTrigger className="flex w-full items-center justify-between p-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors group">
+                            <span>Extra Fields</span>
+                            <ChevronDown className="h-4 w-4 ml-2 group-data-[state=open]:rotate-180 transition-transform" />
+                        </CollapsibleTrigger>
+                        <CollapsibleContent className="p-3 space-y-3 border-t border-border/50 text-sm">
+                            {extraFieldsEntries.map(([key, val]) => {
+                                const fieldKey = key as SelectableSenseKey;
+                                type ItemType = ExtraEntryValue<typeof fieldKey>;
+                                const printKeys = Array.from(FIELDS_TO_PRINT[fieldKey] || []) as (keyof ItemType)[];
+                                
+                                const items = Array.isArray(val) ? val : [val];
+                                
+                                return (
+                                    <div key={key} className="space-y-1">
+                                        <div className="text-xs font-bold text-muted-foreground uppercase">{key}:</div>
+                                        <div className="flex flex-wrap gap-1.5">
+                                            {items.map((item: ItemType, itemIdx: number) => {
+                                                const isObj = typeof item === 'object' && item !== null;
+                                                const displayText = printKeys.length > 0 && isObj
+                                                    ? printKeys.map(k => String(item[k] ?? "")).filter(Boolean).join(" ")
+                                                    : (isObj ? JSON.stringify(item) : String(item));
+
+                                
+                                                return (
+                                                    <button 
+                                                        key={itemIdx}
+                                                        onClick={() => onWordClick(displayText, 0)}
+                                                        className="group focus:outline-none"
+                                                    >
+                                                        <Badge variant="secondary" className="px-2.5 py-1 text-sm font-medium bg-muted/50 border-border group-hover:bg-primary/10 group-hover:text-primary transition-colors shadow-sm">
+                                                            {displayText}
+                                                        </Badge>
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </CollapsibleContent>
+                    </Collapsible>
+                </div>
+            )}
+
+            {node.children && node.children.length > 0 && (
                 <ul className={cn(
-                    "space-y-2",
+                    "space-y-2 mt-2",
                     isTopLevel ? "pl-10" : "pl-6"
                 )}>
                     {node.children.map((child, idx) => (
@@ -165,7 +179,6 @@ function RenderGlossNode({
                             key={idx}
                             node={child}
                             index={idx}
-                            onWordClick={onWordClick}
                             depth={depth + 1}
                         />
                     ))}
@@ -174,3 +187,4 @@ function RenderGlossNode({
         </li>
     );
 }
+

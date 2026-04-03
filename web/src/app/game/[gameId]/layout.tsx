@@ -1,5 +1,6 @@
 
-import { GameIdProvider } from "@/components/context/gameId";
+import { GameProvider } from "@/components/context/gameId";
+import { DATA_DB } from "@/lib/db";
 
 
 export default async function Layout({
@@ -11,9 +12,17 @@ export default async function Layout({
 }) {
     const { gameId } = await params;
 
+    const game = await DATA_DB.db.query.gameTable.findFirst({
+        where: { id: gameId }
+    });
+
+    if (!game) {
+        throw new Error("Game not found");
+    }
+
     return (
-        <GameIdProvider value={gameId}>
+        <GameProvider value={game}>
             {children}
-        </GameIdProvider>
+        </GameProvider>
     )
 }

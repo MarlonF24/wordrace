@@ -1,10 +1,12 @@
 "use client";
 
 import { createContext, useContext } from "react";
+import { gameTable } from "@/lib/db/data";
+import { type InferSelectModel } from "drizzle-orm";
 
-export const GameIdContext = createContext<string | null>(null);
+export const GameIdContext = createContext<InferSelectModel<typeof gameTable> | null>(null);
 
-export function GameIdProvider({ children, value }: { children: React.ReactNode; value: string }) {
+export function GameProvider({ children, value }: { children: React.ReactNode; value: InferSelectModel<typeof gameTable> }) {
     return (
         <GameIdContext.Provider value={value}>
             {children}
@@ -12,10 +14,10 @@ export function GameIdProvider({ children, value }: { children: React.ReactNode;
     )
 }
 
-export function useGameId() {
+export function useGame() {
     const gameId = useContext(GameIdContext);
 
-    if (!gameId) throw new Error("useGameId must be used within a GameIdProvider");
+    if (!gameId) throw new Error("useGame must be used within a GameProvider");
 
     return gameId;
 }

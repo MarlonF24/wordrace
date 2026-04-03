@@ -1,0 +1,1 @@
+drizzle push sometimes seems to reinsert the rows and inserting the raw data as json instead of jsonb thus slowing down perfomance, so when performance drops after a push, maybe reseed with dictionary/seed/db_seed.py (espeically when it does some inserting into __new_dictionary and then renames that to dictionary)

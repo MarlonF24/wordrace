@@ -1,0 +1,1 @@
+/home/marlo/repos/WordRace/dictionary/schema.txt

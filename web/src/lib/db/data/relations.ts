@@ -13,4 +13,14 @@ export const relations = defineRelations(
     gameTable: {
         players: r.many.playerTable(),
     },
+    gamePlayerLink: {
+            game: r.one.gameTable({
+                from: r.gamePlayerLink.gameId,
+                to: r.gameTable.id,
+            }),
+            player: r.one.playerTable({
+                from: r.gamePlayerLink.playerId,
+                to: r.playerTable.id,
+            }),
+        },
 }))
