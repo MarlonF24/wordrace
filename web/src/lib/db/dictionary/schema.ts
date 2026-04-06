@@ -1,51 +1,46 @@
-import { sqliteTable, index, integer, blob, text } from "drizzle-orm/sqlite-core"
-import { sql } from "drizzle-orm"
-
-import { type InferSelectModel } from "drizzle-orm";
+import * as p from "drizzle-orm/pg-core";
 
 interface Linkage {
-	word: string; // may also be multiple words but called "word"
+    word: string; // may also be multiple words but called "word"
 }
 
 const LINKAGE_TYPES = [
-	"synonyms",
-	"antonyms",
-	"hypernyms",
-	"hyponyms",
-	"holonyms",
-	"meronyms",
+    "synonyms",
+    "antonyms",
+    "hypernyms",
+    "hyponyms",
+    "holonyms",
+    "meronyms",
 
-	"derived",
-	"related",
-	"coordinate_terms",
+    "derived",
+    "related",
+    "coordinate_terms",
 ] as const;
 
 export type LinkageType = typeof LINKAGE_TYPES[number];
 
-// extra fields that exist both at entry and sense level
-type SharedExtraFields = Record<LinkageType, Linkage[]> 
-export type SharedExtraFieldKey = keyof SharedExtraFields;
 
-const col = (t: LinkageType) => text({ mode: "json" })
-    .generatedAlwaysAs(sql`COALESCE(json_extract(raw_data, '$.${t}'), '[]')`, { mode: "virtual" })
-    .$type<Linkage[]>()
-    .notNull();
+const col = (t: LinkageType) => p.jsonb(t).$type<Linkage[]>();
 
 const linkageColumns = Object.fromEntries(
     LINKAGE_TYPES.map(type => [type, col(type)])
-) as Record<LinkageType, ReturnType<typeof col>>;
+) as { [K in LinkageType]: ReturnType<typeof col> };
+
+// extra fields that exist both at entry and sense level
+type SharedExtraFields = Record<LinkageType, Linkage[]> & {}
+export type SharedExtraFieldKey = keyof SharedExtraFields;
+
 
 interface Example {
-	text: string;
-	ref: string;
-	type: string;
+    text: string;
+    ref: string;
+    type: string;
 }
-
 
 // extra fields that only exist at sense level
 type ExclusiveSenseExtraFields = {
-	examples: Example[];
-	links: [string, string][];
+    examples: Example[];
+    links: [string, string][];
 }
 export type ExclusiveSenseExtraFieldKey = keyof ExclusiveSenseExtraFields;
 
@@ -57,9 +52,9 @@ export type SenseExtraFieldKey = keyof SenseExtraFields;
 
 // Sense = default fields + exclusive sense extra fields + shared extra fields
 export type Sense = {
-	id: string;
-	senseid: string[];
-	glosses: string[];
+    id: string;
+    senseid: string[];
+    glosses: string[];
 
 } & Partial<SenseExtraFields>; 
 
@@ -67,37 +62,46 @@ type SenseKey = keyof Sense;
 
 
 interface Category {
-	kind: string;
-	name: string;
+    kind: string;
+    name: string;
 }
 
+const schemaName = process.env.DICT_TABLE_SCHEMA || "public";
 
-// CAREFUL: in ./service.ts fields where Boolean(value) is false (e.g. null or []) are removed from the output of the getDictionaryEntries function, so if you ever add a boolean or something else that can be falsy but should be kept in the output, the getDictionaryEntries function needs to be updated
-export const dictionary = sqliteTable("dictionary", {
-	id: integer().primaryKey({ autoIncrement: true }),
-	rawData: blob(),
-	
-	word: text().generatedAlwaysAs(sql`json_extract(raw_data, '$.word')`, { mode: "virtual" }).notNull(),
-	
-	pos: text().generatedAlwaysAs(sql`json_extract(raw_data, '$.pos')`, { mode: "virtual" }).notNull(), // part of speech
-	
-senses: text({mode: "json"}).generatedAlwaysAs(
-                sql`json_extract(raw_data, '$.senses')`, { mode: "virtual" }
-        ).$type<Sense[]>().notNull(),
+export const schema = p.pgSchema(schemaName);
 
-        categories: text({mode: "json"}).generatedAlwaysAs(sql`COALESCE(json_extract(raw_data, '$.categories'), '[]')`, { mode: "virtual" }).$type<Category[]>().notNull(),
-	
-	topics: text().generatedAlwaysAs(sql`json_extract(raw_data, '$.topics')`, { mode: "virtual" }), // gotta find json schema for this and then make blob with json mode, a $type and notNull
-	
-	etymology_text: text().generatedAlwaysAs(sql`json_extract(raw_data, '$.etymology.text')`, { mode: "virtual" }),
-	
-	...linkageColumns,
-	
-},
-(table) => [index("idx_word").on(table.word),
+
+
+export const dictionaryRaw = schema.table("dictionary_raw", {
+    id: p.integer().primaryKey().generatedAlwaysAsIdentity(),
+    raw_data: p.jsonb().notNull(),
+});
+
+// maybe word and pos together could be the PK, but... 
+export const dictionary = schema.table("dictionary", {
+    id: p.integer().primaryKey().generatedAlwaysAsIdentity(),
+    
+    word: p.text().notNull(),
+    
+    pos: p.text().notNull(), // part of speech
+    
+    senses: p.jsonb().$type<Sense[]>().notNull(),
+
+    categories: p.jsonb().$type<Category[]>(),
+    
+    topics: p.jsonb().$type<{ name: string }[]>(),
+    
+    etymology_text: p.text(),
+    
+    ...linkageColumns,
+
+}, (table) => [
+    p.index("idx_word").on(table.word),
 ]);
 
-export type Entry = InferSelectModel<typeof dictionary>;
+
+export type Entry = typeof dictionary.$inferSelect;
+
 export type EntryKey = keyof Entry;
 
 // extra fields that only exist at entry level

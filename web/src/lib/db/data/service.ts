@@ -7,9 +7,9 @@ import { eq, and, sql } from "drizzle-orm";
 import { type InferSelectModel } from "drizzle-orm";
 
 import { 
-    SELECTABLE_EXCLUSIVE_SENSE_EXTRA_FIELDS, 
-    SELECTABLE_EXCLUSIVE_ENTRY_EXTRA_FIELDS, 
-    SELECTABLE_SHARED_EXTRA_FIELDS } from "./schema";
+    SELECTABLE_EXCLUSIVE_SENSE_EXTRA_KEYS, 
+    SELECTABLE_EXCLUSIVE_ENTRY_EXTRA_KEYS, 
+    SELECTABLE_SHARED_EXTRA_KEYS } from "./schema";
 
 import { getDictionaryEntries } from "../dictionary";
 
@@ -27,10 +27,18 @@ export async function createGame(playerID: string, startWord: string, targetWord
     
     const extraFieldsData = Object.fromEntries(extraFields.map(field => [field, true])) as { [K in SelectableExtraKey]?: true };
 
+    const lemmaStart = getLemmaInContext(startWord, 0).lemma;
+    const lemmaTarget = getLemmaInContext(targetWord, 0).lemma;
+
+    if (!lemmaStart || !lemmaTarget) {
+        throw new Error("Could not extract lemma from start or target word");
+    } else if (lemmaStart === lemmaTarget) {
+        throw new Error("Start and target words cannot be the same");
+    }
 
     const [game] = await db.insert(gameTable).values({
-        startWord: getLemmaInContext(startWord, 0).lemma,
-        targetWord: getLemmaInContext(targetWord, 0).lemma,
+        startWord: lemmaStart,
+        targetWord: lemmaTarget,
         mode: mode,
         ...extraFieldsData
     }).returning()
@@ -52,9 +60,9 @@ export async function joinGame(playerId: string, gameId: string, admin: boolean 
 }
 
 export async function getEntriesForGame(game: InferSelectModel<typeof gameTable>, word: string) {
-    const senseExtraFields = SELECTABLE_EXCLUSIVE_SENSE_EXTRA_FIELDS.filter(field => game[field]);
-    const extraEntryFields = SELECTABLE_EXCLUSIVE_ENTRY_EXTRA_FIELDS.filter(field => game[field]);
-    const sharedExtraFields = SELECTABLE_SHARED_EXTRA_FIELDS.filter(field => game[field]);
+    const senseExtraFields = SELECTABLE_EXCLUSIVE_SENSE_EXTRA_KEYS.filter(field => game[field]);
+    const extraEntryFields = SELECTABLE_EXCLUSIVE_ENTRY_EXTRA_KEYS.filter(field => game[field]);
+    const sharedExtraFields = SELECTABLE_SHARED_EXTRA_KEYS.filter(field => game[field]);
 
 
     return getDictionaryEntries(word, sharedExtraFields, senseExtraFields, extraEntryFields);
@@ -63,7 +71,7 @@ export async function getEntriesForGame(game: InferSelectModel<typeof gameTable>
 
 export async function  addRaceStep(gameId: string, playerId: string, sentence: string, wordIdx: number, side: "start" | "target" = "start") {
     const { lemma } = getLemmaInContext(sentence, wordIdx);
-    const cleanLemma = lemma.replace(/[.,/#!$%^&*;:{}=\-_`~()]/g, "").toLowerCase();
+    const cleanLemma = lemma.replace(/[^\p{L}\p{N}]+/gu, "").toLowerCase();
         
     if (!cleanLemma) throw new Error("Lemma is empty after cleaning, cannot add race step");
 
@@ -87,7 +95,6 @@ export async function  addRaceStep(gameId: string, playerId: string, sentence: s
         timestamp: new Date().toISOString(),
     };
 
-    // update DB
     if (side === "start") {
         await db.update(gamePlayerLink)
         .set({

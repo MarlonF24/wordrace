@@ -6,6 +6,7 @@ import { type InferSelectModel } from "drizzle-orm";
 
 export const GameIdContext = createContext<InferSelectModel<typeof gameTable> | null>(null);
 
+
 export function GameProvider({ children, value }: { children: React.ReactNode; value: InferSelectModel<typeof gameTable> }) {
     return (
         <GameIdContext.Provider value={value}>

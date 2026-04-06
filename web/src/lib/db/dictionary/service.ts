@@ -10,7 +10,7 @@ import {
     type SharedExtraFieldKey } from "./schema";
 
 import { isFalsy } from "@/lib/utils";
- 
+
 
 // selection of fields to select from exclusive sense extra fields and shared extra fields
 export type QueryableExclusiveSenseExtraKey = Exclude<ExclusiveSenseExtraFieldKey, "links">;
@@ -168,7 +168,7 @@ export function processSenses<S extends QueryableSenseKey>(senses: Sense[], fiel
 
 
 
-// const entries = await getDictionaryEntries("apple", ["antonyms", "derived"]);
+// const entries = await getDictionaryEntries("man", ["antonyms", "derived", "hypernyms", "hyponyms", "synonyms"], ["examples"], );
 
 // entries[0].senses[0].
 // entries[0].senses[0].examples;

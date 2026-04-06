@@ -1,12 +1,12 @@
 import * as p from "drizzle-orm/pg-core"
-import { sql } from "drizzle-orm";
+import { sql, } from "drizzle-orm";
 import { 
   type QueryableExclusiveEntryExtraKey, 
   type QueryableExclusiveSenseExtraKey,
   type QueryableSharedExtraKey,
   type getDictionaryEntries,
-  type ExtraFields } from "../dictionary";
-
+  type ExtraFields 
+} from "../dictionary";
 
 
 export const playerTable = p.pgTable("players", {
@@ -30,19 +30,19 @@ export const GAME_MODES: Record<GameMode, { label: string; description: string }
 } 
 
 
-export const SELECTABLE_EXCLUSIVE_SENSE_EXTRA_FIELDS = [
+export const SELECTABLE_EXCLUSIVE_SENSE_EXTRA_KEYS = [
   "examples"
 ] as const satisfies ReadonlyArray<QueryableExclusiveSenseExtraKey>;
 
 
 
-export const SELECTABLE_EXCLUSIVE_ENTRY_EXTRA_FIELDS = [
+export const SELECTABLE_EXCLUSIVE_ENTRY_EXTRA_KEYS = [
   "categories",
   "topics",
 ] as const satisfies ReadonlyArray<QueryableExclusiveEntryExtraKey>;
 
 
-export const SELECTABLE_SHARED_EXTRA_FIELDS = [
+export const SELECTABLE_SHARED_EXTRA_KEYS = [
   "antonyms",
   "synonyms",
   "hypernyms",
@@ -53,21 +53,27 @@ export const SELECTABLE_SHARED_EXTRA_FIELDS = [
   "related",
 ] as const satisfies ReadonlyArray<QueryableSharedExtraKey>;
 
-export type SelectableExclusiveSenseExtraKey = typeof SELECTABLE_EXCLUSIVE_SENSE_EXTRA_FIELDS[number];
-export type SelectableExclusiveExtraEntryKey = typeof SELECTABLE_EXCLUSIVE_ENTRY_EXTRA_FIELDS[number];
-export type SelectableSharedExtraKey = typeof SELECTABLE_SHARED_EXTRA_FIELDS[number];
+export type SelectableExclusiveSenseExtraKey = typeof SELECTABLE_EXCLUSIVE_SENSE_EXTRA_KEYS[number];
+export type SelectableExclusiveExtraEntryKey = typeof SELECTABLE_EXCLUSIVE_ENTRY_EXTRA_KEYS[number];
+export type SelectableSharedExtraKey = typeof SELECTABLE_SHARED_EXTRA_KEYS[number];
 
-
-export type SelectableExtraKey = SelectableExclusiveSenseExtraKey | SelectableExclusiveExtraEntryKey | SelectableSharedExtraKey;
-export type SelectableSenseKey = SelectableExclusiveSenseExtraKey | SelectableSharedExtraKey;
 
 export type SelectableEntriesReturn = Awaited<ReturnType<typeof getDictionaryEntries<SelectableSharedExtraKey, SelectableExclusiveExtraEntryKey, SelectableExclusiveSenseExtraKey>>>;
 
 const col = () => p.boolean().default(false).notNull();
 
-export const SELECTABLE_EXTRA_KEYS = [...SELECTABLE_SHARED_EXTRA_FIELDS, ...SELECTABLE_EXCLUSIVE_SENSE_EXTRA_FIELDS, ...SELECTABLE_EXCLUSIVE_ENTRY_EXTRA_FIELDS];
+export const SELECTABLE_SENSE_EXTRA_KEYS = [...SELECTABLE_SHARED_EXTRA_KEYS, ...SELECTABLE_EXCLUSIVE_SENSE_EXTRA_KEYS] as const;
+export type SelectableSenseExtraKey = typeof SELECTABLE_SENSE_EXTRA_KEYS[number];
 
-export type ExtraEntryValue<Key extends SelectableExtraKey> = (ExtraFields[Key] extends unknown[] ? ExtraFields[Key][number] : ExtraFields[Key])
+export const SELECTABLE_ENTRY_EXTRA_KEYS = [...SELECTABLE_SHARED_EXTRA_KEYS, ...SELECTABLE_EXCLUSIVE_ENTRY_EXTRA_KEYS] as const;
+export type SelectableEntryExtraKey = typeof SELECTABLE_ENTRY_EXTRA_KEYS[number];
+
+export const SELECTABLE_EXTRA_KEYS = [...SELECTABLE_SHARED_EXTRA_KEYS, ...SELECTABLE_EXCLUSIVE_SENSE_EXTRA_KEYS, ...SELECTABLE_EXCLUSIVE_ENTRY_EXTRA_KEYS] as const;
+export type SelectableExtraKey = typeof SELECTABLE_EXTRA_KEYS[number];
+
+
+type nonNull<T> = Exclude<T, null>;
+export type ExtraEntryValue<Key extends SelectableExtraKey> = nonNull<ExtraFields[Key]> extends unknown[] ? nonNull<ExtraFields[Key]>[number] : nonNull<ExtraFields[Key]>;
 
 export const FIELDS_TO_PRINT: { [K in SelectableExtraKey]: ReadonlyArray<keyof ExtraEntryValue<K>> } = {
   antonyms: ["word"],
@@ -97,7 +103,12 @@ export const gameTable = p.pgTable("games", {
   mode: gameMode().default("normal"),
   createdAt: p.timestamp().defaultNow().notNull(),
   ...extraFieldColumns,
-})
+}, (table) => ({
+  unique_start_target: p.check(
+    "unique_start_target", 
+    sql`${table.startWord} <> ${table.targetWord}`
+  ),
+}));
 
 export interface RaceStep {
   word: string;

@@ -5,3 +5,5 @@ modes.txt
 *.sqlite
 *.db*
 kaikki.org-dictionary-English-words.jsonl*
+*.jsonl
+.venv

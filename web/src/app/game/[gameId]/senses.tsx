@@ -1,12 +1,19 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
-import { type GlossNode } from "@/lib/db/dictionary/service";
 import { cn } from "@/lib/utils";
 import { useClickContext } from "./clickContext";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
 import { ChevronDown } from "lucide-react";
-import { FIELDS_TO_PRINT, type SelectableEntriesReturn, type SelectableSenseKey, type ExtraEntryValue } from "@/lib/db/data/schema";
+
+import { FIELDS_TO_PRINT, 
+    type SelectableEntriesReturn, 
+    type SelectableSenseExtraKey 
+} from "@/lib/db/data/schema";
+
+import { type GlossNode } from "@/lib/db/dictionary";
+
+import { ExtraFieldBadge } from "./extraFieldDisplay";
+import { PosBadge } from "./posBadge";
 
 export function SensesDisplay({
     entries,
@@ -29,12 +36,7 @@ export function SensesDisplay({
                 {entries.map((entry, i) => (
                     <div key={i} className="flex flex-col gap-4">
                         <div className="flex items-center gap-2">
-                            <Badge
-                                variant="outline"
-                                className="text-xs font-bold uppercase border-2 shadow-[2px_2px_0px_0px_var(--shadow-color)] px-2 py-0.5 bg-secondary text-secondary-foreground"
-                            >
-                                {entry.pos}
-                            </Badge>
+                            <PosBadge pos={entry.pos} />
                         </div>
                         <ul className="space-y-4">
                             {entry.senses.map((node, j) => (
@@ -58,7 +60,7 @@ export function RenderTextWithButtons({
     fullText,
     onWordClick,
 }: {
-    tokens: GlossNode<SelectableSenseKey>['tokens'],
+    tokens: GlossNode<SelectableSenseExtraKey>['tokens'],
     fullText: string,
     onWordClick: (sentence: string, wordIdx: number) => void,
 }) {
@@ -88,7 +90,7 @@ function RenderGlossNode({
     index,
     depth = 0
 }: {
-    node: GlossNode<SelectableSenseKey>,
+    node: GlossNode<SelectableSenseExtraKey>,
     index: number,
     depth?: number
 }) {
@@ -101,7 +103,7 @@ function RenderGlossNode({
     else if (depth === 1) marker = `${String.fromCharCode(97 + (index % 26))}.`;
     else marker = "•";
 
-    const extraFieldsEntries = Object.entries(node.extraFields).filter(([_, v]) => v && (!Array.isArray(v) || v.length > 0));
+    const extraFieldsEntries = Object.entries(node.extraFields).filter(([, v]) => v && (!Array.isArray(v) || v.length > 0));
     const extraFieldsPresent = extraFieldsEntries.length > 0;
 
     return (
@@ -131,9 +133,8 @@ function RenderGlossNode({
                         </CollapsibleTrigger>
                         <CollapsibleContent className="p-3 space-y-3 border-t border-border/50 text-sm">
                             {extraFieldsEntries.map(([key, val]) => {
-                                const fieldKey = key as SelectableSenseKey;
-                                type ItemType = ExtraEntryValue<typeof fieldKey>;
-                                const printKeys = Array.from(FIELDS_TO_PRINT[fieldKey] || []) as (keyof ItemType)[];
+                                const fieldKey = key as SelectableSenseExtraKey;
+                                const printKeys = FIELDS_TO_PRINT[fieldKey] || [];
                                 
                                 const items = Array.isArray(val) ? val : [val];
                                 
@@ -141,23 +142,19 @@ function RenderGlossNode({
                                     <div key={key} className="space-y-1">
                                         <div className="text-xs font-bold text-muted-foreground uppercase">{key}:</div>
                                         <div className="flex flex-wrap gap-1.5">
-                                            {items.map((item: ItemType, itemIdx: number) => {
+                                            {items.map((item: unknown, itemIdx: number) => {
                                                 const isObj = typeof item === 'object' && item !== null;
                                                 const displayText = printKeys.length > 0 && isObj
-                                                    ? printKeys.map(k => String(item[k] ?? "")).filter(Boolean).join(" ")
+                                                    ? (printKeys as string[]).map(k => String((item as Record<string, unknown>)[k] ?? "")).filter(Boolean).join(" ")
                                                     : (isObj ? JSON.stringify(item) : String(item));
 
                                 
                                                 return (
-                                                    <button 
+                                                    <ExtraFieldBadge 
                                                         key={itemIdx}
+                                                        displayText={displayText}
                                                         onClick={() => onWordClick(displayText, 0)}
-                                                        className="group focus:outline-none"
-                                                    >
-                                                        <Badge variant="secondary" className="px-2.5 py-1 text-sm font-medium bg-muted/50 border-border group-hover:bg-primary/10 group-hover:text-primary transition-colors shadow-sm">
-                                                            {displayText}
-                                                        </Badge>
-                                                    </button>
+                                                    />
                                                 );
                                             })}
                                         </div>

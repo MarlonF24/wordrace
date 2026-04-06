@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useTransition, useEffect } from "react";
 import { type RaceStep } from "@/lib/db/data";
 import { History } from "./history";
 import { EntriesDisplay } from "./entriesDisplay";
@@ -26,16 +26,31 @@ export function RaceLane({
     const player = usePlayer();
     const [links, setLinks] = useState(initialLinks);
     const [entries, setEntries] = useState(initialEntries);
+    const [isPending, startTransition] = useTransition();
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (error) {
+            const timer = setTimeout(() => setError(null), 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [error]);
     
     const lastWord = links.at(-1)?.word;
 
     if (!lastWord) throw new Error("Links should always have at least one step with a word");
 
     const handleWordClick = useCallback(async (sentence: string, wordIdx: number) => {
-        const { step, entries } = await addRaceStepAction(game, player.id, sentence, wordIdx, side);
-
-        setLinks(prev => [...prev, step]); // addRaceStepAction returns the lemmatised word that was actually added
-        setEntries(entries);
+        setError(null);
+        startTransition(async () => {
+            try {
+                const { step, entries } = await addRaceStepAction(game, player.id, sentence, wordIdx, side);
+                setLinks(prev => [...prev, step]);
+                setEntries(entries);
+            } catch (e) {
+                setError(e instanceof Error ? e.message : "An unexpected error occurred.");
+            }
+        });
     }, [game, player.id, side]);
 
     const historyComponent = (
@@ -53,6 +68,8 @@ export function RaceLane({
                 word={lastWord} 
                 entries={entries} 
                 onWordClick={handleWordClick}
+                isPending={isPending}
+                error={error}
              />
         </div>
     );
