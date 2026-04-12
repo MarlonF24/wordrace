@@ -2,7 +2,7 @@
 
 import { useTransition } from "react";
 import { addRaceStepAction } from "@/lib/db/data/actions";
-import { useGame, usePlayer } from "@/components/context";
+import { useGame, usePlayer, useError } from "@/components/context";
 
 export function WordButton({ 
     fullText, 
@@ -18,16 +18,25 @@ export function WordButton({
     const [isPending, startTransition] = useTransition();
     const game = useGame();
     const player = usePlayer();
+    const { setError } = useError();
 
     return (
         <button
             disabled={isPending}
             onClick={() => {
+                setError(null);
                 startTransition(async () => {
-                    await addRaceStepAction(game, player.id, fullText, tokenIndex, side);
+                    try {
+                        const result = await addRaceStepAction(game, player.id, fullText, tokenIndex, side);
+                        if (result?.error) {
+                            setError(result.error);
+                        }
+                    } catch (e) {
+                        setError(e instanceof Error ? e.message : "An unexpected error occurred.");
+                    }
                 });
             }}
-            className="hover:underline hover:text-primary transition-colors cursor-pointer text-left inline-block disabled:opacity-50 disabled:cursor-not-allowed"
+            className="hover:underline hover:text-primary transition-colors cursor-pointer text-left inline-block disabled:opacity-50"
         >
             {children}
         </button>

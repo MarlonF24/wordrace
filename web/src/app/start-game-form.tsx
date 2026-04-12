@@ -15,7 +15,7 @@ import { type SelectableExtraKey } from "@/lib/db/data/schema";
 
 
 // TODO: make better descriptions 
-export const EXTRA_FIELDS: Record<SelectableExtraKey, { label: string; desc: string }> = {
+export const EXTRA_KEYS: Record<SelectableExtraKey, { label: string; desc: string }> = {
     antonyms: { label: "Antonyms", desc: "Words with opposite meanings" },
     synonyms: { label: "Synonyms", desc: "Words with similar meanings" },
     hypernyms: { label: "Hypernyms", desc: "Words with more general meanings" },
@@ -49,6 +49,8 @@ export default function StartGameForm() {
   }, [state?.error]);
 
   const [selectedModifiers, setSelectedModifiers] = useState<string[]>([]);
+
+  const extraKeyArray = Object.entries(EXTRA_KEYS);
   
   return ( 
         <form className="flex flex-col gap-6" action={formAction} onChange={() => { setError(null);}}>
@@ -84,6 +86,7 @@ export default function StartGameForm() {
                   </div>
                 ))}
               </RadioGroup>
+              
               {/* Hidden inputes  */}
               {selectedModifiers.map((id) => (
                 <input key={id} type="hidden" name="extraFields" value={id} />
@@ -98,7 +101,7 @@ export default function StartGameForm() {
 
                 <PopoverContent className="w-[--radix-popover-trigger-width] p-4" align="start" >
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {(Object.entries(EXTRA_FIELDS)).map(([field, { label, desc }]) => (
+                    {extraKeyArray.map(([field, { label, desc }]) => (
                       <label
                         key={field}
                         htmlFor={field}
@@ -125,6 +128,13 @@ export default function StartGameForm() {
                       </label>
                     ))}
                   </div>
+                  <Button onClick={() => {
+                    if (selectedModifiers.length != extraKeyArray.length) {
+                      setSelectedModifiers(Object.keys(EXTRA_KEYS))}
+                    else { setSelectedModifiers([])}}
+                    }>
+
+                    Select All</Button>
                 </PopoverContent>
               </Popover>
             </div>

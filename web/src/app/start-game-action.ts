@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { DATA_DB } from "@/lib/db";
 import { getPlayerId } from "@/lib/server/utils";
 import { type GameMode } from "@/lib/db/data/schema";
-import { type EXTRA_FIELDS } from "./start-game-form";
+import { type EXTRA_KEYS } from "./start-game-form";
 
 export const startGameFormAction = async (formData: FormData) => {
     const startWord = formData.get("startWord")!.toString();
@@ -14,7 +14,7 @@ export const startGameFormAction = async (formData: FormData) => {
 
     const mode = (formData.get("mode")?.toString() as GameMode) || "normal";
     
-    const extraFields = formData.getAll("extraFields") as (keyof typeof EXTRA_FIELDS)[];
+    const extraFields = formData.getAll("extraFields") as (keyof typeof EXTRA_KEYS)[];
     console.debug("Selected extra fields:", extraFields);
 
     let gameId: string | null = null; // looks stupid but redirect throws a "NEXT_REDIRECT_ERROR" and game is unbound for some reason even if no error is thrown

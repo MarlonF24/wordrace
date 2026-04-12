@@ -153,7 +153,7 @@ function RenderGlossNode({
                                                 return (
                                                     <ExtraFieldBadge 
                                                         key={itemIdx} 
-                                                        text={displayText} 
+                                                        displayText={displayText} 
                                                         side={side}
                                                     />
                                                 );
@@ -167,15 +167,18 @@ function RenderGlossNode({
                 </div>
             )}
 
-            {node.senses && node.senses.length > 0 && (
-                <ul className="mt-2 space-y-3">
-                    {node.senses.map((subNode, subIdx) => (
+            {node.children && node.children.length > 0 && (
+                <ul className={cn(
+                    "space-y-2 mt-2",
+                    isTopLevel ? "pl-10" : "pl-6"
+                )}>
+                    {node.children.map((child, idx) => (
                         <RenderGlossNode
-                            key={subIdx}
-                            node={subNode}
-                            index={subIdx}
-                            depth={depth + 1}
+                            key={idx}
                             side={side}
+                            node={child}
+                            index={idx}
+                            depth={depth + 1}
                         />
                     ))}
                 </ul>

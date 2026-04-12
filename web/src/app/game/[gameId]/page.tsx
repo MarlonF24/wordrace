@@ -3,8 +3,8 @@ import { DATA_DB } from "@/lib/db";
 import { getPlayerId } from "@/lib/server/utils";
 import { RaceLane } from "./race-lane";
 import { RaceStep, type SelectableEntriesReturn, getEntriesForGame } from "@/lib/db/data";
-import { redirect } from "next/navigation";
 import { FoundPopup } from "./foundPopup";
+import { ErrorDisplay } from "./error-display";
 
 export default async function GamePage({
     params,
@@ -30,23 +30,19 @@ export default async function GamePage({
     const { game, ...gamePlayerLink } = result;
 
    
-
-    // Initialize start links if empty
-    const startLinks: DATA_DB.RaceStep[] = gamePlayerLink.startLinks ?? [];
+    const startLinks: DATA_DB.RaceStep[] = gamePlayerLink.startLinks;
 
     if (startLinks.length === 0) {
         throw new Error("Start links should have been initialized on joinGame, found empty");
     }
 
-    // Initialize target links if collide mode and empty
-    const targetLinks: DATA_DB.RaceStep[] = gamePlayerLink.targetLinks ?? [];
+    const targetLinks: DATA_DB.RaceStep[] = gamePlayerLink.targetLinks;
     if (targetLinks.length === 0) {
         throw new Error("Target links should have been initialized on joinGame for collide mode, found empty");
     }
 
     const currStartWord = startLinks[startLinks.length - 1].word;
     
-    // grab extra fields that are enabled for this game
     
     const startEntriesPromise = getEntriesForGame(game, currStartWord);
     
@@ -88,7 +84,8 @@ export default async function GamePage({
 
     return (
         <div className="flex flex-col h-[calc(100vh-3.5rem)]">
-            {gamePlayerLink.found && <FoundPopup game={game} playerId={playerId} />}
+            <ErrorDisplay />
+            {gamePlayerLink.found && <FoundPopup game={game} gamePlayerLink={gamePlayerLink} />}
             <header className="flex-none bg-muted/30 border-b-2 border-border p-4 flex items-center justify-between gap-8 h-20">
                 <div className="flex flex-col">
                     <span className="text-xs uppercase font-bold text-muted-foreground tracking-widest">Start Word</span>

@@ -18,12 +18,15 @@ export const joinGameAction = async (playerId: string, game: InferSelectModel<ty
 }
 
 export async function addRaceStepAction(game: InferSelectModel<typeof gameTable>, playerId: string, sentence: string, wordIdx: number, side: "start" | "target" = "start") {
+    try {
+        const result = await service.addRaceStep(game.id, playerId, sentence, wordIdx, side);
 
-    const result = await service.addRaceStep(game.id, playerId, sentence, wordIdx, side);
-
-    const entries = await service.getEntriesForGame(game, result.newStep.word);
-    
-    return { entries, ...result };
+        const entries = await service.getEntriesForGame(game, result.newStep.word);
+        
+        return { entries, ...result };
+    } catch (e) {
+        return { error: e instanceof Error ? e.message : "An unexpected error occurred." };
+    }
 }
 
 export async function getGamePlayerLinkAction(gameId: string, playerId: string) {

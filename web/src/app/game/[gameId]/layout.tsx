@@ -1,5 +1,6 @@
 
 import { GameProvider } from "@/components/context/gameId";
+import { ErrorProvider } from "@/components/context/error";
 import { DATA_DB } from "@/lib/db";
 
 
@@ -22,7 +23,9 @@ export default async function Layout({
 
     return (
         <GameProvider value={game}>
-            {children}
+            <ErrorProvider>
+                {children}
+            </ErrorProvider>
         </GameProvider>
     )
 }

@@ -19,9 +19,6 @@ function formattedTimeTaken(current: RaceStep, previous: RaceStep) {
 export function History({ currentLinks, className }: { currentLinks: RaceStep[], className?: string }) {
     if (!currentLinks) return null
 
-    // We render items in reverse order inside a flex-col-reverse container
-    const reversedLinks = [...currentLinks].reverse();
-
     return (
         <Card className={cn("h-full w-full border-r-2 bg-card flex flex-col overflow-hidden rounded-none border-l-0 border-y-0", className)}>
             <CardHeader className="flex-none border-b-2 border-border p-3 md:p-4">
@@ -29,11 +26,11 @@ export function History({ currentLinks, className }: { currentLinks: RaceStep[],
                     History <span className="text-muted-foreground ml-1">({currentLinks.length})</span>
                 </CardTitle>
             </CardHeader>
-            <CardContent className="flex-1 overflow-y-auto p-0 flex flex-col scrollbar-thin">
-                {reversedLinks.map((step, index) => {
-                    const isStart = index === reversedLinks.length - 1
+            <CardContent className="flex-1 overflow-y-auto p-0 flex flex-col-reverse justify-end scrollbar-thin">
+                {currentLinks.map((step, index) => {
+                    const isStart = index === 0
                     
-                    const previousStep = reversedLinks[index + 1]
+                    const previousStep = currentLinks[index - 1]
                     
                     const timeTaken = previousStep
                         ? formattedTimeTaken(step, previousStep)
