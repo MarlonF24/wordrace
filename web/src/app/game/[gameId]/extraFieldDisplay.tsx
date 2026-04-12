@@ -1,5 +1,3 @@
-"use client";
-
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { 
@@ -8,19 +6,18 @@ import {
     type SelectableEntriesReturn 
 } from "@/lib/db/data/schema";
 
-import { useClickContext } from "./clickContext";
+import { WordButton } from "./word-button";
 import { PosBadge } from "./posBadge";
 
 export function ExtraFieldBadge({ 
     displayText, 
-    onClick,
+    side,
     className 
 }: { 
     displayText: string; 
-    onClick: (sentence: string, wordIdx: number) => void;
+    side: "start" | "target";
     className?: string;
 }) {
-
     const tokens = displayText.split(/(\s+)/);
 
     return (
@@ -35,16 +32,17 @@ export function ExtraFieldBadge({
                 const isSpace = /^\s+$/.test(token);
                 if (isSpace) return <span key={idx} className="whitespace-pre">{token}</span>;
                 
-                const wordIdx = tokens.slice(0, idx).filter(t => !/^\s+$/.test(t)).length;
+                const tokenIndex = tokens.slice(0, idx).filter(t => !/^\s+$/.test(t)).length;
 
                 return (
-                    <button
+                    <WordButton
                         key={idx}
-                        onClick={() => onClick(displayText, wordIdx)}
-                        className="hover:underline hover:text-secondary-foreground/80 focus:outline-none transition-colors border-none p-0 inline m-0 bg-transparent text-inherit font-inherit"
+                        fullText={displayText}
+                        tokenIndex={tokenIndex}
+                        side={side}
                     >
                         {token}
-                    </button>
+                    </WordButton>
                 );
             })}
         </Badge>
@@ -53,21 +51,21 @@ export function ExtraFieldBadge({
 
 export function ExtraFieldDisplay({ 
     extraKey, 
-    entries 
+    entries,
+    side
 }: { 
     extraKey: SelectableEntryExtraKey; 
     entries: SelectableEntriesReturn; 
+    side: "start" | "target";
 }) {
-    const { onWordClick } = useClickContext();
     const printKeys = FIELDS_TO_PRINT[extraKey];
     
     return (
         <div className="flex flex-col space-y-8">
             {entries.map((entry, entryIdx) => {
-                const val = entry[extraKey];
+                const val = (entry as Record<string, unknown>)[extraKey];
                 if (!val) return null;
 
-    
                 const items = Array.isArray(val) ? val : [val];
                 
                 return (
@@ -77,17 +75,17 @@ export function ExtraFieldDisplay({
                         </div>
                         <div className="flex flex-wrap gap-2">
                             {items.map((item, idx) => {
-                                const isObj = typeof item === 'object';
+                                const isObj = typeof item === 'object' && item !== null;
                                 
                                 const displayText = printKeys.length > 0 && isObj
-                                    ? (printKeys as Array<keyof typeof item>).map(k => String(item[k] ?? "")).filter(Boolean).join(" ")
+                                    ? (printKeys as string[]).map(k => String((item as Record<string, unknown>)[k] ?? "")).filter(Boolean).join(" ")
                                     : (isObj ? JSON.stringify(item) : String(item));
 
                                 return (
                                     <ExtraFieldBadge 
                                         key={idx}
                                         displayText={displayText}
-                                        onClick={onWordClick}
+                                        side={side}
                                     />
                                 );
                             })}

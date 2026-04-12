@@ -1,62 +1,21 @@
-"use client"
-
-import { useState, useCallback, useTransition, useEffect } from "react";
 import { type RaceStep } from "@/lib/db/data";
 import { History } from "./history";
 import { EntriesDisplay } from "./entriesDisplay";
-import { addRaceStepAction } from "@/lib/db/data/actions";
-import { useGame, usePlayer } from "@/components/context";
-
 import { type SelectableEntriesReturn } from "@/lib/db/data/schema";
-import { FoundPopup } from "./foundPopup";
-
-
 
 export function RaceLane({
-    initialLinks,
-    initialEntries,
+    links,
+    entries,
     side
 }: {
-    initialLinks: RaceStep[];
-    initialEntries: SelectableEntriesReturn;
+    links: RaceStep[];
+    entries: SelectableEntriesReturn;
     side: "start" | "target";
     isMirrored?: boolean;
 }) {
-    const game = useGame();
-    const player = usePlayer();
-    const [links, setLinks] = useState(initialLinks);
-    const [entries, setEntries] = useState(initialEntries);
-    const [isPending, startTransition] = useTransition();
-    const [error, setError] = useState<string | null>(null);
-    const [hasFound, setHasFound] = useState(false);
-
-    useEffect(() => {
-        if (error) {
-            const timer = setTimeout(() => setError(null), 3000);
-            return () => clearTimeout(timer);
-        }
-    }, [error]);
-    
     const lastWord = links.at(-1)?.word;
 
     if (!lastWord) throw new Error("Links should always have at least one step with a word");
-
-    const handleWordClick = useCallback(async (sentence: string, wordIdx: number) => {
-        setError(null);
-        startTransition(async () => {
-            try {
-                const { newStep, found, entries } = await addRaceStepAction(game, player.id, sentence, wordIdx, side);
-                
-                
-                setLinks(prev => [...prev, newStep]);
-                setEntries(entries);
-                
-                if (found) {setHasFound(true); return; } 
-            } catch (e) {
-                setError(e instanceof Error ? e.message : "An unexpected error occurred.");
-            }
-        });
-    }, [game, player.id, side]);
 
     const historyComponent = (
         <aside className="hidden xl:block w-48 h-full overflow-hidden flex-none">
@@ -72,16 +31,13 @@ export function RaceLane({
              <EntriesDisplay 
                 word={lastWord} 
                 entries={entries} 
-                onWordClick={handleWordClick}
-                isPending={isPending}
-                error={error}
+                side={side}
              />
         </div>
     );
 
     return (
         <div className="flex flex-row h-full w-full overflow-hidden">
-            {hasFound && <FoundPopup game={game} playerId={player.id} />}
             {side === "start" ? (
                 <>
                     {historyComponent}

@@ -22,6 +22,7 @@ export async function addRaceStepAction(game: InferSelectModel<typeof gameTable>
     const result = await service.addRaceStep(game.id, playerId, sentence, wordIdx, side);
 
     const entries = await service.getEntriesForGame(game, result.newStep.word);
+    
     return { entries, ...result };
 }
 

@@ -4,6 +4,7 @@ import { getPlayerId } from "@/lib/server/utils";
 import { RaceLane } from "./race-lane";
 import { RaceStep, type SelectableEntriesReturn, getEntriesForGame } from "@/lib/db/data";
 import { redirect } from "next/navigation";
+import { FoundPopup } from "./foundPopup";
 
 export default async function GamePage({
     params,
@@ -74,8 +75,8 @@ export default async function GamePage({
         raceLanes = (
             <div className="w-full h-full">
                 <RaceLane 
-                    initialLinks={startLinks}
-                    initialEntries={startEntries}
+                    links={startLinks}
+                    entries={startEntries}
                     side={"start"}
                     isMirrored={false}
                 />
@@ -87,6 +88,7 @@ export default async function GamePage({
 
     return (
         <div className="flex flex-col h-[calc(100vh-3.5rem)]">
+            {gamePlayerLink.found && <FoundPopup game={game} playerId={playerId} />}
             <header className="flex-none bg-muted/30 border-b-2 border-border p-4 flex items-center justify-between gap-8 h-20">
                 <div className="flex flex-col">
                     <span className="text-xs uppercase font-bold text-muted-foreground tracking-widest">Start Word</span>
@@ -123,8 +125,8 @@ const DoubleLane = ({ startLinks, targetLinks, startEntries, targetEntries }: { 
             <div className="flex-1 min-w-0 border-r-2 border-border relative">
                  <div className="absolute inset-0">
                     <RaceLane 
-                        initialLinks={startLinks}
-                        initialEntries={startEntries}
+                        links={startLinks}
+                        entries={startEntries}
                         side="start"
                         isMirrored={false}
                     />
@@ -133,8 +135,8 @@ const DoubleLane = ({ startLinks, targetLinks, startEntries, targetEntries }: { 
             <div className="flex-1 min-w-0 relative">
                 <div className="absolute inset-0">
                     <RaceLane 
-                        initialLinks={targetLinks}
-                        initialEntries={targetEntries}
+                        links={targetLinks}
+                        entries={targetEntries}
                         side="target"
                         isMirrored={true}
                     />

@@ -1,9 +1,7 @@
-"use client";
-
 import { cn } from "@/lib/utils";
-import { useClickContext } from "./clickContext";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
 import { ChevronDown } from "lucide-react";
+import { WordButton } from "./word-button";
 
 import { FIELDS_TO_PRINT, 
     type SelectableEntriesReturn, 
@@ -17,8 +15,10 @@ import { PosBadge } from "./posBadge";
 
 export function SensesDisplay({
     entries,
+    side,
 }: {
     entries: SelectableEntriesReturn;
+    side: "start" | "target";
 }) {
     if (!entries || entries.length === 0) {
         return (
@@ -45,6 +45,7 @@ export function SensesDisplay({
                                     node={node}
                                     index={j}
                                     depth={0}
+                                    side={side}
                                 />
                             ))}
                         </ul>
@@ -58,11 +59,11 @@ export function SensesDisplay({
 export function RenderTextWithButtons({
     tokens,
     fullText,
-    onWordClick,
+    side,
 }: {
     tokens: GlossNode<SelectableSenseExtraKey>['tokens'],
     fullText: string,
-    onWordClick: (sentence: string, wordIdx: number) => void,
+    side: "start" | "target";
 }) {
     return (
         <>
@@ -72,12 +73,13 @@ export function RenderTextWithButtons({
                     {token.isPunctuation ? (
                         <span>{token.value}</span>
                     ) : (
-                        <button
-                            onClick={() => onWordClick(fullText, token.index)}
-                            className="hover:underline hover:text-primary transition-colors cursor-pointer text-left inline-block"
+                        <WordButton
+                            fullText={fullText}
+                            tokenIndex={token.index}
+                            side={side}
                         >
                             {token.value}
-                        </button>
+                        </WordButton>
                     )}
                 </span>
             ))}
@@ -88,16 +90,16 @@ export function RenderTextWithButtons({
 function RenderGlossNode({
     node,
     index,
-    depth = 0
+    depth = 0,
+    side,
 }: {
     node: GlossNode<SelectableSenseExtraKey>,
     index: number,
-    depth?: number
+    depth?: number,
+    side: "start" | "target";
 }) {
-    const { onWordClick } = useClickContext();
     const isTopLevel = depth === 0;
     
-    // Determine marker based on depth
     let marker = "";
     if (depth === 0) marker = `${index + 1}.`;
     else if (depth === 1) marker = `${String.fromCharCode(97 + (index % 26))}.`;
@@ -119,7 +121,7 @@ function RenderGlossNode({
                     <RenderTextWithButtons
                         tokens={node.tokens}
                         fullText={node.text}
-                        onWordClick={onWordClick}
+                        side={side}
                     />
                 </div>
             </div>
@@ -148,12 +150,11 @@ function RenderGlossNode({
                                                     ? (printKeys as string[]).map(k => String((item as Record<string, unknown>)[k] ?? "")).filter(Boolean).join(" ")
                                                     : (isObj ? JSON.stringify(item) : String(item));
 
-                                
                                                 return (
                                                     <ExtraFieldBadge 
-                                                        key={itemIdx}
-                                                        displayText={displayText}
-                                                        onClick={() => onWordClick(displayText, 0)}
+                                                        key={itemIdx} 
+                                                        text={displayText} 
+                                                        side={side}
                                                     />
                                                 );
                                             })}
@@ -166,17 +167,15 @@ function RenderGlossNode({
                 </div>
             )}
 
-            {node.children && node.children.length > 0 && (
-                <ul className={cn(
-                    "space-y-2 mt-2",
-                    isTopLevel ? "pl-10" : "pl-6"
-                )}>
-                    {node.children.map((child, idx) => (
+            {node.senses && node.senses.length > 0 && (
+                <ul className="mt-2 space-y-3">
+                    {node.senses.map((subNode, subIdx) => (
                         <RenderGlossNode
-                            key={idx}
-                            node={child}
-                            index={idx}
+                            key={subIdx}
+                            node={subNode}
+                            index={subIdx}
                             depth={depth + 1}
+                            side={side}
                         />
                     ))}
                 </ul>
@@ -184,4 +183,3 @@ function RenderGlossNode({
         </li>
     );
 }
-
