@@ -103,25 +103,35 @@ export const gameTable = p.pgTable("games", {
   mode: gameMode().default("normal"),
   createdAt: p.timestamp().defaultNow().notNull(),
   ...extraFieldColumns,
-}, (table) => ({
-  unique_start_target: p.check(
+}, (table) => [
+  p.check(
     "unique_start_target", 
     sql`${table.startWord} <> ${table.targetWord}`
   ),
-}));
+]);
 
 export interface RaceStep {
   word: string;
-  timestamp: string;
+  timestamp: number;
 }
 
 export const gamePlayerLink = p.pgTable("game_player_link", {
   gameId: p.uuid().references(() => gameTable.id).notNull(),
   playerId: p.uuid().references(() => playerTable.id).notNull(),
   admin: p.boolean().default(false).notNull(),
-  startLinks: p.jsonb().$type<RaceStep[]>().default(sql`'[]'::jsonb`).notNull(),
-  targetLinks: p.jsonb().$type<RaceStep[]>().default(sql`'[]'::jsonb`).notNull(),
-}, (table) => ({
-  pk: p.primaryKey({columns: [table.gameId, table.playerId]}),
-}))
+  startLinks: p.jsonb().$type<RaceStep[]>().notNull(),
+  targetLinks: p.jsonb().$type<RaceStep[]>().notNull(),
+  found: p.boolean().generatedAlwaysAs(sql`(start_links -> -1 ->> 'word') = (target_links -> -1 ->> 'word')`).notNull(),
+  linkCount: p.integer().generatedAlwaysAs(sql`jsonb_array_length(start_links) - 1 + jsonb_array_length(target_links) - 1`).notNull(),
+  durationMs: p.bigint("duration_ms", { mode: "number" }).generatedAlwaysAs(sql`
+    greatest(
+      (start_links -> -1 ->> 'timestamp')::bigint - (start_links -> 0 ->> 'timestamp')::bigint,
+      (target_links -> -1 ->> 'timestamp')::bigint - (target_links -> 0 ->> 'timestamp')::bigint
+    )
+  `).notNull(),
+
+}, (table) => [
+  p.primaryKey({columns: [table.gameId, table.playerId]}),
+])
+
 

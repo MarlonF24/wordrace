@@ -22,6 +22,23 @@ export async function createPlayer(playerID: string) {
     return player;
 }
 
+
+
+
+export async function getGamePlayerLink(
+    gameId: string, 
+    playerId: string, 
+) {
+
+    return await db.query.gamePlayerLink.findFirst({
+        where: {
+            gameId: gameId,
+            playerId: playerId
+        }
+    });
+
+}
+
 export async function createGame(playerID: string, startWord: string, targetWord: string, mode: GameMode = "normal", extraFields: SelectableExtraKey[] = []) {
 
     
@@ -36,6 +53,34 @@ export async function createGame(playerID: string, startWord: string, targetWord
         throw new Error("Start and target words cannot be the same");
     }
 
+    const existsStart = DICTIONARY_DB.db.query.dictionary.findFirst({
+        where: {
+            word: lemmaStart
+        },
+        columns: {
+            id: true
+        }
+    });
+
+    const existsTarget = DICTIONARY_DB.db.query.dictionary.findFirst({
+        where: {
+            word: lemmaTarget
+        },
+        columns: {
+            id: true
+        }
+    });
+
+    const [startEntry, targetEntry] = await Promise.all([existsStart, existsTarget]);
+
+    if (!startEntry) {
+        throw new Error(`Start word "${lemmaStart}" does not exist in the dictionary`);
+    }
+
+    if (!targetEntry) {
+        throw new Error(`Target word "${lemmaTarget}" does not exist in the dictionary`);
+    }
+
     const [game] = await db.insert(gameTable).values({
         startWord: lemmaStart,
         targetWord: lemmaTarget,
@@ -45,17 +90,20 @@ export async function createGame(playerID: string, startWord: string, targetWord
 
     console.debug("Created game with start word:", game.startWord, "and target word:", game.targetWord, "for player ID:", playerID, "with extra fields:", extraFields);
 
-    await joinGame(playerID, game.id, true);
+    await joinGame(playerID, game, true);
 
     return game
 }
 
-export async function joinGame(playerId: string, gameId: string, admin: boolean = false) {
+export async function joinGame(playerId: string, game: InferSelectModel<typeof gameTable>, admin: boolean = false) {
 
+    const time = Date.now();
     await db.insert(gamePlayerLink).values({
-        gameId: gameId,
+        gameId: game.id,
         playerId: playerId,
-        admin: admin
+        admin: admin,
+        startLinks: [{ word: game.startWord, timestamp: time }],
+        targetLinks: [{ word: game.targetWord, timestamp: time }],
     })
 }
 
@@ -92,28 +140,30 @@ export async function  addRaceStep(gameId: string, playerId: string, sentence: s
 
     const newStep: RaceStep = {
         word: cleanLemma,
-        timestamp: new Date().toISOString(),
+        timestamp: Date.now(),
     };
 
+    let updatedLink;
+
     if (side === "start") {
-        await db.update(gamePlayerLink)
+        [updatedLink] = await db.update(gamePlayerLink)
         .set({
-            startLinks: sql`COALESCE(${gamePlayerLink.startLinks}, '[]'::jsonb) || ${JSON.stringify([newStep])}::jsonb`,
+            startLinks: sql`${gamePlayerLink.startLinks} || ${JSON.stringify([newStep])}::jsonb`,
         })
         .where(and(
             eq(gamePlayerLink.gameId, gameId),
             eq(gamePlayerLink.playerId, playerId)
-        ));
+        )).returning();
     } else {
-        await db.update(gamePlayerLink)
+        [updatedLink] = await db.update(gamePlayerLink)
         .set({
-            targetLinks: sql`COALESCE(${gamePlayerLink.targetLinks}, '[]'::jsonb) || ${JSON.stringify([newStep])}::jsonb`,
+            targetLinks: sql`${gamePlayerLink.targetLinks} || ${JSON.stringify([newStep])}::jsonb`,
         })
         .where(and(
             eq(gamePlayerLink.gameId, gameId),
             eq(gamePlayerLink.playerId, playerId)
-        ));
+        )).returning();
     }
 
-    return newStep;
+    return {newStep, found: updatedLink.found};
 }

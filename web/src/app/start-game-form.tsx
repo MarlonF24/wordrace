@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -33,12 +33,30 @@ export const EXTRA_FIELDS: Record<SelectableExtraKey, { label: string; desc: str
 
 export default function StartGameForm() {
   
-  const [_, formAction, isPending] = useActionState((prevState: unknown, formData: FormData) => startGameFormAction(formData), null); 
+  
+
+  const [state, formAction, isPending] = useActionState(
+    (prevState: unknown, formData: FormData) => startGameFormAction(formData), 
+    null
+  ); 
+  
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (state?.error) {
+      setError(state.error);
+    }
+  }, [state?.error]);
 
   const [selectedModifiers, setSelectedModifiers] = useState<string[]>([]);
   
   return ( 
-        <form className="flex flex-col gap-6" action={formAction}>
+        <form className="flex flex-col gap-6" action={formAction} onChange={() => { setError(null);}}>
+            {error && (
+              <span className="bg-destructive/15 text-destructive text-sm font-medium p-2 rounded-lg border border-destructive/20">
+                {error}
+              </span>
+            )}
             <div className="flex flex-col gap-1.5">
               <label htmlFor="start-word" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                 Start Word

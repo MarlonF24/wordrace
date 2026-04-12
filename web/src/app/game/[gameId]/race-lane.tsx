@@ -8,14 +8,14 @@ import { addRaceStepAction } from "@/lib/db/data/actions";
 import { useGame, usePlayer } from "@/components/context";
 
 import { type SelectableEntriesReturn } from "@/lib/db/data/schema";
+import { FoundPopup } from "./foundPopup";
 
 
 
 export function RaceLane({
     initialLinks,
     initialEntries,
-    side,
-    isMirrored = false
+    side
 }: {
     initialLinks: RaceStep[];
     initialEntries: SelectableEntriesReturn;
@@ -28,6 +28,7 @@ export function RaceLane({
     const [entries, setEntries] = useState(initialEntries);
     const [isPending, startTransition] = useTransition();
     const [error, setError] = useState<string | null>(null);
+    const [hasFound, setHasFound] = useState(false);
 
     useEffect(() => {
         if (error) {
@@ -44,9 +45,13 @@ export function RaceLane({
         setError(null);
         startTransition(async () => {
             try {
-                const { step, entries } = await addRaceStepAction(game, player.id, sentence, wordIdx, side);
-                setLinks(prev => [...prev, step]);
+                const { newStep, found, entries } = await addRaceStepAction(game, player.id, sentence, wordIdx, side);
+                
+                
+                setLinks(prev => [...prev, newStep]);
                 setEntries(entries);
+                
+                if (found) {setHasFound(true); return; } 
             } catch (e) {
                 setError(e instanceof Error ? e.message : "An unexpected error occurred.");
             }
@@ -57,7 +62,7 @@ export function RaceLane({
         <aside className="hidden xl:block w-48 h-full overflow-hidden flex-none">
             <History 
                 currentLinks={links} 
-                className={isMirrored ? "border-l-2 border-r-0 rounded-none h-full" : "border-r-2 border-l-0 rounded-none h-full"} 
+                className={side === "target" ? "border-l-2 border-r-0 rounded-none h-full" : "border-r-2 border-l-0 rounded-none h-full"} 
             />
         </aside>
     );
@@ -76,15 +81,16 @@ export function RaceLane({
 
     return (
         <div className="flex flex-row h-full w-full overflow-hidden">
-            {isMirrored ? (
+            {hasFound && <FoundPopup game={game} playerId={player.id} />}
+            {side === "start" ? (
                 <>
-                    {definitionComponent}
                     {historyComponent}
+                    {definitionComponent}
                 </>
             ) : (
                  <>
-                    {historyComponent}
                     {definitionComponent}
+                    {historyComponent}
                 </>
             )}
         </div>

@@ -24,7 +24,7 @@ if (url !== dictUrl) {
 
 export default defineConfig({
   schema: ['./src/lib/db/data/schema.ts', "./src/lib/db/dictionary/schema.ts"],
-  out: './src/db/data',
+  out: './src/lib/db',
   dialect: 'postgresql',
   casing: 'snake_case',
   dbCredentials: {

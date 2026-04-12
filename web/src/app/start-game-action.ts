@@ -17,7 +17,16 @@ export const startGameFormAction = async (formData: FormData) => {
     const extraFields = formData.getAll("extraFields") as (keyof typeof EXTRA_FIELDS)[];
     console.debug("Selected extra fields:", extraFields);
 
-    const game = await DATA_DB.createGameAction(playerId, startWord, targetWord, mode, extraFields);
+    let gameId: string | null = null; // looks stupid but redirect throws a "NEXT_REDIRECT_ERROR" and game is unbound for some reason even if no error is thrown
+    try {
+        const game = await DATA_DB.createGameAction(playerId, startWord, targetWord, mode, extraFields);
+        gameId = game.id;
+    } catch (error) {
+        console.error("Error creating game:", error);
+        return { error: (error as Error).message || "An error occurred while creating the game" };
+    }
 
-    redirect(`/game/${game.id}`);
+    if (gameId) {
+        redirect(`/game/${gameId}`);
+    }
 } 

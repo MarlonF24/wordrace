@@ -3,18 +3,12 @@ import { type RaceStep } from "@/lib/db/data"
 import { cn } from "@/lib/utils"
 
 function formattedTimeTaken(current: RaceStep, previous: RaceStep) {
-    const start = new Date(previous.timestamp)
-    const end = new Date(current.timestamp)
-
-    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
-        return "-"
-    }
-
-    const diffMs = end.getTime() - start.getTime()
+    const diffMs = current.timestamp - previous.timestamp
     const diffSeconds = Math.floor(diffMs / 1000)
     
     if (diffSeconds < 60) {
-        return `${diffSeconds}s`
+        const tenths = Math.floor((diffMs % 1000) / 100)
+        return `${diffSeconds}.${tenths}s`
     }
 
     const minutes = Math.floor(diffSeconds / 60)

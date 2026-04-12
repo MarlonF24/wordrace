@@ -3,6 +3,7 @@ import { DATA_DB } from "@/lib/db";
 import { getPlayerId } from "@/lib/server/utils";
 import { RaceLane } from "./race-lane";
 import { RaceStep, type SelectableEntriesReturn, getEntriesForGame } from "@/lib/db/data";
+import { redirect } from "next/navigation";
 
 export default async function GamePage({
     params,
@@ -27,32 +28,30 @@ export default async function GamePage({
 
     const { game, ...gamePlayerLink } = result;
 
+   
+
     // Initialize start links if empty
-    let startLinks: DATA_DB.RaceStep[] = gamePlayerLink.startLinks ?? [];
+    const startLinks: DATA_DB.RaceStep[] = gamePlayerLink.startLinks ?? [];
+
     if (startLinks.length === 0) {
-        const firstStep = await DATA_DB.addRaceStep(game.id, gamePlayerLink.playerId, game.startWord, 0, "start");
-        startLinks = [firstStep];
+        throw new Error("Start links should have been initialized on joinGame, found empty");
     }
 
     // Initialize target links if collide mode and empty
-    let targetLinks: DATA_DB.RaceStep[] = gamePlayerLink.targetLinks ?? [];
-    if (game.mode === "collide" && targetLinks.length === 0) {
-        const firstStep = await DATA_DB.addRaceStep(game.id, gamePlayerLink.playerId, game.targetWord, 0, "target");
-        targetLinks = [firstStep];
+    const targetLinks: DATA_DB.RaceStep[] = gamePlayerLink.targetLinks ?? [];
+    if (targetLinks.length === 0) {
+        throw new Error("Target links should have been initialized on joinGame for collide mode, found empty");
     }
 
-    const startWord = startLinks[startLinks.length - 1].word;
+    const currStartWord = startLinks[startLinks.length - 1].word;
     
     // grab extra fields that are enabled for this game
     
-    const startEntriesPromise = getEntriesForGame(game, startWord);
+    const startEntriesPromise = getEntriesForGame(game, currStartWord);
     
     let raceLanes;
 
     if (game.mode === "collide") {
-        if (targetLinks.length === 0) {
-            throw new Error("Target links should have been initialized for collide mode, found empty");
-        }
 
         const targetWord = targetLinks[targetLinks.length - 1].word;
 
