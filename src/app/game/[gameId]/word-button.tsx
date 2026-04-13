@@ -1,8 +1,7 @@
 "use client";
 
-import { useTransition } from "react";
 import { addRaceStepAction } from "@/lib/db/data/actions";
-import { useGame, usePlayer, useError } from "@/components/context";
+import { useGame, usePlayer, useError, usePending } from "@/components/context";
 
 export function WordButton({ 
     fullText, 
@@ -15,7 +14,7 @@ export function WordButton({
     children: React.ReactNode;
     side: "start" | "target";
 }) {
-    const [isPending, startTransition] = useTransition();
+    const { isPending, startTransition } = usePending();
     const game = useGame();
     const player = usePlayer();
     const { setError } = useError();

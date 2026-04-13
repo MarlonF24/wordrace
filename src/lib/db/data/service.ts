@@ -2,7 +2,7 @@ import {db} from "./db";
 import {playerTable, gameTable, gamePlayerLink, type RaceStep, type GameMode, type SelectableExtraKey} from "./schema";
 import { DICTIONARY_DB } from "@/lib/db";
 import { getLemmaInContext } from "@/lib/lemmatisation";
-import { eq, and, sql } from "drizzle-orm";
+import { eq, and, sql, InferInsertModel } from "drizzle-orm";
 
 import { type InferSelectModel } from "drizzle-orm";
 
@@ -39,11 +39,12 @@ export async function getGamePlayerLink(
 
 }
 
-export async function createGame(playerID: string, startWord: string, targetWord: string, mode: GameMode = "normal", extraFields: SelectableExtraKey[] = []) {
+export type CreateGameData = InferInsertModel<typeof gameTable> & { id?: never, createdAt?: never };
 
+export async function createGame(playerID: string, gameData: CreateGameData) {
+
+    const { startWord, targetWord, mode, ...extraFields } = gameData;
     
-    const extraFieldsData = Object.fromEntries(extraFields.map(field => [field, true])) as { [K in SelectableExtraKey]?: true };
-
     const lemmaStart = getLemmaInContext(startWord, 0).lemma;
     const lemmaTarget = getLemmaInContext(targetWord, 0).lemma;
 
@@ -84,11 +85,11 @@ export async function createGame(playerID: string, startWord: string, targetWord
     const [game] = await db.insert(gameTable).values({
         startWord: lemmaStart,
         targetWord: lemmaTarget,
-        mode: mode,
-        ...extraFieldsData
+        mode,
+        ...extraFields,
     }).returning()
 
-    console.debug("Created game with start word:", game.startWord, "and target word:", game.targetWord, "for player ID:", playerID, "with extra fields:", extraFields);
+    console.debug("Created game with start word:", lemmaStart, "and target word:", lemmaTarget, "for player ID:", playerID, "with extra fields:", extraFields);
 
     await joinGame(playerID, game, true);
 

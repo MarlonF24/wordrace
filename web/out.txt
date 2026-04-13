@@ -1,2 +1,0 @@
-src/lib/db/dictionary/test-types.ts(3,7): error TS2322: Type 'string' is not assignable to type 'Linkage[]'.
-src/lib/db/dictionary/test-types.ts(10,7): error TS2322: Type '"not-a-real-key"' is not assignable to type '"synonyms" | "antonyms" | "hypernyms" | "hyponyms" | "holonyms" | "meronyms" | "derived" | "related" | "coordinate_terms" | "id" | "rawData" | "word" | "pos" | "senses" | "categories" | "topics" | "etymology_text"'.

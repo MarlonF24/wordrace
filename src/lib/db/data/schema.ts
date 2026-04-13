@@ -11,7 +11,7 @@ import {
 
 export const playerTable = p.pgTable("players", {
   id: p.uuid().primaryKey().defaultRandom(),
-  createdAt: p.timestamp().defaultNow().notNull(),
+  createdAt: p.timestamp({withTimezone: true}).defaultNow().notNull(),
 })
 
 
@@ -101,7 +101,7 @@ export const gameTable = p.pgTable("games", {
   startWord: p.text().notNull(),
   targetWord: p.text().notNull(),
   mode: gameMode().default("normal"),
-  createdAt: p.timestamp().defaultNow().notNull(),
+  createdAt: p.timestamp({withTimezone: true}).defaultNow().notNull(),
   ...extraFieldColumns,
 }, (table) => [
   p.check(

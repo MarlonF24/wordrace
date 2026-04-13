@@ -5,8 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { startGameFormAction } from "./start-game-action";
-import { GAME_MODES } from "@/lib/db/data/schema";
+import { startGameAction } from "./start-game-action";
+import { GAME_MODES, type GameMode } from "@/lib/db/data/schema";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
 
@@ -33,11 +33,22 @@ export const EXTRA_KEYS: Record<SelectableExtraKey, { label: string; desc: strin
 
 export default function StartGameForm() {
   
-  
 
   const [state, formAction, isPending] = useActionState(
-    (prevState: unknown, formData: FormData) => startGameFormAction(formData), 
-    null
+    (prevState: unknown, formData: FormData) => {
+      const startWord = formData.get("startWord")!.toString();
+      const targetWord = formData.get("targetWord")!.toString();
+
+
+      const mode = (formData.get("mode")?.toString() as GameMode) || "normal";
+      
+      const extraFields = formData.getAll("extraFields") as (keyof typeof EXTRA_KEYS)[];
+      console.debug("Selected extra fields:", extraFields);
+      
+      
+      return startGameAction({ startWord, targetWord, mode, ...Object.fromEntries(extraFields.map((key) => [key, true])) });
+    
+    }, null 
   ); 
   
   const [error, setError] = useState<string | null>(null);
@@ -47,6 +58,7 @@ export default function StartGameForm() {
       setError(state.error);
     }
   }, [state?.error]);
+
 
   const [selectedModifiers, setSelectedModifiers] = useState<string[]>([]);
 

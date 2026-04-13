@@ -22,7 +22,7 @@ export default function WelcomePage() {
             Connect any two words by navigating through their Wiktionary definitions. Fewest steps wins.
           </p>
 
-          <div className="flex flex-wrap justify-center lg:justify-start gap-3 pt-2">
+          {/* <div className="flex flex-wrap justify-center lg:justify-start gap-3 pt-2">
             <Button
               asChild
               size="lg"
@@ -36,9 +36,8 @@ export default function WelcomePage() {
               size="lg"
               className="font-(family-name:--font-space-grotesk) font-bold tracking-wide px-8 h-11 border-2 shadow-[4px_4px_0px_0px_var(--shadow-color)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all"
             >
-              {/* <Link href="/leaderboard">Leaderboard</Link> */}
             </Button>
-          </div>
+          </div> */}
         </div>
 
         <Card
