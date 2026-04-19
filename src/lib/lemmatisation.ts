@@ -44,7 +44,7 @@ export function getLemmaInContext(sentence: string, targetTokenIdx: number) {
     
   return {
     word: targetToken.out(its.value),
-    // @ts-expect-error some weird issue where .lemma is has the wrong type, but it works at runtime
+    // @ts-expect-error some weird issue where .lemma has the wrong type, but it works at runtime
     lemma: targetToken.out(its.lemma),
     pos: targetToken.out(its.pos), 
   };

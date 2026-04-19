@@ -1,8 +1,7 @@
 "use server"
 
 import * as service from "./service";
-import { type GameMode, type SelectableExtraKey as ExtraField  } from "./schema";
-import { type InferInsertModel, type InferSelectModel } from "drizzle-orm";
+import { type InferSelectModel } from "drizzle-orm";
 import { gameTable } from "./schema";
 
 export const createPlayerAction = async (playerID: string) => {

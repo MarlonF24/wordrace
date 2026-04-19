@@ -1,5 +1,5 @@
 import {db} from "./db";
-import {playerTable, gameTable, gamePlayerLink, type RaceStep, type GameMode, type SelectableExtraKey} from "./schema";
+import {playerTable, gameTable, gamePlayerLink, type RaceStep } from "./schema";
 import { DICTIONARY_DB } from "@/lib/db";
 import { getLemmaInContext } from "@/lib/lemmatisation";
 import { eq, and, sql, InferInsertModel } from "drizzle-orm";

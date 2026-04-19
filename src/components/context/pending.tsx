@@ -14,9 +14,11 @@ export function PendingProvider({ children }: { children: ReactNode }) {
 
     return (
         <PendingContext.Provider value={{ isPending, startTransition }}>
-            {children}
+            <div inert={isPending} className="contents">
+                {children}
+            </div>
             {isPending && (
-            <div className="absolute top-4 right-4 z-50 animate-spin w-5 h-5 border-2 border-primary border-t-transparent rounded-full" />
+                <div className="fixed top-4 right-4 z-50 animate-spin w-5 h-5 border-2 border-primary border-t-transparent rounded-full" />
             )}
         </PendingContext.Provider>
     );
