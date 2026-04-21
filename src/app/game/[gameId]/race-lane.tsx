@@ -1,7 +1,7 @@
 import { type RaceStep } from "@/lib/db/data";
 import { History } from "./history";
 import { EntriesDisplay } from "./entriesDisplay";
-import { type SelectableEntriesReturn } from "@/lib/db/data/schema";
+import { type Entry } from "@/lib/db/dictionary/types";
 
 export function RaceLane({
     links,
@@ -9,7 +9,7 @@ export function RaceLane({
     side
 }: {
     links: RaceStep[];
-    entries: SelectableEntriesReturn;
+    entries: Entry[];
     side: "start" | "target";
     isMirrored?: boolean;
 }) {

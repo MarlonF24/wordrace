@@ -1,23 +1,25 @@
 import { cn } from "@/lib/utils";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
 import { ChevronDown } from "lucide-react";
-import { WordButton } from "./word-button";
+import { RichTextRenderer } from "./rich-text-renderer";
 
-import { FIELDS_TO_PRINT, 
-    type SelectableEntriesReturn, 
-    type SelectableSenseExtraKey 
-} from "@/lib/db/data/schema";
+import { 
+    type SelectableSenseLexicalKey,
+    type Entry,
+    OBJECT_FIELDS_TO_PRINT
+} from "@/lib/db/dictionary/types";
 
-import { type GlossNode } from "@/lib/db/dictionary";
+import { type GlossNode, type SelectableLexicalFields } from "@/lib/db/dictionary";
 
-import { ExtraFieldBadge } from "./extraFieldDisplay";
+import { LexicalFieldBadge } from "./lexicalFieldDisplay";
 import { PosBadge } from "./posBadge";
+
 
 export function SensesDisplay({
     entries,
-    side,
+    side
 }: {
-    entries: SelectableEntriesReturn;
+    entries: Entry[];
     side: "start" | "target";
 }) {
     if (!entries || entries.length === 0) {
@@ -29,6 +31,7 @@ export function SensesDisplay({
             </div>
         );
     }
+   
 
     return (
         <div className="relative h-full">
@@ -56,44 +59,13 @@ export function SensesDisplay({
     );
 }
 
-export function RenderTextWithButtons({
-    tokens,
-    fullText,
-    side,
-}: {
-    tokens: GlossNode<SelectableSenseExtraKey>['tokens'],
-    fullText: string,
-    side: "start" | "target";
-}) {
-    return (
-        <>
-            {tokens.map((token, index) => (
-                <span key={index}>
-                    {token.precedingSpaces}
-                    {token.isPunctuation ? (
-                        <span>{token.value}</span>
-                    ) : (
-                        <WordButton
-                            fullText={fullText}
-                            tokenIndex={token.index}
-                            side={side}
-                        >
-                            {token.value}
-                        </WordButton>
-                    )}
-                </span>
-            ))}
-        </>
-    );
-}
-
 function RenderGlossNode({
     node,
     index,
     depth = 0,
     side,
 }: {
-    node: GlossNode<SelectableSenseExtraKey>,
+    node: GlossNode,
     index: number,
     depth?: number,
     side: "start" | "target";
@@ -105,8 +77,12 @@ function RenderGlossNode({
     else if (depth === 1) marker = `${String.fromCharCode(97 + (index % 26))}.`;
     else marker = "•";
 
-    const extraFieldsEntries = Object.entries(node.extraFields).filter(([, v]) => v && (!Array.isArray(v) || v.length > 0));
-    const extraFieldsPresent = extraFieldsEntries.length > 0;
+    type NonGlossSelectableLexicalKey = Exclude<SelectableSenseLexicalKey, "glosses">;
+
+    const nonGlossLexicalFieldsEntries = Object.entries(node.lexicalFields).filter(
+        ([k, v]) => k !== "glosses" && v && (!Array.isArray(v) || v.length > 0)
+    ) as [NonGlossSelectableLexicalKey, SelectableLexicalFields[NonGlossSelectableLexicalKey]][];
+    const nonGlossLexicalFieldsPresent = nonGlossLexicalFieldsEntries.length > 0;
 
     return (
         <li className={cn("flex flex-col gap-1", !isTopLevel && "mt-1")}>
@@ -117,16 +93,16 @@ function RenderGlossNode({
                 )}>
                     {marker}
                 </span>
-                <div className={cn("leading-relaxed whitespace-pre-wrap flex-1", isTopLevel ? "text-lg" : "text-base text-muted-foreground/90")}>
-                    <RenderTextWithButtons
-                        tokens={node.tokens}
-                        fullText={node.text}
-                        side={side}
-                    />
-                </div>
+                { node.lexicalFields.glosses && (
+                    <div className={cn("leading-relaxed whitespace-pre-wrap flex-1", isTopLevel ? "text-lg" : "text-base text-muted-foreground/90")}>
+                        <RichTextRenderer
+                            tokens={node.lexicalFields.glosses}
+                            side={side}
+                        />
+                    </div>)}
             </div>
             
-            {extraFieldsPresent && (
+            {nonGlossLexicalFieldsPresent && (
                 <div className={cn("mt-2", isTopLevel ? "ml-8" : "ml-6")}>
                     <Collapsible className="group/collapsible bg-muted/20 border-border/50 rounded-md border w-fit data-[state=open]:w-full transition-all duration-300">
                         <CollapsibleTrigger className="flex w-full items-center justify-between p-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors group">
@@ -134,9 +110,10 @@ function RenderGlossNode({
                             <ChevronDown className="h-4 w-4 ml-2 group-data-[state=open]:rotate-180 transition-transform" />
                         </CollapsibleTrigger>
                         <CollapsibleContent className="p-3 space-y-3 border-t border-border/50 text-sm">
-                            {extraFieldsEntries.map(([key, val]) => {
-                                const fieldKey = key as SelectableSenseExtraKey;
-                                const printKeys = FIELDS_TO_PRINT[fieldKey] || [];
+                            {nonGlossLexicalFieldsEntries.map(([key, val]) => {
+                                const fieldKey = key as Exclude<SelectableSenseLexicalKey, "glosses">;
+
+                                const printKeys = (OBJECT_FIELDS_TO_PRINT)[fieldKey] || [];
                                 
                                 const items = Array.isArray(val) ? val : [val];
                                 
@@ -144,19 +121,15 @@ function RenderGlossNode({
                                     <div key={key} className="space-y-1">
                                         <div className="text-xs font-bold text-muted-foreground uppercase">{key}:</div>
                                         <div className="flex flex-wrap gap-1.5">
-                                            {items.map((item: unknown, itemIdx: number) => {
-                                                const isObj = typeof item === 'object' && item !== null;
-                                                const displayText = printKeys.length > 0 && isObj
-                                                    ? (printKeys as string[]).map(k => String((item as Record<string, unknown>)[k] ?? "")).filter(Boolean).join(" ")
-                                                    : (isObj ? JSON.stringify(item) : String(item));
-
-                                                return (
-                                                    <ExtraFieldBadge 
-                                                        key={itemIdx} 
-                                                        displayText={displayText} 
+                                            {items.map((item, itemIdx) => {
+                                                // again, correlated union of types issue, would have to write generic function like "sesField" in seed.ts, but...
+                                                return printKeys.map((pk) => (
+                                                    <LexicalFieldBadge 
+                                                        key={`${itemIdx}-${pk}`}
+                                                        tokens={item[pk]}
                                                         side={side}
                                                     />
-                                                );
+                                                ));
                                             })}
                                         </div>
                                     </div>

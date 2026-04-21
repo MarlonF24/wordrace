@@ -1,79 +1,325 @@
 import pg from 'pg';
-import { from as copyFrom } from 'pg-copy-streams';
+import { from as copyFrom, to as copyTo } from 'pg-copy-streams';
 import { pipeline } from 'node:stream/promises';
 import { createReadStream } from 'node:fs';
 import { dictionary, dictionaryRaw } from './schema';
 import { getColumns, getTableUniqueName } from 'drizzle-orm';
+import { tokenizeToRichText } from '@/lib/lemmatisation';
+import { stringify } from 'csv-stringify';
+import split2 from 'split2';
 
-const client = new pg.Client({
+import {
+    SELECTABLE_ENTRY_LEXICAL_KEYS,
+    SELECTABLE_SENSE_LEXICAL_KEYS,
+    OBJECT_FIELDS_TO_PRINT,
+    type RawEntry,
+    type ProcessedFlatObjectlexicalField,
+    type FlatObjectSelectableLexicalFields,
+    type FlatObjectSelectableLexicalKey,
+    type RichText,
+    type SelectableLexicalFields,
+    type RawLexicalFields,
+    type RawSense,
+    type GlossNode,
+    type RawSenseLexicalFields,
+    type SelectableSenseLexicalKey,
+    type Entry,
+} from './types';
+
+const dbConfig = {
     host: process.env.DICT_DB_HOST,
     port: Number(process.env.DICT_DB_PORT),
     user: process.env.DICT_DB_USER,
     password: process.env.DICT_DB_PASSWORD,
     database: process.env.DICT_DB_NAME,
-});
+};
+
+const client = new pg.Client(dbConfig);
 
 // include schema: schema.name
 const fullDictionaryName = getTableUniqueName(dictionary);
 const fullDictionaryRawName = getTableUniqueName(dictionaryRaw);
 
-console.debug("Dictionary table name:", fullDictionaryName);
-console.debug("Dictionary raw table name:", fullDictionaryRawName);
-
+console.debug('Dictionary table name:', fullDictionaryName);
+console.debug('Dictionary raw table name:', fullDictionaryRawName);
 
 async function loadRawData(jsonlPath: string) {
     await client.connect();
-    
-    console.log("Truncating raw storage...");
-    await client.query(`TRUNCATE TABLE ${fullDictionaryRawName}`);
 
-    console.log("Streaming JSONL to Postgres...");
-    const copyStream = client.query(copyFrom(
-        `COPY ${fullDictionaryRawName} (${dictionaryRaw.raw_data.name}) FROM STDIN WITH (FORMAT csv, QUOTE e'\\x01', DELIMITER e'\\x02')`
-    ));
+    console.log('Truncating raw storage...');
+    await client.query(`TRUNCATE TABLE ${fullDictionaryRawName} RESTART IDENTITY`);
+
+    console.log('Streaming JSONL to Postgres...');
+    const copyStream = client.query(
+        copyFrom(
+            `COPY ${fullDictionaryRawName} (${dictionaryRaw.raw_data.name}) FROM STDIN WITH (FORMAT csv, QUOTE e'\\x01', DELIMITER e'\\x02')`
+        )
+    );
 
     await pipeline(createReadStream(jsonlPath), copyStream);
 
     await client.end();
-    console.log("Raw data loaded.");
+    console.log('Raw data loaded.');
 }
 
-async function hydrateFromRaw() {
+async function hydrateWithProcessing() {
+    const readerClient = new pg.Client(dbConfig);
+    const writerClient = new pg.Client(dbConfig);
+
+    try {
+        await Promise.all([readerClient.connect(), writerClient.connect()]);
+
+        console.log('Truncating dictionary...');
+        await writerClient.query(`TRUNCATE TABLE ${fullDictionaryName} RESTART IDENTITY`);
+
+        const colNames = Object.values(getColumns(dictionary))
+            .filter((col) => col.name !== 'id')
+            .map((col) => col.name) as Exclude<
+            keyof typeof dictionary.$inferSelect,
+            'id'
+        >[] satisfies Exclude<keyof Entry, 'id'>[];
+
+        console.log('Processing and hydrating...');
+
+        const exportStream = readerClient.query(
+            copyTo(
+                `COPY (SELECT ${dictionaryRaw.raw_data.name} FROM ${fullDictionaryRawName}) TO STDOUT WITH (FORMAT csv, QUOTE e'\\x01', DELIMITER e'\\x02')`
+            )
+        );
+        const importStream = writerClient.query(
+            copyFrom(
+                `COPY ${fullDictionaryName} (${colNames.map((c) => `"${c}"`).join(', ')}) FROM STDIN WITH (FORMAT csv)`
+            )
+        );
+
+        await pipeline(
+            exportStream,
+            split2(),
+            async function* (source) {
+                let count = 0;
+                for await (const chunk of source) {
+                    const chunkStr = chunk.toString().trim();
+                    if (!chunkStr) continue;
+
+                    try {
+                        const raw = JSON.parse(chunkStr);
+                        const processed = processRawEntry(raw);
+
+                        yield colNames.map((col) => {
+                            const val = processed[col];
+                            return typeof val === 'object' ? JSON.stringify(val) : val;
+                        });
+
+                        count++;
+                        if (count % 1000 === 0) {
+                            process.stdout.write(`\rProcessed ${count} entries...\n`);
+                        }
+                    } catch (err) {
+                        console.error(
+                            `Error processing entry ${count + 1}: ${err instanceof Error ? err.message : String(err)}. Skipping.`
+                        );
+                    }
+                }
+                process.stdout.write(`\nFinished processing ${count} entries.\n`);
+            },
+            stringify({
+                header: false,
+                quoted: true,
+            }),
+            importStream
+        );
+    } finally {
+        await Promise.allSettled([readerClient.end(), writerClient.end()]);
+    }
+}
+
+// necessary to make correlated union types work
+function setField<O extends object, K extends keyof O>(obj: O, key: K, value: O[K]) {
+    // Because K is generic here, TS understands that value
+    // is the specific match for acc[key].
+    obj[key] = value;
+}
+
+export function processRawEntry(rawEntry: RawEntry): Entry {
+    const entryLexicalFields = processObjectLexicalFields(rawEntry, SELECTABLE_ENTRY_LEXICAL_KEYS);
+
+    const processedSenses = processSenses(rawEntry.senses);
+
+    return {
+        word: rawEntry.word.toLowerCase(),
+        pos: rawEntry.pos,
+        senses: processedSenses,
+        ...entryLexicalFields,
+    };
+}
+
+function processObjectLexicalFields<T extends FlatObjectSelectableLexicalKey>(
+    rawObj: Partial<Pick<RawLexicalFields, T>>,
+    lexicalKeys: readonly T[]
+) {
+    return lexicalKeys.reduce(
+        (acc, lexicalKey) => {
+            const lexVal = rawObj[lexicalKey];
+            if (lexVal) {
+                setField(acc, lexicalKey, processObjectLexicalField(lexVal, lexicalKey));
+            }
+            return acc;
+        },
+        {} as Partial<Pick<SelectableLexicalFields, T>>
+    );
+}
+
+function processObjectLexicalField<K extends FlatObjectSelectableLexicalKey>(
+    lexVal: RawLexicalFields[K],
+    lexicalKey: K
+): SelectableLexicalFields[K] {
+    // for now well write the code for the current state, where all selectable lexical field values are object[] and thus all selectable lexical fields are in FlatObjectSelectableLexicalFields.
+
+    // const items = Array.isArray(lexVal) ? lexVal : [lexVal];
+
+    if (!(lexicalKey in OBJECT_FIELDS_TO_PRINT))
+        throw new Error(
+            `Extra key ${lexicalKey} does not map to object or object[] and is thus not in OBJECT_FIELDS_TO_PRINT, rn 'processObjectLexicalField' only supports lexical fields whose values are objects or arrays of objects. Gotta edit this function if you want to support non-object lexical fields like string or string[].`
+        );
+
+        
+        const fieldsToPrint = OBJECT_FIELDS_TO_PRINT[lexicalKey];
+        
+        const result = lexVal.map((item) => {
+            const processedItem = Object.fromEntries(
+                fieldsToPrint.reduce(
+                    (entries, printKey) => {
+                        if (printKey in item) {
+                            const val = (item as FlatObjectSelectableLexicalFields[K])[
+                                printKey
+                            ] as string;
+                            entries.push([printKey, tokenizeToRichText(val)]);
+                        }
+                        return entries;
+                    },
+                    [] as [keyof FlatObjectSelectableLexicalFields[K], RichText][]
+                )
+            ) as ProcessedFlatObjectlexicalField<K>;
+            
+            return processedItem;
+        });
+        
+    if (lexicalKey === "examples") {
+        // console.log("examples in processObjectLexicalField", lexVal);
+    }
+    return result as SelectableLexicalFields[K];
+}
+
+export function processSenses(senses: RawSense[]): GlossNode[] {
+    /*
+     Senses are hierarchical, with glosses potentially being subdefinitions of previous glosses. However, each gloss stores the complete information of its gloss path. We convert that into a tree, removing the redundant information by storing each shared bit on the highest possible shared parent.
     
-    await client.connect();
+     NOTE: the senses are ordered such that each sense is a child of the sense with one less gloss that was most recently encountered:
+    
+        Glosses: [A] -> root level  
+        Glosses: [A, B] -> child of A  
+        Glosses: [A, B, C] -> child of B  
+        Glosses: [D] -> root level (new branch -> A, B and C are never encountered again)  
+        Glosses: [D, E] -> child of D  
 
-    // if (dictionarySchemaPath) {
-    //     console.log("Creating clean table from schema...");
-    //     const fullPath = path.resolve(dictionarySchemaPath);
-    //     const createTableSQL = await fs.promises.readFile(fullPath, 'utf-8');
-    //     await client.query(`TRUNCATE TABLE IF EXISTS ${fullDictionaryName}`);
-    //     await client.query(createTableSQL);
+    returns an array of root level gloss nodes, each with a children property that contains its child glosses, and so on. If carrying a value, each of the specified fields will be an additional 
+    */
 
-    // }
-    console.log("Truncating dictionary table...");
-    await client.query(`TRUNCATE TABLE ${fullDictionaryName}`);
+    const rootLevel: GlossNode[] = [];
+    const lastEncountered: { glossNode: GlossNode; sense: RawSense }[] = []; // stores the last encountered gloss node for level i at [][i]
 
-    const colNames = Object.values(getColumns(dictionary))
-    .filter(col => col.name !== "id")
-    .map(col => `"${col.name}"`);
+    for (const sense of senses) {
+        const depth = sense.glosses ? sense.glosses.length : 1; // if no glosses, we consider it as a root level node with an empty gloss. There might be an edge case where a non-gloss sense has a non-gloss child and should technically go into a different depth but that would be too expensive to detect and too rare.
 
-    const columnList = colNames.join(', ');
-    // We need the columns prefixed with the subquery alias for the outer select
-    const aliasedColumnList = colNames.map(name => `(populated).${name}`).join(', ');
+        if (depth === 0)
+            throw new Error(
+                'Sense with empty array ([]) of glosses encountered in processSenses. Expect at least one gloss in the array or no array at all.'
+            );
 
-    await client.query(`
-        INSERT INTO ${fullDictionaryName} (${columnList})
-        SELECT ${aliasedColumnList}
-        FROM (
-            SELECT jsonb_populate_record(NULL::${fullDictionaryName}, ${dictionaryRaw.raw_data.name}) AS populated
-            FROM ${fullDictionaryRawName}
-        ) AS sub
-    `);
+        // if not root level, grab parent
+        const parent = depth > 1 ? lastEncountered[depth - 1] : undefined;
+        const parentSense = parent?.sense;
+        const parentGlossNode = parent?.glossNode;
 
-    await client.end();
+        // initialise glossnode
+        const node: GlossNode = {
+            children: [],
+            lexicalFields: {}, // grab last sense as thats always the diff
+        };
 
-    console.log("Dictionary is ready.");
+        // compute diff (even if no parent, cause it also filters to grab only object lexical fields)
+        const diffObjectSenseLexicalFields = getDiffObjectSenseLexicalFields(sense, parentSense);
+
+        // process lexical fields
+        node.lexicalFields = processObjectLexicalFields(
+            diffObjectSenseLexicalFields,
+            Object.keys(diffObjectSenseLexicalFields) as (keyof typeof diffObjectSenseLexicalFields)[]
+        );
+
+        // set gloss (if theres a parent and it has glosses, cut those off the start)
+        const parentGlossLength = parentSense?.glosses ? parentSense.glosses.length : 0;
+        node.lexicalFields.glosses = sense.glosses
+            ? tokenizeToRichText(sense.glosses.slice(parentGlossLength).join(' '))
+            : undefined;
+
+        // attach to parent or root
+        if (parentGlossNode) {
+            parentGlossNode.children.push(node);
+        } else {
+            // sometimes even with depth > 1 there is no parent
+            rootLevel.push(node);
+        }
+
+        lastEncountered[depth] = { glossNode: node, sense };
+    }
+
+    return rootLevel;
+}
+
+function getDiffObjectSenseLexicalFields(sense: RawSense, parentSense?: RawSense) {
+    /* 
+    Extract object lexical fields. Given a parentSense, leave only the difference in those to the parent.
+    */
+
+    const diffObjectSenseLexicalFields: Partial<
+        Pick<RawSenseLexicalFields, Extract<SelectableSenseLexicalKey, FlatObjectSelectableLexicalKey>>
+    > = {}; // in the RawSense, children senses usually repeat everything in the parent sense, so we only want to keep the differences for every field
+
+    for (const senseLexicalKey of SELECTABLE_SENSE_LEXICAL_KEYS) {
+        if (senseLexicalKey === 'glosses') continue; // rn only non object selectable lexical sense key, might need to add more in the future
+
+        const val = sense[senseLexicalKey];
+        if (val === undefined) continue;
+
+        const parentVal = parentSense ? parentSense[senseLexicalKey] : undefined;
+
+        if (!parentVal) {
+            // if no parent sense or no parent value, just take whats there
+            setField(diffObjectSenseLexicalFields, senseLexicalKey, val);
+            continue;
+        }
+
+        const parentType = typeof parentVal;
+        const valType = typeof val;
+
+        if (valType !== parentType) {
+            throw new Error(
+                `Type mismatch between parent and child sense for key ${senseLexicalKey} whilst diffing in processSenses. Parent type: ${parentType}, Child type: ${valType}. This should not happen as the data structure is consistent, but if it does, gotta handle it in the code.`
+            );
+        }
+
+        if (Array.isArray(val) && Array.isArray(parentVal)) {
+            const diff = val.slice(parentVal.length); // we assume that the child always contains everything in the parent, so thats what we cut off at the start
+
+            if (diff.length > 0) setField(diffObjectSenseLexicalFields, senseLexicalKey, diff);
+        } else if (JSON.stringify(parentVal) !== JSON.stringify(val)) {
+            // if only object
+            setField(diffObjectSenseLexicalFields, senseLexicalKey, val);
+        }
+    }
+
+    return diffObjectSenseLexicalFields;
 }
 
 // loadRawData("/home/marlo/repos/WordRace/web/src/lib/db/dictionary/kaikki.org-dictionary-English.jsonl");
-// hydrateFromRaw();
+hydrateWithProcessing();

@@ -10,25 +10,29 @@ import { GAME_MODES, type GameMode } from "@/lib/db/data/schema";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
 
-import { type SelectableExtraKey } from "@/lib/db/data/schema";
+import { type SelectableLexicalKey } from "@/lib/db/dictionary/types";
 
 
 
 // TODO: make better descriptions 
-export const EXTRA_KEYS: Record<SelectableExtraKey, { label: string; desc: string }> = {
+const LEXICAL_KEY_DISPLAYS: Record<SelectableLexicalKey, { label: string; desc: string }> = {
+    glosses: { label: "Glosses", desc: "Include the glosses of the senses of the word" },
     antonyms: { label: "Antonyms", desc: "Words with opposite meanings" },
     synonyms: { label: "Synonyms", desc: "Words with similar meanings" },
     hypernyms: { label: "Hypernyms", desc: "Words with more general meanings" },
     hyponyms: { label: "Hyponyms", desc: "Words with more specific meanings" },
     holonyms: { label: "Holonyms", desc: "Words that denote a whole whose part is the base word" },
     meronyms: { label: "Meronyms", desc: "Words that denote a part of the base word" },
-    derived: { label: "Derived Forms", desc: "Words that are derived from the base word" },
+    derived: { label: "Derived Words", desc: "Words that are derived from the base word" },
     related: { label: "Related Words", desc: "Words that are etymologically related to the base word" },
-    categories: { label: "Include Categories", desc: "Categories or domains the word belongs to" },
-    topics: { label: "Include Topics", desc: "Topics associated with the word" },
-    examples: { label: "Include Examples", desc: "Example sentences using the word" },
-};
+    categories: { label: "Categories", desc: "Categories or domains the word belongs to" },
+    examples: { label: "Examples", desc: "Example sentences using the word" },
+    coordinate_terms: { label: "Coordinate Terms", desc: "Words that share a common hypernym with the base word" },
+  } as const;
 
+type LexicalKeyDisplay = typeof LEXICAL_KEY_DISPLAYS;
+
+const ALWAYS_SELECTED_LEXICAL_FIELDS: Set<SelectableLexicalKey> = new Set(["glosses"]);
 
 
 export default function StartGameForm() {
@@ -42,11 +46,11 @@ export default function StartGameForm() {
 
       const mode = (formData.get("mode")?.toString() as GameMode) || "normal";
       
-      const extraFields = formData.getAll("extraFields") as (keyof typeof EXTRA_KEYS)[];
-      console.debug("Selected extra fields:", extraFields);
+      const lexicalFields = formData.getAll("lexicalFields") as SelectableLexicalKey[];
+      console.debug("Selected lexical fields:", lexicalFields);
       
       
-      return startGameAction({ startWord, targetWord, mode, ...Object.fromEntries(extraFields.map((key) => [key, true])) });
+      return startGameAction(startWord, targetWord, mode, Object.fromEntries(lexicalFields.map((key) => [key, true])));
     
     }, null 
   ); 
@@ -60,9 +64,11 @@ export default function StartGameForm() {
   }, [state?.error]);
 
 
-  const [selectedModifiers, setSelectedModifiers] = useState<string[]>([]);
+  const [selectedModifiers, setSelectedModifiers] = useState<(keyof LexicalKeyDisplay)[]>([
+    ...ALWAYS_SELECTED_LEXICAL_FIELDS
+  ]);
 
-  const extraKeyArray = Object.entries(EXTRA_KEYS);
+  const lexicalKeyArray = Object.entries(LEXICAL_KEY_DISPLAYS) as [keyof LexicalKeyDisplay, LexicalKeyDisplay[keyof LexicalKeyDisplay]][];
   
   return ( 
         <form className="flex flex-col gap-6" action={formAction} onChange={() => { setError(null);}}>
@@ -101,7 +107,7 @@ export default function StartGameForm() {
               
               {/* Hidden inputes  */}
               {selectedModifiers.map((id) => (
-                <input key={id} type="hidden" name="extraFields" value={id} />
+                <input key={id} type="hidden" name="lexicalFields" value={id} />
               ))}
 
               <Popover>
@@ -113,7 +119,9 @@ export default function StartGameForm() {
 
                 <PopoverContent className="w-[--radix-popover-trigger-width] p-4" align="start" >
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {extraKeyArray.map(([field, { label, desc }]) => (
+                    {lexicalKeyArray.map(([field, { label, desc }]) => (
+                      // only fields that are not always selected get a checkbox
+                      ALWAYS_SELECTED_LEXICAL_FIELDS.has(field) ? null : (
                       <label
                         key={field}
                         htmlFor={field}
@@ -138,12 +146,12 @@ export default function StartGameForm() {
                           <p className="text-xs text-muted-foreground max-w-[160px]">{desc}</p>
                         </div>
                       </label>
-                    ))}
+                    )))}
                   </div>
                   <Button onClick={() => {
-                    if (selectedModifiers.length != extraKeyArray.length) {
-                      setSelectedModifiers(Object.keys(EXTRA_KEYS))}
-                    else { setSelectedModifiers([])}}
+                    if (selectedModifiers.length !== lexicalKeyArray.length) {
+                      setSelectedModifiers(Object.keys(LEXICAL_KEY_DISPLAYS) as (keyof LexicalKeyDisplay)[]);
+                    } else { setSelectedModifiers([])}}
                     }>
 
                     Select All</Button>

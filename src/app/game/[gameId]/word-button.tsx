@@ -2,15 +2,14 @@
 
 import { addRaceStepAction } from "@/lib/db/data/actions";
 import { useGame, usePlayer, useError, usePending } from "@/components/context";
+import { type RichToken } from "@/lib/db/dictionary/types";
 
 export function WordButton({ 
-    fullText, 
-    tokenIndex, 
+    token, 
     children, 
     side 
 }: { 
-    fullText: string; 
-    tokenIndex: number; 
+    token: RichToken;
     children: React.ReactNode;
     side: "start" | "target";
 }) {
@@ -26,10 +25,7 @@ export function WordButton({
                 setError(null);
                 startTransition(async () => {
                     try {
-                        const result = await addRaceStepAction(game, player.id, fullText, tokenIndex, side);
-                        if (result?.error) {
-                            setError(result.error);
-                        }
+                        await addRaceStepAction(game, player.id, token, side);
                     } catch (e) {
                         setError(e instanceof Error ? e.message : "An unexpected error occurred.");
                     }

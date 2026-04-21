@@ -1,70 +1,23 @@
 import * as p from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm/sql/sql";
 
-interface Linkage {
-    word: string; // may also be multiple words but called "word"
-}
+import {
+    type LinkageType,
+    LINKAGE_TYPES,
+    type RawEntry,
+    type Entry,
+    type ProcessedlexicalField,
+    type SelectableLexicalKey
+} from "./types";
 
-const LINKAGE_TYPES = [
-    "synonyms",
-    "antonyms",
-    "hypernyms",
-    "hyponyms",
-    "holonyms",
-    "meronyms",
+const col = (t: LinkageType) => p.jsonb(t).$type<ProcessedlexicalField<Extract<LinkageType, SelectableLexicalKey>>>();
 
-    "derived",
-    "related",
-    "coordinate_terms",
-] as const;
-
-export type LinkageType = typeof LINKAGE_TYPES[number];
-
-
-const col = (t: LinkageType) => p.jsonb(t).$type<Linkage[]>();
 
 const linkageColumns = Object.fromEntries(
     LINKAGE_TYPES.map(type => [type, col(type)])
 ) as { [K in LinkageType]: ReturnType<typeof col> };
 
-// extra fields that exist both at entry and sense level
-type SharedExtraFields = Record<LinkageType, Linkage[]> & {}
-export type SharedExtraFieldKey = keyof SharedExtraFields;
 
-
-interface Example {
-    text: string;
-    ref: string;
-    type: string;
-}
-
-// extra fields that only exist at sense level
-type ExclusiveSenseExtraFields = {
-    examples: Example[];
-    links: [string, string][];
-}
-export type ExclusiveSenseExtraFieldKey = keyof ExclusiveSenseExtraFields;
-
-
-// all extra fields on a sense
-type SenseExtraFields = ExclusiveSenseExtraFields & SharedExtraFields;
-export type SenseExtraFieldKey = keyof SenseExtraFields;
-
-
-// Sense = default fields + exclusive sense extra fields + shared extra fields
-export type Sense = {
-    id: string;
-    senseid: string[];
-    glosses: string[];
-
-} & Partial<SenseExtraFields>; 
-
-type SenseKey = keyof Sense;
-
-
-interface Category {
-    kind: string;
-    name: string;
-}
 
 const schemaName = process.env.DICT_TABLE_SCHEMA || "public";
 
@@ -74,42 +27,43 @@ export const schema = p.pgSchema(schemaName);
 
 export const dictionaryRaw = schema.table("dictionary_raw", {
     id: p.integer().primaryKey().generatedAlwaysAsIdentity(),
-    raw_data: p.jsonb().notNull(),
+    raw_data: p.jsonb().notNull().$type<RawEntry>(),
 });
 
-// maybe word and pos together could be the PK, but... 
-export const dictionary = schema.table("dictionary", {
+
+
+const dictionaryColumns = {
     id: p.integer().primaryKey().generatedAlwaysAsIdentity(),
     
-    word: p.text().notNull(),
-    
-    pos: p.text().notNull(), // part of speech
-    
-    senses: p.jsonb().$type<Sense[]>().notNull(),
+    word: p.text().notNull().$type<string>(), // lowercase
 
-    categories: p.jsonb().$type<Category[]>(),
+    pos: p.text().notNull().$type<string>(), // part of speech
     
-    topics: p.jsonb().$type<{ name: string }[]>(),
+    senses: p.jsonb().$type<Entry["senses"]>().notNull(),
+
+    categories: p.jsonb().$type<Entry["categories"]>(),
     
-    etymology_text: p.text(),
+    
+    // etymology_text: p.text().$type<string>(),
     
     ...linkageColumns,
 
-}, (table) => [
-    p.index("idx_word").on(table.word),
-]);
+} satisfies {id: unknown} & { [K in keyof Entry]: p.Set$Type<unknown, Entry[K]> } 
 
 
-export type Entry = typeof dictionary.$inferSelect;
+// maybe word and pos together could be the PK, but... 
+export const dictionary = schema.table(
+    "dictionary", 
+    dictionaryColumns, 
+    (table) => [
+        p.index("idx_word").on(table.word),
+        p.check("lowercase_word", sql`word = lower(word)`),
+    ]
+);
 
-export type EntryKey = keyof Entry;
 
-// extra fields that only exist at entry level
-type ExclusiveEntryExtraFields = Pick<Entry, "categories" | "topics" | "etymology_text">;
-export type ExclusiveEntryExtraFieldKey = keyof ExclusiveEntryExtraFields;
 
-// all extra fields on an entry
-type EntryExtraFields = Pick<Entry, SharedExtraFieldKey | ExclusiveEntryExtraFieldKey>;
 
-export type ExtraFields = EntryExtraFields & SenseExtraFields;
-type ExtraFieldKey = keyof ExtraFields;
+
+
+

@@ -10,7 +10,7 @@ export function ErrorDisplay() {
 
     useEffect(() => {
         if (error) {
-            const timer = setTimeout(() => setError(null), 5000);
+            const timer = setTimeout(() => setError(null), 7000);
             return () => clearTimeout(timer);
         }
     }, [error, setError]);
@@ -23,10 +23,10 @@ export function ErrorDisplay() {
                 <AlertCircle className="h-4 w-4" />
                 <AlertTitle className="font-bold">Error</AlertTitle>
                 <AlertDescription className="flex items-center justify-between gap-4">
-                    <span>{error}</span>
+                    <span className="text-white">{error}</span>
                     <button 
                         onClick={() => setError(null)}
-                        className="hover:bg-destructive-foreground/10 rounded-full p-1 transition-colors"
+                        className="text-white hover:bg-white/10 rounded-full p-1 transition-all hover:scale-110 active:scale-90"
                     >
                         <X className="h-4 w-4" />
                     </button>

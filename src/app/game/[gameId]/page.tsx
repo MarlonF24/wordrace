@@ -2,7 +2,8 @@
 import { DATA_DB } from "@/lib/db";
 import { getPlayerId } from "@/lib/server/utils";
 import { RaceLane } from "./race-lane";
-import { RaceStep, type SelectableEntriesReturn, getEntriesForGame } from "@/lib/db/data";
+import { RaceStep, getEntriesForGame } from "@/lib/db/data";
+import { type Entry } from "@/lib/db/dictionary";
 import { FoundPopup } from "./foundPopup";
 import { ErrorDisplay } from "./error-display";
 
@@ -116,7 +117,7 @@ export default async function GamePage({
 }
 
 
-const DoubleLane = ({ startLinks, targetLinks, startEntries, targetEntries }: { startLinks: RaceStep[]; targetLinks: RaceStep[]; startEntries: SelectableEntriesReturn; targetEntries: SelectableEntriesReturn }) => {
+const DoubleLane = ({ startLinks, targetLinks, startEntries, targetEntries }: { startLinks: RaceStep[]; targetLinks: RaceStep[]; startEntries: Entry[]; targetEntries: Entry[] }) => {
     return (
         <>
             <div className="flex-1 min-w-0 border-r-2 border-border relative">

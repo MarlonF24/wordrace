@@ -2,25 +2,26 @@ import { Card, CardContent } from "@/components/ui/card";
 import { SensesDisplay } from "./senses";
 
 import { 
-  type SelectableEntriesReturn, 
-  type SelectableEntryExtraKey, SELECTABLE_ENTRY_EXTRA_KEYS, 
-} from "@/lib/db/data/schema";
+  type SelectableEntryLexicalKey, 
+  type Entry,
+  SELECTABLE_ENTRY_LEXICAL_KEYS, 
+} from "@/lib/db/dictionary/types";
 
 
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { ExtraFieldDisplay } from "./extraFieldDisplay";
+import { LexicalFieldDisplay } from "./lexicalFieldDisplay";
 
 
 export function EntriesDisplay(
   { word, entries, side}: { 
     word: string, 
-    entries: SelectableEntriesReturn,
+    entries: Entry[],
     side: "start" | "target"
   }
 ) {
-  const presentExtraFields = SELECTABLE_ENTRY_EXTRA_KEYS.filter(key => entries.some(entry => key in entry));
+  const presentLexicalFields = SELECTABLE_ENTRY_LEXICAL_KEYS.filter(key => entries.some(entry => key in entry));
 
-  const tabs = ["definitions", ...presentExtraFields];
+  const tabs = ["definitions", ...presentLexicalFields] as (SelectableEntryLexicalKey | "definitions")[];
 
   return (
     <main className="h-full w-full flex flex-col items-center justify-start py-4 px-4 md:p-4 gap-4 md:gap-6 overflow-hidden relative">
@@ -46,15 +47,15 @@ export function EntriesDisplay(
             </div>
           </div>
 
-          {tabs.map(value => (
-            <TabsContent key={value} value={value} className="flex-1 min-h-0 mt-0 data-[state=inactive]:hidden focus-visible:outline-none focus-visible:ring-0 outline-none">
+          {tabs.map(tab => (
+            <TabsContent key={tab} value={tab} className="flex-1 min-h-0 mt-0 data-[state=inactive]:hidden focus-visible:outline-none focus-visible:ring-0 outline-none">
               <Card className="h-full p-2 border-2 shadow-[4px_4px_0px_0px_var(--shadow-color)] bg-card flex flex-col rounded-xl overflow-hidden">
                 <CardContent className="flex-1 overflow-y-auto md:p-6 scrollbar-thin">
-                  {value === "definitions" ? (
+                  {tab === "definitions" ? (
                     <SensesDisplay entries={entries} side={side} />
                   ) : (
                     <div className="space-y-6">
-                      <ExtraFieldDisplay extraKey={value as SelectableEntryExtraKey} entries={entries} side={side} />
+                      <LexicalFieldDisplay lexicalKey={tab} entries={entries} side={side} />
                     </div>
                   )}
                 </CardContent>
