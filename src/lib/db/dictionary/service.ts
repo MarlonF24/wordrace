@@ -29,7 +29,6 @@ export async function getDictionaryEntries<
     exclusiveSenseLexicalFields: S[] = [],
     exclusiveEntryLexicalFields: E[] = [],
 
-    // returns whether at least one of the requested lexical fields was found on at least one of the entries or senses
 ): Promise<Entry[]> {
 
     const selectedEntryLexicalFields = [...sharedLexicalFields, ...exclusiveEntryLexicalFields]
@@ -78,7 +77,7 @@ export async function getDictionaryEntries<
     // we filter here cause ijts falsy cleaned
     const noEntryLexicalFieldsFound = processedEntries.every(entry => Object.entries(entry).length <= Object.keys(fixedColumns).length);
 
-    // will always throw if entries === []
+    // whether theres actually stuff to display (will always throw if entries === [])
     if (noEntryLexicalFieldsFound && noSenseLexicalFieldsFound) {
         throw new Error(`Word "${queryWord}" does not exist in the dictionary or none of the requested lexical fields (${[...selectedEntryLexicalFields, ...exclusiveSenseLexicalFields].join(", ")}) were found on the entries or their senses`);
     }

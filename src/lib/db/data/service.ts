@@ -2,6 +2,7 @@ import { db } from './db';
 import { playerTable, gameTable, gamePlayerLink, type RaceStep, type Game, type GameMode } from './schema';
 import { DICTIONARY_DB } from '@/lib/db';
 import { eq, and, sql, InferInsertModel } from 'drizzle-orm';
+import { cache } from 'react';
 
 import { type InferSelectModel } from 'drizzle-orm';
 
@@ -125,14 +126,14 @@ export async function joinGame(playerId: string, game: Game, admin: boolean = fa
     });
 }
 
-export async function getEntriesForGame(game: Partial<Pick<Game, SelectableLexicalKey>>, word: string) {
+export const getEntriesForGame = cache(async (game: Partial<Pick<Game, SelectableLexicalKey>>, word: string) => {
     // works as if field is not on game its -> undefined -> false, which is the default value in the table anyways
     const senseLexicalFields = SELECTABLE_EXCLUSIVE_SENSE_LEXICAL_KEYS.filter((field) => game[field]);
     const extraEntryFields = SELECTABLE_EXCLUSIVE_ENTRY_LEXICAL_KEYS.filter((field) => game[field]);
     const sharedLexicalFields = SELECTABLE_SHARED_LEXICAL_KEYS.filter((field) => game[field]);
 
     return getDictionaryEntries(word, sharedLexicalFields, senseLexicalFields, extraEntryFields);
-}
+});  
 
 export async function addRaceStep(
     game: Game,
