@@ -7,15 +7,8 @@ import { type SelectableLexicalKey} from "@/lib/db/dictionary/types";
 
 
 export const startGameAction = async (
-    startWord: string, 
-    targetWord: string, 
-    mode: DATA_DB.GameMode, 
-    lexicalFields: Partial<Record<SelectableLexicalKey, boolean>>
+    gameData: DATA_DB.GameInsert,
 ) => {
-    if (Object.keys(lexicalFields).length === 0) {
-        return { error: "At least one lexical field must be selected" };
-    }
-
     const playerId = await getPlayerId();
     
     // again, looks stupid but redirect throws a "NEXT_REDIRECT_ERROR" and thus cant be put into the try without game logic, and game is unbound for some reason even if no error is thrown
@@ -23,7 +16,7 @@ export const startGameAction = async (
     let gameId: string;
     
     try {
-        const game = await DATA_DB.createGame(playerId, startWord, targetWord, mode, lexicalFields);
+        const game = await DATA_DB.createGame(playerId, gameData);
         gameId = game.id;
     } catch (error) {
         console.error("Error creating game:", error);

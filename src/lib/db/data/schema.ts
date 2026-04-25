@@ -2,7 +2,10 @@ import * as p from "drizzle-orm/pg-core"
 import { sql, } from "drizzle-orm";
 import { 
   SELECTABLE_LEXICAL_KEYS,
-  type SelectableLexicalKey
+  type SelectableExclusiveSenseLexicalKey,
+  type SelectableExclusiveEntryLexicalKey,
+  type SelectableSharedLexicalKey,
+  type SelectableLexicalKey,
 } from "../dictionary/types";
 
 
@@ -36,21 +39,38 @@ const lexicalFieldColumns = SELECTABLE_LEXICAL_KEYS.reduce((acc, field) => {
 }, {} as Record<SelectableLexicalKey, ReturnType<typeof col>>);
 
 
+
+
 export const gameTable = p.pgTable("games", {
-  id: p.uuid().primaryKey().defaultRandom(),
+  id: p.uuid().primaryKey().defaultRandom().notNull(),
   startWord: p.text().notNull(),
   targetWord: p.text().notNull(),
   mode: gameMode().default("normal").notNull(),
+  lemmatise: p.boolean().default(true).notNull(),
   createdAt: p.timestamp({withTimezone: true}).defaultNow().notNull(),
-  ...lexicalFieldColumns,
+
+  exclusiveEntryLexicalFields: p.jsonb().default({}).$type<Record<SelectableExclusiveEntryLexicalKey, true>>().notNull(),
+  exclusiveSenseLexicalFields: p.jsonb().default({}).$type<Record<SelectableExclusiveSenseLexicalKey, true>>().notNull(),
+  sharedLexicalFields: p.jsonb().default({}).$type<Record<SelectableSharedLexicalKey, true>>().notNull(),
+
+  entryLexicalFields: p.jsonb().generatedAlwaysAs(sql`(exclusive_entry_lexical_fields || exclusive_sense_lexical_fields || shared_lexical_fields)`).$type<Record<SelectableLexicalKey, true>>().notNull(),
+  senseLexicalFields: p.jsonb().generatedAlwaysAs(sql`(exclusive_sense_lexical_fields || shared_lexical_fields)`).$type<Record<SelectableLexicalKey, true>>().notNull(),
+  
+  lexicalFields: p.jsonb().generatedAlwaysAs(sql`(exclusive_entry_lexical_fields || exclusive_sense_lexical_fields || shared_lexical_fields)`).$type<Record<SelectableLexicalKey, true>>().notNull(),
+
 }, (table) => [
   p.check(
     "unique_start_target", 
     sql`${table.startWord} <> ${table.targetWord}`
   ),
+  p.check(
+    "at_least_one_lexical_field", 
+    sql`${table.lexicalFields} <> '{}'::jsonb`
+  ),
 ]);
 
 export type Game = typeof gameTable.$inferSelect
+export type GameInsert = typeof gameTable.$inferInsert
 
 export interface RaceStep {
   word: string;

@@ -96,13 +96,14 @@ export const SELECTABLE_EXCLUSIVE_SENSE_LEXICAL_KEYS = [
   "examples"
 ] as const satisfies ReadonlyArray<RawExclusiveSenseLexicalKey>;
 
-
+export const SELECTABLE_EXCLUSIVE_SENSE_LEXICAL_KEYS_SET: ReadonlySet<SelectableExclusiveSenseLexicalKey> = new Set(SELECTABLE_EXCLUSIVE_SENSE_LEXICAL_KEYS);
 
 export const SELECTABLE_EXCLUSIVE_ENTRY_LEXICAL_KEYS = [
   "categories",
   // "topics"
 ] as const satisfies ReadonlyArray<RawExclusiveEntryLexicalKey>;
 
+export const SELECTABLE_EXCLUSIVE_ENTRY_LEXICAL_KEYS_SET: ReadonlySet<SelectableExclusiveEntryLexicalKey> = new Set(SELECTABLE_EXCLUSIVE_ENTRY_LEXICAL_KEYS);
 
 export const SELECTABLE_SHARED_LEXICAL_KEYS = [
   "antonyms",
@@ -115,6 +116,8 @@ export const SELECTABLE_SHARED_LEXICAL_KEYS = [
   "related",
   "coordinate_terms"
 ] as const satisfies ReadonlyArray<RawSharedLexicalKey>;
+
+export const SELECTABLE_SHARED_LEXICAL_KEYS_SET: ReadonlySet<SelectableSharedLexicalKey> = new Set(SELECTABLE_SHARED_LEXICAL_KEYS);
 
 export type SelectableExclusiveSenseLexicalKey = typeof SELECTABLE_EXCLUSIVE_SENSE_LEXICAL_KEYS[number];
 export type SelectableExclusiveEntryLexicalKey = typeof SELECTABLE_EXCLUSIVE_ENTRY_LEXICAL_KEYS[number];

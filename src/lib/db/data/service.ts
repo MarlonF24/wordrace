@@ -1,18 +1,12 @@
 import { db } from './db';
-import { playerTable, gameTable, gamePlayerLink, type RaceStep, type Game, type GameMode } from './schema';
-import { DICTIONARY_DB } from '@/lib/db';
-import { eq, and, sql, InferInsertModel } from 'drizzle-orm';
+import { playerTable, gameTable, gamePlayerLink, type RaceStep, type Game, GameInsert } from './schema';
+import { eq, and, sql } from 'drizzle-orm';
 import { cache } from 'react';
 
-import { type InferSelectModel } from 'drizzle-orm';
 
 import {
     getDictionaryEntries,
-    SELECTABLE_SHARED_LEXICAL_KEYS,
-    SELECTABLE_EXCLUSIVE_ENTRY_LEXICAL_KEYS,
-    SELECTABLE_EXCLUSIVE_SENSE_LEXICAL_KEYS,
     RichToken,
-    SelectableLexicalKey,
 } from '../dictionary';
 import { tokenizeToRichText } from '@/lib/lemmatisation';
 
@@ -36,78 +30,74 @@ export async function getGamePlayerLink(gameId: string, playerId: string) {
     });
 }
 
-export type CreateGameData = Omit<InferInsertModel<typeof gameTable>, 'id' | 'createdAt'>;
 
 export async function createGame(
     playerID: string, 
-    startWord: string, 
-    targetWord: string, 
-    mode: GameMode, 
-    lexicalFields: Partial<Record<SelectableLexicalKey, boolean>>
+    gameData: GameInsert
 ) {
 
-    let lemmaStart = tokenizeToRichText(startWord)[0];
-    if (typeof lemmaStart === 'object') lemmaStart = lemmaStart.l;
+    // integrity checks, some are also done by the db itself but...
 
-    let lemmaTarget = tokenizeToRichText(targetWord)[0];
-    if (typeof lemmaTarget === 'object') lemmaTarget = lemmaTarget.l;
+    if (!gameData.sharedLexicalFields && !gameData.exclusiveSenseLexicalFields && !gameData.exclusiveEntryLexicalFields) {
+        throw new Error('At least one lexical field must be selected to create a game');
+    }
 
-    if (!lemmaStart || !lemmaTarget) {
-        throw new Error('Could not extract lemma from start or target word');
-    } else if (lemmaStart === lemmaTarget) {
+    let insertStart: string;
+    let insertTarget: string;
+
+    if (gameData.lemmatise) {
+        const tokenizedStart = tokenizeToRichText(gameData.startWord)[0];
+        if (typeof tokenizedStart !== "object") throw new Error('Could not tokenize start word'); // this happens if it punctuation or something that cannot be lemmatised, look into tokenizeToRichText for details 
+        insertStart = tokenizedStart.l;
+
+        const tokenizedTarget = tokenizeToRichText(gameData.targetWord)[0];
+        if (typeof tokenizedTarget !== "object") throw new Error('Could not tokenize target word');
+        insertTarget = tokenizedTarget.l;
+    } else {
+        insertStart = gameData.startWord;
+        insertTarget = gameData.targetWord;
+    } 
+
+
+    if (insertStart === insertTarget) {
         throw new Error('Start and target words cannot be the same');
     }
 
-    // const existsStart = DICTIONARY_DB.db.query.dictionary.findFirst({
-    //     where: {
-    //         word: lemmaStart
-    //     },
-    //     columns: {
-    //         id: true
-    //     }
-    // });
-    // const existsTarget = DICTIONARY_DB.db.query.dictionary.findFirst({
-    //     where: {
-    //         word: lemmaTarget
-    //     },
-    //     columns: {
-    //         id: true
-    //     }
-    // });
-
     const [startEntries, targetEntries] = await Promise.all([
-        getEntriesForGame(lexicalFields, lemmaStart),
-        getEntriesForGame(lexicalFields, lemmaTarget),
+        getEntriesForGame(gameData, insertStart),
+        getEntriesForGame(gameData, insertTarget),
     ]);
 
-    // thos checks should not be necessary anymore as getEntriesForGame throws an error if no entries were found
+    // thos checks should not be necessary anymore as getEntriesForGame throws an error if no entries were found, but...
     if (!startEntries.length) {
-        throw new Error(`Start word "${lemmaStart}" does not exist in the dictionary`);
+        throw new Error(`Start word "${insertStart}" does not exist in the dictionary`);
     }
 
     if (!targetEntries.length) {
-        throw new Error(`Target word "${lemmaTarget}" does not exist in the dictionary`);
+        throw new Error(`Target word "${insertTarget}" does not exist in the dictionary`);
     }
+
+    const insert = gameData
+
+    insert.startWord = insertStart;
+    insert.targetWord = insertTarget;
 
     const [game] = await db
         .insert(gameTable)
         .values({
-            startWord: lemmaStart,
-            targetWord: lemmaTarget,
-            mode,
-            ...lexicalFields,
+            ...insert,
         })
         .returning();
 
     console.debug(
         'Created game with start word:',
-        lemmaStart,
+        game.startWord,
         'and target word:',
-        lemmaTarget,
+        game.targetWord,
         'for player ID:',
         playerID,
         'with lexical fields:',
-        lexicalFields
+        game.lexicalFields
     );
 
     await joinGame(playerID, game, true);
@@ -126,48 +116,37 @@ export async function joinGame(playerId: string, game: Game, admin: boolean = fa
     });
 }
 
-export const getEntriesForGame = cache(async (game: Partial<Pick<Game, SelectableLexicalKey>>, word: string) => {
-    // works as if field is not on game its -> undefined -> false, which is the default value in the table anyways
-    const senseLexicalFields = SELECTABLE_EXCLUSIVE_SENSE_LEXICAL_KEYS.filter((field) => game[field]);
-    const extraEntryFields = SELECTABLE_EXCLUSIVE_ENTRY_LEXICAL_KEYS.filter((field) => game[field]);
-    const sharedLexicalFields = SELECTABLE_SHARED_LEXICAL_KEYS.filter((field) => game[field]);
+export const getEntriesForGame = cache(async (game: Pick<GameInsert, "sharedLexicalFields" | "exclusiveSenseLexicalFields" | "exclusiveEntryLexicalFields">, word: string) => {
 
-    return getDictionaryEntries(word, sharedLexicalFields, senseLexicalFields, extraEntryFields);
+    return getDictionaryEntries(word, game.sharedLexicalFields, game.exclusiveSenseLexicalFields, game.exclusiveEntryLexicalFields);
 });  
+
 
 export async function addRaceStep(
     game: Game,
     playerId: string,
-    token: RichToken,
+    word: RichToken,
     side: 'start' | 'target' = 'start'
 ) {
+    const queryWord = game.lemmatise ? word.l : word.v;
+
     // this also validates that the token is in the  and otherwise throws an error
-    const entries = await getEntriesForGame(game, token.l);
+    const entries = await getEntriesForGame(game, queryWord);
 
     const newStep: RaceStep = {
-        word: token.l,
+        word: queryWord,
         timestamp: Date.now(),
     };
 
-    let updatedLink;
+    const linkField = side === 'start' ? 'startLinks' : 'targetLinks';
 
-    if (side === 'start') {
-        [updatedLink] = await db
-            .update(gamePlayerLink)
-            .set({
-                startLinks: sql`${gamePlayerLink.startLinks} || ${JSON.stringify([newStep])}::jsonb`,
-            })
-            .where(and(eq(gamePlayerLink.gameId, game.id), eq(gamePlayerLink.playerId, playerId)))
-            .returning();
-    } else {
-        [updatedLink] = await db
-            .update(gamePlayerLink)
-            .set({
-                targetLinks: sql`${gamePlayerLink.targetLinks} || ${JSON.stringify([newStep])}::jsonb`,
-            })
-            .where(and(eq(gamePlayerLink.gameId, game.id), eq(gamePlayerLink.playerId, playerId)))
-            .returning();
-    }
+    const [updatedLink] = await db
+        .update(gamePlayerLink)
+        .set({
+            [linkField]: sql`${gamePlayerLink[linkField]} || ${JSON.stringify([newStep])}::jsonb`,
+        })
+        .where(and(eq(gamePlayerLink.gameId, game.id), eq(gamePlayerLink.playerId, playerId)))
+        .returning();
 
     return { entries, newStep, found: updatedLink.found };
 }

@@ -10,6 +10,7 @@ import {
     type GlossNode,
     SelectableLexicalKey,
     SelectableSenseLexicalKey,
+    SelectableEntryLexicalKey,
 } from "./types";
 
 import { processRawEntry } from "./seed";
@@ -18,20 +19,18 @@ import { processRawEntry } from "./seed";
 
 type FixedEntryKey = Exclude<EntryKey, SelectableLexicalKey>;
 
-// as only the entry keys are available at runtime, we split it up to be able to filter  
-export async function getDictionaryEntries<
-    SH extends SelectableSharedLexicalKey, 
-    E extends SelectableExclusiveEntryLexicalKey, 
-    S extends SelectableExclusiveSenseLexicalKey
->(
-    word: string,
-    sharedLexicalFields: SH[] = [],
-    exclusiveSenseLexicalFields: S[] = [],
-    exclusiveEntryLexicalFields: E[] = [],
+type Typ<T extends string> = {
+    [K in T]?: true;
+};
 
+// as only the entry keys are available at runtime, we split it up to be able to filter  
+export async function getDictionaryEntries(
+    word: string,
+    sharedLexicalFields: Typ<SelectableSharedLexicalKey> = {},
+    exclusiveSenseLexicalFields: Typ<SelectableExclusiveSenseLexicalKey> = {},
+    exclusiveEntryLexicalFields: Typ<SelectableExclusiveEntryLexicalKey> = {},
 ): Promise<Entry[]> {
 
-    const selectedEntryLexicalFields = [...sharedLexicalFields, ...exclusiveEntryLexicalFields]
 
     const fixedColumns: Record<FixedEntryKey, true> = {
         word: true,
@@ -39,22 +38,23 @@ export async function getDictionaryEntries<
         senses: true,
     }
 
-    const entrygameColumns = Object.fromEntries(selectedEntryLexicalFields.map(f => [f, true])) as Record<EntryKey, true>;
 
-    const queryWord = word.toLowerCase();
+    const queryWord = word.toLowerCase(); // dictionary fully lowercased
+
+
 
     const entries = await db.query.dictionary.findMany({
         columns: {
             ...fixedColumns,
-            ...entrygameColumns,
+            ...sharedLexicalFields,
+            ...exclusiveEntryLexicalFields,
         },
         where: {
             word: queryWord,
         }
     });
 
-    
-    const selectedSenseLexicalFields = [...exclusiveSenseLexicalFields, ...sharedLexicalFields];
+    const selectedSenseLexicalFields = { ...sharedLexicalFields, ...exclusiveSenseLexicalFields }
     
     let noSenseLexicalFieldsFound = true;
 
@@ -62,9 +62,9 @@ export async function getDictionaryEntries<
         const { senses, ...rest } = entry;
         
         // remove falsy values (e.g. null, "" or []
-        const falsyCleanedRest = Object.fromEntries(Object.entries(rest).filter(([, value]) => !isFalsy(value))) as Pick<typeof rest, Exclude<FixedEntryKey, "senses"> | Extract<SH | E, EntryKey>>; 
+        const falsyCleanedRest = Object.fromEntries(Object.entries(rest).filter(([, value]) => !isFalsy(value))) as Pick<typeof rest, Exclude<FixedEntryKey, "senses"> | Extract<SelectableEntryLexicalKey, keyof typeof rest>>; 
         
-        const { rootNodes, foundSenseLexicalFields } = processGlossNodes(senses, new Set(selectedSenseLexicalFields));
+        const { rootNodes, foundSenseLexicalFields } = processGlossNodes(senses, selectedSenseLexicalFields);
         
         noSenseLexicalFieldsFound = noSenseLexicalFieldsFound && foundSenseLexicalFields.size === 0;
 
@@ -79,7 +79,7 @@ export async function getDictionaryEntries<
 
     // whether theres actually stuff to display (will always throw if entries === [])
     if (noEntryLexicalFieldsFound && noSenseLexicalFieldsFound) {
-        throw new Error(`Word "${queryWord}" does not exist in the dictionary or none of the requested lexical fields (${[...selectedEntryLexicalFields, ...exclusiveSenseLexicalFields].join(", ")}) were found on the entries or their senses`);
+        throw new Error(`Word "${queryWord}" does not exist in the dictionary or none of the requested lexical fields (${[...Object.keys(sharedLexicalFields), ...Object.keys(exclusiveSenseLexicalFields)].join(", ")}) were found on the entries or their senses`);
     }
     
 
@@ -88,23 +88,24 @@ export async function getDictionaryEntries<
 
 
 
-function processGlossNodes<S extends SelectableSenseLexicalKey>(rootNodes: GlossNode[], senseLexicalFields: Set<S>): { rootNodes: GlossNode[], foundSenseLexicalFields: Set<S> } {
+function processGlossNodes(rootNodes: GlossNode[], senseLexicalFields: Typ<SelectableSenseLexicalKey>): { rootNodes: GlossNode[], foundSenseLexicalFields: Set<SelectableSenseLexicalKey> } {
     // cleans glossnodes from unselected lexical fields
         
     const nodesToProcess = [...rootNodes];
-    const foundSenseLexicalFields = new Set<S>();
+    const foundSenseLexicalFields = new Set<SelectableSenseLexicalKey>();
 
     // DFS
     while (nodesToProcess.length > 0) {
         const node = nodesToProcess.pop()!; // pops last element -> DFS
-        const cleanedLexicalFields = {} as Partial<GlossNode["lexicalFields"]>; 
+   
+        const cleanedLexicalFields = Object.fromEntries(
+            Object.entries(node.lexicalFields).filter(([key]) => {
 
-        for (const lexicalKey of Object.keys(node.lexicalFields) as S[]) {
-            if (senseLexicalFields.has(lexicalKey)) {
-                cleanedLexicalFields[lexicalKey] = node.lexicalFields[lexicalKey];
-                foundSenseLexicalFields.add(lexicalKey);
-            }
-        }
+                const found = senseLexicalFields[key as SelectableSenseLexicalKey];
+                if (found) foundSenseLexicalFields.add(key as SelectableSenseLexicalKey);
+                return found;
+            })
+        );
 
         node.lexicalFields = cleanedLexicalFields;
 

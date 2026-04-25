@@ -33,9 +33,7 @@ export function FoundPopup({ game, gamePlayerLink }: { game: InferSelectModel<ty
                     
                     <div className="flex flex-row  gap-5">
                         <Button onClick={() => {
-                            const {id, createdAt, startWord, targetWord, mode, ...lexicalFields } = game;
-
-                            startGameAction(startWord, targetWord, mode, lexicalFields)
+                            startGameAction(game)
                             }
                         }>Same Settings</Button>
                         <Button onClick={() => redirect("/")} >Welcome Page</Button>
