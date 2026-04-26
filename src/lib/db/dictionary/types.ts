@@ -139,7 +139,7 @@ export type SelectableLexicalKey = typeof SELECTABLE_LEXICAL_KEYS[number];
 
 export type RichToken = {
     l: string;    // lemma
-    v: string;    // original text value
+    w: string;    // original word
 }
 
 

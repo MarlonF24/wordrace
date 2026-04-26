@@ -45,6 +45,50 @@ type LexicalKeyDisplay = typeof LEXICAL_KEY_DISPLAYS;
 const ALWAYS_SELECTED_LEXICAL_FIELDS: Set<SelectableLexicalKey> = new Set(['glosses']);
 
 export default function StartGameForm() {
+
+    const [selectedExclusiveEntryLexicalKeys, setSelectedExclusiveEntryLexicalKeys] = useState<
+        SelectableExclusiveEntryLexicalKey[]
+    >([...SELECTABLE_EXCLUSIVE_ENTRY_LEXICAL_KEYS_SET.intersection(ALWAYS_SELECTED_LEXICAL_FIELDS)]);
+
+    const [selectedExclusiveSenseLexicalKeys, setSelectedExclusiveSenseLexicalKeys] = useState<
+        SelectableExclusiveSenseLexicalKey[]
+    >([...SELECTABLE_EXCLUSIVE_SENSE_LEXICAL_KEYS_SET.intersection(ALWAYS_SELECTED_LEXICAL_FIELDS)]);
+
+    const [selectedSharedLexicalKeys, setSelectedSharedLexicalKeys] = useState<SelectableSharedLexicalKey[]>([
+        ...SELECTABLE_SHARED_LEXICAL_KEYS_SET.intersection(ALWAYS_SELECTED_LEXICAL_FIELDS),
+    ]);
+
+    const [lemmatise, setLemmatise] = useState(true);
+
+    const LEXICAL_SECTIONS = {
+        shared: {
+            keys: SELECTABLE_SHARED_LEXICAL_KEYS,
+            state: selectedSharedLexicalKeys,
+            setter: setSelectedSharedLexicalKeys,
+            name: "sharedLexicalFields"
+        },
+        exclusiveSense: {
+            keys: SELECTABLE_EXCLUSIVE_SENSE_LEXICAL_KEYS,
+            state: selectedExclusiveSenseLexicalKeys,
+            setter: setSelectedExclusiveSenseLexicalKeys,
+            name: "exclusiveSenseLexicalFields"
+        },
+        exclusiveEntry: {
+            keys: SELECTABLE_EXCLUSIVE_ENTRY_LEXICAL_KEYS,
+            state: selectedExclusiveEntryLexicalKeys,
+            setter: setSelectedExclusiveEntryLexicalKeys,
+            name: "exclusiveEntryLexicalFields"
+
+        }
+    } as const;
+
+    const lexicalKeyArray = Object.entries(LEXICAL_KEY_DISPLAYS) as [
+        SelectableLexicalKey,
+        { label: string; desc: string },
+    ][];
+
+
+
     const [state, formAction, isPending] = useActionState((prevState: unknown, formData: FormData) => {
         const startWord = formData.get('startWord')!.toString();
         const targetWord = formData.get('targetWord')!.toString();
@@ -53,14 +97,14 @@ export default function StartGameForm() {
         const lemmatise = formData.get('lemmatise') === 'true';
 
         const exclusiveEntryLexicalFields = Object.fromEntries(
-            formData.getAll('exclusiveEntryLexicalFields').map((k) => [k, true])
+            formData.getAll(LEXICAL_SECTIONS.exclusiveEntry.name).map((k) => [k, true])
         );
 
         const exclusiveSenseLexicalFields = Object.fromEntries(
-            formData.getAll('exclusiveSenseLexicalFields').map((k) => [k, true])
+            formData.getAll(LEXICAL_SECTIONS.exclusiveSense.name).map((k) => [k, true])
         );
 
-        const sharedLexicalFields = Object.fromEntries(formData.getAll('sharedLexicalFields').map((k) => [k, true]));
+        const sharedLexicalFields = Object.fromEntries(formData.getAll(LEXICAL_SECTIONS.shared.name).map((k) => [k, true]));
 
         console.debug('Assembled lexical fields:', {
             exclusiveEntryLexicalFields,
@@ -81,6 +125,7 @@ export default function StartGameForm() {
         return startGameAction(gameData);
     }, null);
 
+
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
@@ -90,45 +135,6 @@ export default function StartGameForm() {
     }, [state?.error]);
 
 
-    const [selectedExclusiveEntryLexicalKeys, setSelectedExclusiveEntryLexicalKeys] = useState<
-        SelectableExclusiveEntryLexicalKey[]
-    >([...SELECTABLE_EXCLUSIVE_ENTRY_LEXICAL_KEYS_SET.intersection(ALWAYS_SELECTED_LEXICAL_FIELDS)]);
-
-    const [selectedExclusiveSenseLexicalKeys, setSelectedExclusiveSenseLexicalKeys] = useState<
-        SelectableExclusiveSenseLexicalKey[]
-    >([...SELECTABLE_EXCLUSIVE_SENSE_LEXICAL_KEYS_SET.intersection(ALWAYS_SELECTED_LEXICAL_FIELDS)]);
-
-    const [selectedSharedLexicalKeys, setSelectedSharedLexicalKeys] = useState<SelectableSharedLexicalKey[]>([
-        ...SELECTABLE_SHARED_LEXICAL_KEYS_SET.intersection(ALWAYS_SELECTED_LEXICAL_FIELDS),
-    ]);
-
-    const [lemmatise, setLemmatise] = useState(true);
-
-    const LEXICAL_SECTIONS = [
-        {
-            keys: SELECTABLE_SHARED_LEXICAL_KEYS,
-            state: selectedSharedLexicalKeys,
-            setter: setSelectedSharedLexicalKeys,
-            name: 'sharedLexicalFields'
-        },
-        {
-            keys: SELECTABLE_EXCLUSIVE_SENSE_LEXICAL_KEYS,
-            state: selectedExclusiveSenseLexicalKeys,
-            setter: setSelectedExclusiveSenseLexicalKeys,
-            name: 'exclusiveSenseLexicalFields'
-        },
-        {
-            keys: SELECTABLE_EXCLUSIVE_ENTRY_LEXICAL_KEYS,
-            state: selectedExclusiveEntryLexicalKeys,
-            setter: setSelectedExclusiveEntryLexicalKeys,
-            name: 'exclusiveEntryLexicalFields'
-        }
-    ] as const;
-
-    const lexicalKeyArray = Object.entries(LEXICAL_KEY_DISPLAYS) as [
-        SelectableLexicalKey,
-        { label: string; desc: string },
-    ][];
 
     return (
         <form
@@ -248,7 +254,7 @@ export default function StartGameForm() {
                                 className="grid gap-4"
                                 style={{ gridTemplateColumns: 'repeat(3, minmax(0, 1fr))' }}
                             >
-                                {LEXICAL_SECTIONS.map(({ keys, state, setter }) => 
+                                {Object.values(LEXICAL_SECTIONS).map(({ keys, state, setter }) => 
                                     (keys).map((field) => {
                                         if (ALWAYS_SELECTED_LEXICAL_FIELDS.has(field)) return null;
                                         const { label, desc } = LEXICAL_KEY_DISPLAYS[field];
@@ -285,18 +291,18 @@ export default function StartGameForm() {
                             className="self-start text-xs text-muted-foreground"
                             onClick={() => {
                                 const allKeys = Object.keys(LEXICAL_KEY_DISPLAYS) as SelectableLexicalKey[];
-                                const currentTotal = LEXICAL_SECTIONS.reduce((acc, { state }) => acc + state.length, 0);
+                                const currentTotal = Object.values(LEXICAL_SECTIONS).reduce((acc, { state }) => acc + state.length, 0);
 
                                 if (currentTotal < allKeys.length) {
-                                    LEXICAL_SECTIONS.forEach(({ keys, setter }) => setter([...keys]));
+                                    Object.values(LEXICAL_SECTIONS).forEach(({ keys, setter }) => setter([...keys]));
                                 } else {
-                                    LEXICAL_SECTIONS.forEach(({ keys, setter }) =>
+                                    Object.values(LEXICAL_SECTIONS).forEach(({ keys, setter }) =>
                                         setter([...new Set(keys).intersection(ALWAYS_SELECTED_LEXICAL_FIELDS)])
                                     );
                                 }
                             }}
                         >
-                            {LEXICAL_SECTIONS.reduce((acc, { state }) => acc + state.length, 0) === Object.keys(LEXICAL_KEY_DISPLAYS).length 
+                            {Object.values(LEXICAL_SECTIONS).reduce((acc, { state }) => acc + state.length, 0) === Object.keys(LEXICAL_KEY_DISPLAYS).length 
                                 ? 'Deselect All Extra' 
                                 : 'Select All'}
                         </Button>

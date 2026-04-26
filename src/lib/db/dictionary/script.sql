@@ -1,1 +1,1 @@
-TRUNCATE TABLE games RESTART IDENTITY;
+DROP TABLE dictionary.dictionary;

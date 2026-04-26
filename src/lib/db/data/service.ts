@@ -1,5 +1,5 @@
 import { db } from './db';
-import { playerTable, gameTable, gamePlayerLink, type RaceStep, type Game, GameInsert } from './schema';
+import { playerTable, gameTable, gamePlayerLink, type RaceStep, type Game, type GameInsert } from './schema';
 import { eq, and, sql } from 'drizzle-orm';
 import { cache } from 'react';
 

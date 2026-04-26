@@ -124,6 +124,7 @@ function RenderGlossNode({
                                             {items.map((item, itemIdx) => {
                                                 // again, correlated union of types issue, would have to write generic function like "sesField" in seed.ts, but...
                                                 return printKeys.map((pk) => (
+                                                    
                                                     <LexicalFieldBadge 
                                                         key={`${itemIdx}-${pk}`}
                                                         tokens={item[pk]}

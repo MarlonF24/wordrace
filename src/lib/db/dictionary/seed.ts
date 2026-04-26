@@ -2,11 +2,12 @@ import pg from 'pg';
 import { from as copyFrom, to as copyTo } from 'pg-copy-streams';
 import { pipeline } from 'node:stream/promises';
 import { createReadStream } from 'node:fs';
-import { dictionary, dictionaryRaw } from './schema';
-import { getColumns, getTableUniqueName } from 'drizzle-orm';
+import { dictionary, dictionaryRaw, insertDictionaryColumns, words } from './schema';
+import { getTableUniqueName } from 'drizzle-orm';
 import { tokenizeToRichText } from '@/lib/lemmatisation';
 import { stringify } from 'csv-stringify';
 import split2 from 'split2';
+import { setCorrUnionField } from '@/lib/utils';
 
 import {
     SELECTABLE_ENTRY_LEXICAL_KEYS,
@@ -39,6 +40,7 @@ const client = new pg.Client(dbConfig);
 // include schema: schema.name
 const fullDictionaryName = getTableUniqueName(dictionary);
 const fullDictionaryRawName = getTableUniqueName(dictionaryRaw);
+const fullWordsName = getTableUniqueName(words);
 
 console.debug('Dictionary table name:', fullDictionaryName);
 console.debug('Dictionary raw table name:', fullDictionaryRawName);
@@ -62,22 +64,24 @@ async function loadRawData(jsonlPath: string) {
     console.log('Raw data loaded.');
 }
 
-async function hydrateWithProcessing() {
+async function hydrateWithProcessing(reseedWords: boolean = false) {
     const readerClient = new pg.Client(dbConfig);
     const writerClient = new pg.Client(dbConfig);
 
     try {
         await Promise.all([readerClient.connect(), writerClient.connect()]);
-
-        console.log('Truncating dictionary...');
+        
+        console.log('Truncating dictionary and words...');
         await writerClient.query(`TRUNCATE TABLE ${fullDictionaryName} RESTART IDENTITY`);
 
-        const colNames = Object.values(getColumns(dictionary))
-            .filter((col) => col.name !== 'id')
-            .map((col) => col.name) as Exclude<
-            keyof typeof dictionary.$inferSelect,
-            'id'
-        >[] satisfies Exclude<keyof Entry, 'id'>[];
+        // Quickly deactivate FKs and triggers for bulk load
+        if (reseedWords) {
+            await writerClient.query(`ALTER TABLE ${fullDictionaryName} DISABLE TRIGGER ALL`);
+            await writerClient.query(`TRUNCATE TABLE ${fullWordsName} RESTART IDENTITY CASCADE`);
+        }
+
+
+        const colNames = Object.keys(insertDictionaryColumns) as (keyof typeof dictionary.$inferInsert)[];
 
         console.log('Processing and hydrating...');
 
@@ -92,6 +96,7 @@ async function hydrateWithProcessing() {
             )
         );
 
+    
         await pipeline(
             exportStream,
             split2(),
@@ -128,17 +133,25 @@ async function hydrateWithProcessing() {
             }),
             importStream
         );
+
+        if (reseedWords) {
+            console.log(`Populating ${fullWordsName} from ${fullDictionaryName}...`);
+            await writerClient.query(`
+                INSERT INTO ${fullWordsName} (word)
+                SELECT DISTINCT word FROM ${fullDictionaryName}
+                ON CONFLICT DO NOTHING
+            `);
+        }
+
+        // Re-enable triggers and FKs
+        await writerClient.query(`ALTER TABLE ${fullDictionaryName} ENABLE TRIGGER ALL`);
+
     } finally {
         await Promise.allSettled([readerClient.end(), writerClient.end()]);
     }
 }
 
-// necessary to make correlated union types work
-function setField<O extends object, K extends keyof O>(obj: O, key: K, value: O[K]) {
-    // Because K is generic here, TS understands that value
-    // is the specific match for acc[key].
-    obj[key] = value;
-}
+
 
 export function processRawEntry(rawEntry: RawEntry): Entry {
     const entryLexicalFields = processObjectLexicalFields(rawEntry, SELECTABLE_ENTRY_LEXICAL_KEYS);
@@ -161,7 +174,7 @@ function processObjectLexicalFields<T extends FlatObjectSelectableLexicalKey>(
         (acc, lexicalKey) => {
             const lexVal = rawObj[lexicalKey];
             if (lexVal) {
-                setField(acc, lexicalKey, processObjectLexicalField(lexVal, lexicalKey));
+                setCorrUnionField(acc, lexicalKey, processObjectLexicalField(lexVal, lexicalKey));
             }
             return acc;
         },
@@ -295,7 +308,7 @@ function getDiffObjectSenseLexicalFields(sense: RawSense, parentSense?: RawSense
 
         if (!parentVal) {
             // if no parent sense or no parent value, just take whats there
-            setField(diffObjectSenseLexicalFields, senseLexicalKey, val);
+            setCorrUnionField(diffObjectSenseLexicalFields, senseLexicalKey, val);
             continue;
         }
 
@@ -311,10 +324,10 @@ function getDiffObjectSenseLexicalFields(sense: RawSense, parentSense?: RawSense
         if (Array.isArray(val) && Array.isArray(parentVal)) {
             const diff = val.slice(parentVal.length); // we assume that the child always contains everything in the parent, so thats what we cut off at the start
 
-            if (diff.length > 0) setField(diffObjectSenseLexicalFields, senseLexicalKey, diff);
+            if (diff.length > 0) setCorrUnionField(diffObjectSenseLexicalFields, senseLexicalKey, diff);
         } else if (JSON.stringify(parentVal) !== JSON.stringify(val)) {
             // if only object
-            setField(diffObjectSenseLexicalFields, senseLexicalKey, val);
+            setCorrUnionField(diffObjectSenseLexicalFields, senseLexicalKey, val);
         }
     }
 
@@ -322,4 +335,4 @@ function getDiffObjectSenseLexicalFields(sense: RawSense, parentSense?: RawSense
 }
 
 // loadRawData("/home/marlo/repos/WordRace/web/src/lib/db/dictionary/kaikki.org-dictionary-English.jsonl");
-hydrateWithProcessing();
+await hydrateWithProcessing();

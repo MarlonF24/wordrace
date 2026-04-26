@@ -13,3 +13,10 @@ export function isFalsy(value: unknown): boolean {
     if (typeof value === "object" && value !== null) return Object.keys(value).length === 0;
     return !value;
 }
+
+// necessary to make correlated union types work
+export function setCorrUnionField<O extends object, K extends keyof O>(obj: O, key: K, value: O[K]) {
+    // Because K is generic here, TS understands that value
+    // is the specific match for acc[key].
+    obj[key] = value;
+}
