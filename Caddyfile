@@ -1,0 +1,16 @@
+{
+    email {$CADDY_EMAIL}
+}
+
+{$DOMAIN} {
+    reverse_proxy app:3000
+    
+    handle_errors {
+        rewrite * /{err.status_code}
+        reverse_proxy app:3000
+    }
+
+    log {
+        output file /var/log/caddy/access.log
+    }
+}

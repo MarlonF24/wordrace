@@ -1,5 +1,22 @@
 
 services:
+  caddy:
+    image: caddy:latest
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN:?Missing DOMAIN environment variable}
+      CADDY_EMAIL: ${CADDY_EMAIL:?Missing CADDY_EMAIL environment variable}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - app
+
+
   db:
     image: postgres:16-alpine
     restart: always
@@ -10,7 +27,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - "5433:5432"
+      - "127.0.0.1:5432:5432"
     healthcheck: # check so that the db is ready before starting the app
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-user} -d ${DB_NAME:-wordrace}"]
       interval: 5s
@@ -29,6 +46,7 @@ services:
       DB_PORT: 5432
       DB_NAME: ${DB_NAME:?Missing DB_NAME environment variable}
       SEED_DATA_PATH: /app/seed_data.jsonl
+      NEXT_PUBLIC_BASE_URL: https://${DOMAIN:?Missing DOMAIN environment variable}
     depends_on:
       db:
         condition: service_healthy
@@ -37,10 +55,13 @@ services:
       sh -c "bunx drizzle-kit migrate && 
              bun \$$SEED_SCRIPT_PATH &&
              bun run start"
-    ports:
-      - "3000:3000"
+    # Only expose port 3000 to the internal Docker network (Caddy will proxy to it)
+    expose:
+      - "3000"
    
     restart: always
 
 volumes:
   postgres_data:
+  caddy_data:
+  caddy_config:

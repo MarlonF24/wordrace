@@ -16,6 +16,10 @@ tsconfig.tsbuildinfo
 eslint.config.mjs
 
 
+# github
+.github/
+
+
 .env*
 
 
@@ -23,6 +27,8 @@ eslint.config.mjs
 Dockerfile
 docker-compose*.yml
 .dockerignore
+
+Caddyfile
 
 # Misc / Documentation
 NOTES.txt

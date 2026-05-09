@@ -55,13 +55,13 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Copy docker-compose to server
+      - name: Copy deployment files to server
         uses: appleboy/scp-action@master
         with:
           host: ${{ secrets.ORACLE_HOST }}
           username: ${{ secrets.ORACLE_USER }}
           key: ${{ secrets.ORACLE_SSH_KEY }}
-          source: "docker-compose.yml"
+          source: "docker-compose.yml,Caddyfile"
           target: "~/wordrace"
 
       - name: Deploy via SSH
@@ -70,11 +70,11 @@ jobs:
           host: ${{ secrets.ORACLE_HOST }}
           username: ${{ secrets.ORACLE_USER }}
           key: ${{ secrets.ORACLE_SSH_KEY }}
-          envs: REGISTRY,APP_IMAGE,DB_USER,DB_PASSWORD,DB_NAME,SEED_FILE_PATH,GITHUB_TOKEN
+          envs: REGISTRY,APP_IMAGE,DB_USER,DB_PASSWORD,DB_NAME,GITHUB_TOKEN,CADDY_EMAIL,DOMAIN
           script: |
             cd ~/wordrace
             echo "$GITHUB_TOKEN" | docker login "$REGISTRY" -u "${{ github.actor }}" --password-stdin
-            docker compose up -d --pull always app
+            docker compose up -d --pull always
             docker image prune -f
             docker logout "$REGISTRY"
         env:
@@ -83,5 +83,6 @@ jobs:
           DB_USER: ${{ secrets.DB_USER }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           DB_NAME: ${{ secrets.DB_NAME }}
-          SEED_FILE_PATH: ${{ secrets.SEED_FILE_PATH }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CADDY_EMAIL: ${{ secrets.CADDY_EMAIL }}
+          DOMAIN: ${{ vars.STRIPPED_DOMAIN }}
