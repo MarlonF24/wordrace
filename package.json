@@ -16,7 +16,7 @@
     "ajv": "^8.18.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "drizzle-orm": "^1.0.0-beta.15-859cf75",
+    "drizzle-orm": "^1.0.0-rc.2",
     "lucide-react": "^0.575.0",
     "next": "16.1.6",
     "pg": "^8.18.0",
@@ -35,15 +35,18 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@typescript-eslint/parser": "^8.56.0",
-    "csv-stringify": "^6.7.0",
-    "drizzle-kit": "^1.0.0-beta.15-859cf75",
+    "drizzle-kit": "1.0.0-rc.2",
     "eslint": "^9.39.3",
     "eslint-config-next": "^16.1.6",
-    "pg-copy-streams": "^7.0.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   },
   "overrides": {
     "minimatch": "^10.2.2"
+  },
+  "optionalDependencies": {
+    "csv-stringify": "^6.7.0",
+    "pg-copy-streams": "^7.0.0",
+    "split2": "^4.2.0"
   }
 }

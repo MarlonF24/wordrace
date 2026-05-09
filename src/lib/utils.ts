@@ -20,3 +20,4 @@ export function setCorrUnionField<O extends object, K extends keyof O>(obj: O, k
     // is the specific match for acc[key].
     obj[key] = value;
 }
+

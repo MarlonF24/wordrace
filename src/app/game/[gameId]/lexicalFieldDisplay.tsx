@@ -61,7 +61,7 @@ export function LexicalFieldDisplay({
                         </div>
                         <div className="flex flex-wrap gap-2">
                             {items.map((item, idx) => {
-                                return printKeys.map((pk) => (
+                                return (printKeys as (keyof typeof item)[]).map((pk) => (
                                     <LexicalFieldBadge 
                                         key={`${idx}-${pk}`}
                                         tokens={item[pk]}

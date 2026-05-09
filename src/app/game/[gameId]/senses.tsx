@@ -123,7 +123,7 @@ function RenderGlossNode({
                                         <div className="flex flex-wrap gap-1.5">
                                             {items.map((item, itemIdx) => {
                                                 // again, correlated union of types issue, would have to write generic function like "sesField" in seed.ts, but...
-                                                return printKeys.map((pk) => (
+                                                return (printKeys as (keyof typeof item)[]).map((pk) => (
                                                     
                                                     <LexicalFieldBadge 
                                                         key={`${itemIdx}-${pk}`}

@@ -9,19 +9,30 @@ import {
     type ProcessedlexicalField,
     type SelectableLexicalKey,
 } from './types';
-import { table } from 'node:console';
+import assert from 'node:assert';
+
+
+const schemaName = process.env.DICT_SCHEMA;
+assert(schemaName, "DICT_SCHEMA environment variable must be set")
+
+const tableFunc = (
+  schemaName === "public" 
+    ? p.snakeCase.table 
+    : p.snakeCase.schema(schemaName).table
+) as p.PgTableFn<string | undefined>;
+
+
 
 const col = (t: LinkageType) => p.jsonb(t).$type<ProcessedlexicalField<Extract<LinkageType, SelectableLexicalKey>>>();
 
 const linkageColumns = Object.fromEntries(LINKAGE_TYPES.map((type) => [type, col(type)])) as {
     [K in LinkageType]: ReturnType<typeof col>;
+
 };
 
-const schemaName = process.env.DICT_TABLE_SCHEMA || 'public';
 
-export const schema = p.pgSchema(schemaName);
 
-export const dictionaryRaw = schema.table('dictionary_raw', {
+export const dictionaryRaw = tableFunc('dictionary_raw', {
     id: p.integer().primaryKey().generatedAlwaysAsIdentity(),
     raw_data: p.jsonb().notNull().$type<RawEntry>(),
 });
@@ -72,13 +83,13 @@ const generatedDictionaryColumns = {
 };
 
 // maybe word and pos together could be the PK, but...
-export const dictionary = schema.table(
+export const dictionary = tableFunc(
     dictionaryTableName,
     { ...insertDictionaryColumns, ...generatedDictionaryColumns },
     (table) => [p.index('idx_word').on(table.word), p.check('lowercase_word', sql`word = lower(word)`)]
 );
 
-export const words = schema.table('words', {
+export const words = tableFunc('words', {
     word: p.text().primaryKey().notNull(), // lowercase
     },
     (table) => [p.check('lowercase_word', sql`word = lower(word)`)]

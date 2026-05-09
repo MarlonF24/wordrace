@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useState, useEffect } from 'react';
+import { useActionState, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -40,7 +40,6 @@ const LEXICAL_KEY_DISPLAYS: Record<SelectableLexicalKey, { label: string; desc: 
     coordinate_terms: { label: 'Coordinate Terms', desc: 'Words that share a common hypernym with the base word' },
 } as const;
 
-type LexicalKeyDisplay = typeof LEXICAL_KEY_DISPLAYS;
 
 const ALWAYS_SELECTED_LEXICAL_FIELDS: Set<SelectableLexicalKey> = new Set(['glosses']);
 
@@ -65,31 +64,47 @@ export default function StartGameForm() {
             keys: SELECTABLE_SHARED_LEXICAL_KEYS,
             state: selectedSharedLexicalKeys,
             setter: setSelectedSharedLexicalKeys,
-            name: "sharedLexicalFields"
+            name: 'sharedLexicalFields',
         },
         exclusiveSense: {
             keys: SELECTABLE_EXCLUSIVE_SENSE_LEXICAL_KEYS,
             state: selectedExclusiveSenseLexicalKeys,
             setter: setSelectedExclusiveSenseLexicalKeys,
-            name: "exclusiveSenseLexicalFields"
+            name: 'exclusiveSenseLexicalFields',
         },
         exclusiveEntry: {
             keys: SELECTABLE_EXCLUSIVE_ENTRY_LEXICAL_KEYS,
             state: selectedExclusiveEntryLexicalKeys,
             setter: setSelectedExclusiveEntryLexicalKeys,
-            name: "exclusiveEntryLexicalFields"
-
-        }
+            name: 'exclusiveEntryLexicalFields',
+        },
     } as const;
 
-    const lexicalKeyArray = Object.entries(LEXICAL_KEY_DISPLAYS) as [
-        SelectableLexicalKey,
-        { label: string; desc: string },
-    ][];
+    function toggleLexicalField<T extends SelectableLexicalKey>(
+        setter: React.Dispatch<React.SetStateAction<T[]>>,
+        field: T,
+        checked: boolean
+    ) {
+        setter((prev) => (checked ? [...prev, field] : prev.filter((id) => id !== field)));
+    }
+
+    function setAllLexicalFields<T extends SelectableLexicalKey>(
+        setter: React.Dispatch<React.SetStateAction<T[]>>,
+        keys: readonly T[],
+        all: boolean
+    ) {
+        if (all) {
+            setter([...keys]);
+        } else {
+            setter([...new Set(keys).intersection(ALWAYS_SELECTED_LEXICAL_FIELDS)] as T[]);
+        }
+    }
 
 
 
-    const [state, formAction, isPending] = useActionState((prevState: unknown, formData: FormData) => {
+    const [error, setError] = useState<string | null>(null);
+
+    const [, formAction, isPending] = useActionState(async (_prevState: unknown, formData: FormData) => {
         const startWord = formData.get('startWord')!.toString();
         const targetWord = formData.get('targetWord')!.toString();
 
@@ -122,17 +137,82 @@ export default function StartGameForm() {
             sharedLexicalFields,
         };
 
-        return startGameAction(gameData);
+        const result = await startGameAction(gameData);
+        if (result?.error) {
+            setError(result.error);
+        }
+        return result;
     }, null);
 
+    const lexicalFieldsControl = (
+        <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(3, minmax(0, 1fr))' }}>
+            {Object.entries(LEXICAL_SECTIONS).map(([key, section]) => {
+                const { keys, state, setter } = section;
+                return (keys as readonly SelectableLexicalKey[]).map((field) => {
+                    if (ALWAYS_SELECTED_LEXICAL_FIELDS.has(field)) return null;
+                    const { label, desc } = LEXICAL_KEY_DISPLAYS[field];
+                    return (
+                        <label
+                            key={field}
+                            htmlFor={field}
+                            className="flex flex-row items-start space-x-3 cursor-pointer hover:bg-muted/50 p-2 -m-2 rounded-lg transition-colors"
+                        >
+                            <Checkbox
+                                id={field}
+                                className="mt-1"
+                                checked={(state as readonly string[]).includes(field)}
+                                onCheckedChange={(checked) => {
+                                    if (key === 'shared') {
+                                        toggleLexicalField(setter as React.Dispatch<React.SetStateAction<SelectableSharedLexicalKey[]>>, field as SelectableSharedLexicalKey, !!checked);
+                                    } else if (key === 'exclusiveSense') {
+                                        toggleLexicalField(setter as React.Dispatch<React.SetStateAction<SelectableExclusiveSenseLexicalKey[]>>, field as SelectableExclusiveSenseLexicalKey, !!checked);
+                                    } else if (key === 'exclusiveEntry') {
+                                        toggleLexicalField(setter as React.Dispatch<React.SetStateAction<SelectableExclusiveEntryLexicalKey[]>>, field as SelectableExclusiveEntryLexicalKey, !!checked);
+                                    }
+                                }}
+                            />
+                            <div className="space-y-1 leading-none">
+                                <span className="font-semibold text-sm">{label}</span>
+                                <p className="text-xs text-muted-foreground max-w-[160px]">{desc}</p>
+                            </div>
+                        </label>
+                    );
+                });
+            })}
+        </div>
+    );
 
-    const [error, setError] = useState<string | null>(null);
+    const selectAllButton = (
+        <Button
+            type="button"
+            size="sm"
+            className="self-start text-xs text-muted-foreground"
+            onClick={() => {
+                const allKeys = Object.keys(LEXICAL_KEY_DISPLAYS) as SelectableLexicalKey[];
+                const currentTotal = Object.values(LEXICAL_SECTIONS).reduce(
+                    (acc, { state }) => acc + state.length,
+                    0
+                );
 
-    useEffect(() => {
-        if (state?.error) {
-            setError(state.error);
-        }
-    }, [state?.error]);
+                const selectAll = currentTotal < allKeys.length;
+                
+                Object.entries(LEXICAL_SECTIONS).forEach(([key, section]) => {
+                    if (key === 'shared') {
+                        setAllLexicalFields(section.setter as React.Dispatch<React.SetStateAction<SelectableSharedLexicalKey[]>>, section.keys as readonly SelectableSharedLexicalKey[], selectAll);
+                    } else if (key === 'exclusiveSense') {
+                        setAllLexicalFields(section.setter as React.Dispatch<React.SetStateAction<SelectableExclusiveSenseLexicalKey[]>>, section.keys as readonly SelectableExclusiveSenseLexicalKey[], selectAll);
+                    } else if (key === 'exclusiveEntry') {
+                        setAllLexicalFields(section.setter as React.Dispatch<React.SetStateAction<SelectableExclusiveEntryLexicalKey[]>>, section.keys as readonly SelectableExclusiveEntryLexicalKey[], selectAll);
+                    }
+                });
+            }}
+        >
+            {Object.values(LEXICAL_SECTIONS).reduce((acc, { state }) => acc + state.length, 0) ===
+            Object.keys(LEXICAL_KEY_DISPLAYS).length
+                ? 'Deselect All Extra'
+                : 'Select All'}
+        </Button>
+    );
 
 
 
@@ -240,7 +320,7 @@ export default function StartGameForm() {
                                 <div className="space-y-1 leading-none">
                                     <span className="font-semibold text-sm">Lemmatisation</span>
                                     <p className="text-xs text-muted-foreground max-w-[200px]">
-                                        Clicking a word matches its base dictionary form (e.g. "running" matches "run").
+                                        Clicking a word matches its base dictionary form (e.g. &quot;running&quot; matches &quot;run&quot;).
                                     </p>
                                 </div>
                             </label>
@@ -250,62 +330,10 @@ export default function StartGameForm() {
                             <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                                 Extra Lexical Fields
                             </span>
-                            <div
-                                className="grid gap-4"
-                                style={{ gridTemplateColumns: 'repeat(3, minmax(0, 1fr))' }}
-                            >
-                                {Object.values(LEXICAL_SECTIONS).map(({ keys, state, setter }) => 
-                                    (keys).map((field) => {
-                                        if (ALWAYS_SELECTED_LEXICAL_FIELDS.has(field)) return null;
-                                        const { label, desc } = LEXICAL_KEY_DISPLAYS[field];
-                                        return (
-                                            <label
-                                                key={field}
-                                                htmlFor={field}
-                                                className="flex flex-row items-start space-x-3 cursor-pointer hover:bg-muted/50 p-2 -m-2 rounded-lg transition-colors"
-                                            >
-                                                <Checkbox
-                                                    id={field}
-                                                    className="mt-1"
-                                                    checked={state.includes(field)}
-                                                    onCheckedChange={(checked) => {
-                                                        setter((prev) =>
-                                                            checked ? [...prev, field] : prev.filter((id) => id !== field)
-                                                        );
-                                                    }}
-                                                />
-                                                <div className="space-y-1 leading-none">
-                                                    <span className="font-semibold text-sm">{label}</span>
-                                                    <p className="text-xs text-muted-foreground max-w-[160px]">{desc}</p>
-                                                </div>
-                                            </label>
-                                        );
-                                    })
-                                )}
-                            </div>
+                            {lexicalFieldsControl}
                         </div>
 
-                        <Button
-                            type="button"
-                            size="sm"
-                            className="self-start text-xs text-muted-foreground"
-                            onClick={() => {
-                                const allKeys = Object.keys(LEXICAL_KEY_DISPLAYS) as SelectableLexicalKey[];
-                                const currentTotal = Object.values(LEXICAL_SECTIONS).reduce((acc, { state }) => acc + state.length, 0);
-
-                                if (currentTotal < allKeys.length) {
-                                    Object.values(LEXICAL_SECTIONS).forEach(({ keys, setter }) => setter([...keys]));
-                                } else {
-                                    Object.values(LEXICAL_SECTIONS).forEach(({ keys, setter }) =>
-                                        setter([...new Set(keys).intersection(ALWAYS_SELECTED_LEXICAL_FIELDS)])
-                                    );
-                                }
-                            }}
-                        >
-                            {Object.values(LEXICAL_SECTIONS).reduce((acc, { state }) => acc + state.length, 0) === Object.keys(LEXICAL_KEY_DISPLAYS).length 
-                                ? 'Deselect All Extra' 
-                                : 'Select All'}
-                        </Button>
+                        {selectAllButton}
                     </PopoverContent>
                 </Popover>
             </div>

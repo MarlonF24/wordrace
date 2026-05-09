@@ -128,7 +128,7 @@ export async function addRaceStep(
     word: RichToken,
     side: 'start' | 'target' = 'start'
 ) {
-    const queryWord = game.lemmatise ? word.l : word.v;
+    const queryWord = game.lemmatise ? word.l : word.w;
 
     // this also validates that the token is in the  and otherwise throws an error
     const entries = await getEntriesForGame(game, queryWord);

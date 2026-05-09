@@ -1,4 +1,3 @@
--- Custom SQL migration file, put your code below! --
 CREATE OR REPLACE FUNCTION "dictionary".flatten_lexical_blob(input_data jsonb) 
 RETURNS jsonb AS $$
 DECLARE

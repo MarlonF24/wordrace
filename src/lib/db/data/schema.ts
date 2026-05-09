@@ -1,15 +1,25 @@
 import * as p from "drizzle-orm/pg-core"
 import { sql, } from "drizzle-orm";
 import { 
-  SELECTABLE_LEXICAL_KEYS,
   type SelectableExclusiveSenseLexicalKey,
   type SelectableExclusiveEntryLexicalKey,
   type SelectableSharedLexicalKey,
   type SelectableLexicalKey,
 } from "../dictionary/types";
+import assert from "node:assert";
+
+const schemaName = process.env.DATA_SCHEMA || "public" 
+assert(schemaName, "DATA_SCHEMA environment variable must be set")
 
 
-export const playerTable = p.pgTable("players", {
+const tableFunc = (
+  schemaName === "public" 
+    ? p.snakeCase.table 
+    : p.snakeCase.schema(schemaName).table
+) as p.PgTableFn<string | undefined>;
+
+
+export const playerTable = tableFunc("players", {
   id: p.uuid().primaryKey().defaultRandom(),
   createdAt: p.timestamp({withTimezone: true}).defaultNow().notNull(),
 })
@@ -30,18 +40,9 @@ export const GAME_MODES: Record<GameMode, { label: string; description: string }
 } 
 
 
-const col = () => p.boolean().default(false).notNull(); // NOTE: if changing default here, gotta change getEntriesForGame in service.ts as well, which relies on the default value false
 
 
-const lexicalFieldColumns = SELECTABLE_LEXICAL_KEYS.reduce((acc, field) => {
-  acc[field] = col();
-  return acc;
-}, {} as Record<SelectableLexicalKey, ReturnType<typeof col>>);
-
-
-
-
-export const gameTable = p.pgTable("games", {
+export const gameTable = tableFunc("games", {
   id: p.uuid().primaryKey().defaultRandom().notNull(),
   startWord: p.text().notNull(),
   targetWord: p.text().notNull(),
@@ -77,7 +78,7 @@ export interface RaceStep {
   timestamp: number;
 }
 
-export const gamePlayerLink = p.pgTable("game_player_link", {
+export const gamePlayerLink = tableFunc("game_player_link", {
   gameId: p.uuid().references(() => gameTable.id).notNull(),
   playerId: p.uuid().references(() => playerTable.id).notNull(),
   admin: p.boolean().default(false).notNull(),
@@ -96,4 +97,5 @@ export const gamePlayerLink = p.pgTable("game_player_link", {
   p.primaryKey({columns: [table.gameId, table.playerId]}),
 ])
 
+console.debug("Defined tables for schema ->", schemaName)
 

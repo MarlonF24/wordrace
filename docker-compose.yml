@@ -1,0 +1,46 @@
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USER:?Missing DB_USER environment variable}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Missing DB_PASSWORD environment variable}
+      POSTGRES_DB: ${DB_NAME:-wordrace}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    healthcheck: # check so that the db is ready before starting the app
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-user} -d ${DB_NAME:-wordrace}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+
+  app:
+    image: ${APP_IMAGE:?Missing APP_IMAGE environment variable}
+    volumes:
+      - ${SEED_FILE_PATH:?Missing SEED_FILE_PATH environment variable, you need to specify where the jsonl file with the raw dictionary data is located}:/app/seed_data.jsonl:ro
+    environment:
+      DB_USER: ${DB_USER:?Missing DB_USER environment variable}
+      DB_PASSWORD: ${DB_PASSWORD:?Missing DB_PASSWORD environment variable}
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:?Missing DB_NAME environment variable}
+      SEED_DATA_PATH: /app/seed_data.jsonl
+    depends_on:
+      db:
+        condition: service_healthy
+
+    command: >
+      sh -c "bunx drizzle-kit migrate && 
+             bun \$$SEED_SCRIPT_PATH &&
+             bun run start"
+    ports:
+      - "3000:3000"
+   
+    restart: always
+
+volumes:
+  postgres_data:

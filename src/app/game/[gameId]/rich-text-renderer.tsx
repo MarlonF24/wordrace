@@ -24,7 +24,7 @@ export function RichTextRenderer({
                         token={token}
                         side={side}
                     >
-                        {token.v}
+                        {token.w}
                     </WordButton>
                 );
             })}

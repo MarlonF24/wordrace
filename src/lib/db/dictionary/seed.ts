@@ -28,14 +28,14 @@ import {
 } from './types';
 
 const dbConfig = {
-    host: process.env.DICT_DB_HOST,
-    port: Number(process.env.DICT_DB_PORT),
-    user: process.env.DICT_DB_USER,
-    password: process.env.DICT_DB_PASSWORD,
-    database: process.env.DICT_DB_NAME,
+    host: process.env.DB_HOST,
+    port: Number(process.env.DB_PORT),
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
 };
 
-const client = new pg.Client(dbConfig);
+
 
 // include schema: schema.name
 const fullDictionaryName = getTableUniqueName(dictionary);
@@ -45,11 +45,24 @@ const fullWordsName = getTableUniqueName(words);
 console.debug('Dictionary table name:', fullDictionaryName);
 console.debug('Dictionary raw table name:', fullDictionaryRawName);
 
-async function loadRawData(jsonlPath: string) {
+async function loadRawData(jsonlPath: string = process.env.SEED_DATA_PATH!, deleteExisting: boolean = false) {
+    if (!jsonlPath) throw new Error(`Path ${jsonlPath} is not set.`);
+
+    const client = new pg.Client(dbConfig);
     await client.connect();
 
-    console.log('Truncating raw storage...');
-    await client.query(`TRUNCATE TABLE ${fullDictionaryRawName} RESTART IDENTITY`);
+    if (!deleteExisting) {
+        const res = await client.query(`SELECT COUNT(*) FROM ${fullDictionaryRawName}`);
+        const count = res.rows[0].count;
+        if (count > 0) {
+            console.log(`Found existing entries in ${fullDictionaryRawName}. Not touching table as deleteExisting is false.`);
+            await client.end();
+            return;
+        }
+    } else {
+        console.log('Truncating raw storage...');
+        await client.query(`TRUNCATE TABLE ${fullDictionaryRawName} RESTART IDENTITY`);
+    }
 
     console.log('Streaming JSONL to Postgres...');
     const copyStream = client.query(
@@ -64,13 +77,28 @@ async function loadRawData(jsonlPath: string) {
     console.log('Raw data loaded.');
 }
 
-async function hydrateWithProcessing(reseedWords: boolean = false) {
+async function hydrateWithProcessing(reseedWords: boolean = false, deleteExisting: boolean = false) {
+    if (!deleteExisting) {
+        const client = new pg.Client(dbConfig);
+        await client.connect();
+        const res = await client.query(`SELECT COUNT(*) FROM ${fullDictionaryName}`);
+        const count = res.rows[0].count;
+        if (count > 0) {
+            console.log(`Found existing entries in ${fullDictionaryName}. Not touching table as deleteExisting is false.`);
+            await client.end();
+            return;
+        }
+        await client.end();
+    }
+
+    
     const readerClient = new pg.Client(dbConfig);
     const writerClient = new pg.Client(dbConfig);
 
     try {
         await Promise.all([readerClient.connect(), writerClient.connect()]);
         
+
         console.log('Truncating dictionary and words...');
         await writerClient.query(`TRUNCATE TABLE ${fullDictionaryName} RESTART IDENTITY`);
 
@@ -333,6 +361,10 @@ function getDiffObjectSenseLexicalFields(sense: RawSense, parentSense?: RawSense
 
     return diffObjectSenseLexicalFields;
 }
-
-// loadRawData("/home/marlo/repos/WordRace/web/src/lib/db/dictionary/kaikki.org-dictionary-English.jsonl");
-await hydrateWithProcessing();
+if (process.env.NODE_ENV === 'production') {
+    await loadRawData();
+    await hydrateWithProcessing(true);
+} else {
+    // await loadRawData();
+    await hydrateWithProcessing(false);
+}
