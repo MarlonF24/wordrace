@@ -73,8 +73,19 @@ jobs:
           envs: REGISTRY,APP_IMAGE,DB_USER,DB_PASSWORD,DB_NAME,GITHUB_TOKEN,CADDY_EMAIL,DOMAIN
           script: |
             cd ~/wordrace
+
+            cat <<EOF > .env.generated
+            REGISTRY=$REGISTRY
+            APP_IMAGE=$APP_IMAGE
+            DB_USER=$DB_USER
+            DB_PASSWORD=$DB_PASSWORD
+            DB_NAME=$DB_NAME
+            CADDY_EMAIL=$CADDY_EMAIL
+            DOMAIN=$DOMAIN
+            EOF
+
             echo "$GITHUB_TOKEN" | docker login "$REGISTRY" -u "${{ github.actor }}" --password-stdin
-            docker compose up -d --pull always
+            docker compose --env-file .env.local --env-file .env.generated up -d --pull always 
             docker image prune -f
             docker logout "$REGISTRY"
         env:

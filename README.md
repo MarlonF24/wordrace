@@ -4,9 +4,9 @@
 
 This project uses **Open English Wordnet (2025 Edition)** as its primary lexical database. Open English Wordnet is an open-source fork of the original Princeton WordNet.
 
-### Citations
+The dictionary data was obtained from: https://kaikki.org/dictionary/English/index.html (download at the bottom of the page: https://kaikki.org/dictionary/English/kaikki.org-dictionary-English.jsonl)
 
-If you use this data in research or software, please cite:
+### Citations
 
 * **Open English Wordnet:** John P. McCrae, Alexandre Rademaker, Francis Bond, Ewa Rudnicka and Christiane Fellbaum (2019) *English WordNet 2019 – An Open-Source WordNet for English*. In Proceedings of the 10th Global WordNet Conference (GWC 2019), Wrocław, Poland.
     [Website: https://en-word.net/](https://en-word.net/)

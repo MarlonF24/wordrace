@@ -38,7 +38,7 @@ services:
   app:
     image: ${APP_IMAGE:?Missing APP_IMAGE environment variable}
     volumes:
-      - ${SEED_FILE_PATH:?Missing SEED_FILE_PATH environment variable, you need to specify where the jsonl file with the raw dictionary data is located}:/app/seed_data.jsonl:ro
+      - ${SEED_DATA_PATH:?Missing SEED_DATA_PATH environment variable, you need to specify where the jsonl file with the raw dictionary data is located}:/app/seed_data.jsonl:ro
     environment:
       DB_USER: ${DB_USER:?Missing DB_USER environment variable}
       DB_PASSWORD: ${DB_PASSWORD:?Missing DB_PASSWORD environment variable}

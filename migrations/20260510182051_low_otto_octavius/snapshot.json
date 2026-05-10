@@ -1,9 +1,9 @@
 {
   "version": "8",
   "dialect": "postgres",
-  "id": "65176201-3f48-46f0-b556-65e1a6096037",
+  "id": "1fcb4df9-5b39-4929-8e30-62eb9074d6ed",
   "prevIds": [
-    "94c277e1-ffac-4023-a90c-a9c59d843fb7"
+    "d00132e2-164d-4d0f-b75c-4cc236c4f919"
   ],
   "ddl": [
     {
@@ -553,7 +553,7 @@
       "dimensions": 0,
       "default": null,
       "generated": {
-        "as": "\"dictionary\".flatten_lexical_blob(\n            COALESCE(\"senses\", '[]'::jsonb) || COALESCE(\"categories\", '[]'::jsonb) || COALESCE(\"synonyms\", '[]'::jsonb) || COALESCE(\"antonyms\", '[]'::jsonb) || COALESCE(\"hypernyms\", '[]'::jsonb) || COALESCE(\"hyponyms\", '[]'::jsonb) || COALESCE(\"holonyms\", '[]'::jsonb) || COALESCE(\"meronyms\", '[]'::jsonb) || COALESCE(\"derived\", '[]'::jsonb) || COALESCE(\"related\", '[]'::jsonb) || COALESCE(\"coordinate_terms\", '[]'::jsonb)\n        )",
+        "as": "\"dictionary\".flatten_lexical_blob_mapped(\n            COALESCE(\"senses\", '[]'::jsonb) || COALESCE(\"categories\", '[]'::jsonb) || COALESCE(\"synonyms\", '[]'::jsonb) || COALESCE(\"antonyms\", '[]'::jsonb) || COALESCE(\"hypernyms\", '[]'::jsonb) || COALESCE(\"hyponyms\", '[]'::jsonb) || COALESCE(\"holonyms\", '[]'::jsonb) || COALESCE(\"meronyms\", '[]'::jsonb) || COALESCE(\"derived\", '[]'::jsonb) || COALESCE(\"related\", '[]'::jsonb) || COALESCE(\"coordinate_terms\", '[]'::jsonb),\n            ARRAY['antonyms', 'synonyms', 'hypernyms', 'hyponyms', 'holonyms', 'meronyms', 'derived', 'related', 'coordinate_terms', 'glosses', 'examples', 'categories']::text[]\n        )",
         "type": "stored"
       },
       "identity": null,

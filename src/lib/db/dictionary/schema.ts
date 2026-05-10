@@ -8,6 +8,7 @@ import {
     type Entry,
     type ProcessedlexicalField,
     type SelectableLexicalKey,
+    SELECTABLE_LEXICAL_KEYS,
 } from './types';
 import assert from 'node:assert';
 
@@ -16,7 +17,7 @@ const schemaName = process.env.DICT_SCHEMA;
 assert(schemaName, "DICT_SCHEMA environment variable must be set")
 
 const tableFunc = (
-  schemaName === "public" 
+  schemaName === "public" // drizzle has some issue with doing schema("public")
     ? p.snakeCase.table 
     : p.snakeCase.schema(schemaName).table
 ) as p.PgTableFn<string | undefined>;
@@ -27,7 +28,6 @@ const col = (t: LinkageType) => p.jsonb(t).$type<ProcessedlexicalField<Extract<L
 
 const linkageColumns = Object.fromEntries(LINKAGE_TYPES.map((type) => [type, col(type)])) as {
     [K in LinkageType]: ReturnType<typeof col>;
-
 };
 
 
@@ -71,13 +71,17 @@ const generatedDictionaryColumns = {
     id: p.integer().primaryKey().generatedAlwaysAsIdentity(),
 
     allLinks: p.jsonb().generatedAlwaysAs(
-        sql`"dictionary".flatten_lexical_blob(
+        sql`"dictionary".flatten_lexical_blob_mapped(
             ${sql.join(
                 Object.keys(lexicalDictionaryColumns).map(
-                    (k) => sql`COALESCE(${sql.identifier(k)}, '[]'::jsonb)` 
+                    (k) => sql`COALESCE(${sql.identifier(k)}, '[]'::jsonb)`
                 ),
-                sql` || ` 
-            )}
+                sql` || `
+            )},
+            ARRAY[${sql.join(
+                SELECTABLE_LEXICAL_KEYS.map((k) => sql.raw(`'${k}'`)),
+                sql`, `
+            )}]::text[]
         )`
     ),
 };

@@ -45,24 +45,24 @@ const fullWordsName = getTableUniqueName(words);
 console.debug('Dictionary table name:', fullDictionaryName);
 console.debug('Dictionary raw table name:', fullDictionaryRawName);
 
-async function loadRawData(jsonlPath: string = process.env.SEED_DATA_PATH!, deleteExisting: boolean = false) {
+async function loadRawData(jsonlPath: string = process.env.SEED_DATA_PATH!, minRowsForAbort: number = 1454988) {
     if (!jsonlPath) throw new Error(`Path ${jsonlPath} is not set.`);
 
     const client = new pg.Client(dbConfig);
     await client.connect();
 
-    if (!deleteExisting) {
-        const res = await client.query(`SELECT COUNT(*) FROM ${fullDictionaryRawName}`);
-        const count = res.rows[0].count;
-        if (count > 0) {
-            console.log(`Found existing entries in ${fullDictionaryRawName}. Not touching table as deleteExisting is false.`);
-            await client.end();
-            return;
-        }
-    } else {
-        console.log('Truncating raw storage...');
-        await client.query(`TRUNCATE TABLE ${fullDictionaryRawName} RESTART IDENTITY`);
+
+    const res = await client.query(`SELECT COUNT(*) FROM ${fullDictionaryRawName}`);
+    const count = res.rows[0].count;
+    if (count >= minRowsForAbort) {
+        console.log(`Found ${count} which is greater than or equal to minRowsForAbort (${minRowsForAbort}) entries in ${fullDictionaryRawName}. Not touching table.`);
+        await client.end();
+        return;
     }
+
+    console.log(`Found ${count} < minRowsForAbort (${minRowsForAbort}): Truncating raw storage...`);
+    await client.query(`TRUNCATE TABLE ${fullDictionaryRawName} RESTART IDENTITY`);
+
 
     console.log('Streaming JSONL to Postgres...');
     const copyStream = client.query(
@@ -77,30 +77,27 @@ async function loadRawData(jsonlPath: string = process.env.SEED_DATA_PATH!, dele
     console.log('Raw data loaded.');
 }
 
-async function hydrateWithProcessing(reseedWords: boolean = false, deleteExisting: boolean = false) {
-    if (!deleteExisting) {
-        const client = new pg.Client(dbConfig);
-        await client.connect();
-        const res = await client.query(`SELECT COUNT(*) FROM ${fullDictionaryName}`);
-        const count = res.rows[0].count;
-        if (count > 0) {
-            console.log(`Found existing entries in ${fullDictionaryName}. Not touching table as deleteExisting is false.`);
-            await client.end();
-            return;
-        }
+async function hydrateWithProcessing(reseedWords: boolean = false, minRowsForAbort: number = 1454988) {
+    
+    const client = new pg.Client(dbConfig);
+    await client.connect();
+    const res = await client.query(`SELECT COUNT(*) FROM ${fullDictionaryRawName}`);
+    const count = res.rows[0].count;
+    
+    if (count >= minRowsForAbort) {
+        console.log(`Found ${count} which is greater than or equal to minRowsForAbort (${minRowsForAbort}) entries in ${fullDictionaryRawName}. Not touching table.`);
         await client.end();
+        return;
     }
 
-    
+    console.log(`Found ${count} < minRowsForAbort (${minRowsForAbort}): Truncating raw storage...`);
+    await client.query(`TRUNCATE TABLE ${fullDictionaryRawName} RESTART IDENTITY`);
+
     const readerClient = new pg.Client(dbConfig);
     const writerClient = new pg.Client(dbConfig);
 
     try {
         await Promise.all([readerClient.connect(), writerClient.connect()]);
-        
-
-        console.log('Truncating dictionary and words...');
-        await writerClient.query(`TRUNCATE TABLE ${fullDictionaryName} RESTART IDENTITY`);
 
         // Quickly deactivate FKs and triggers for bulk load
         if (reseedWords) {
@@ -366,5 +363,5 @@ if (process.env.NODE_ENV === 'production') {
     await hydrateWithProcessing(true);
 } else {
     // await loadRawData();
-    await hydrateWithProcessing(false);
+    await hydrateWithProcessing(true);
 }

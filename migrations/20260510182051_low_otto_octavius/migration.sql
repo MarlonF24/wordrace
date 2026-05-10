@@ -53,8 +53,9 @@ CREATE TABLE "dictionary"."dictionary" (
 	"related" jsonb,
 	"coordinate_terms" jsonb,
 	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "dictionary"."dictionary_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
-	"all_links" jsonb GENERATED ALWAYS AS ("dictionary".flatten_lexical_blob(
-            COALESCE("senses", '[]'::jsonb) || COALESCE("categories", '[]'::jsonb) || COALESCE("synonyms", '[]'::jsonb) || COALESCE("antonyms", '[]'::jsonb) || COALESCE("hypernyms", '[]'::jsonb) || COALESCE("hyponyms", '[]'::jsonb) || COALESCE("holonyms", '[]'::jsonb) || COALESCE("meronyms", '[]'::jsonb) || COALESCE("derived", '[]'::jsonb) || COALESCE("related", '[]'::jsonb) || COALESCE("coordinate_terms", '[]'::jsonb)
+	"all_links" jsonb GENERATED ALWAYS AS ("dictionary".flatten_lexical_blob_mapped(
+            COALESCE("senses", '[]'::jsonb) || COALESCE("categories", '[]'::jsonb) || COALESCE("synonyms", '[]'::jsonb) || COALESCE("antonyms", '[]'::jsonb) || COALESCE("hypernyms", '[]'::jsonb) || COALESCE("hyponyms", '[]'::jsonb) || COALESCE("holonyms", '[]'::jsonb) || COALESCE("meronyms", '[]'::jsonb) || COALESCE("derived", '[]'::jsonb) || COALESCE("related", '[]'::jsonb) || COALESCE("coordinate_terms", '[]'::jsonb),
+            ARRAY['antonyms', 'synonyms', 'hypernyms', 'hyponyms', 'holonyms', 'meronyms', 'derived', 'related', 'coordinate_terms', 'glosses', 'examples', 'categories']::text[]
         )) STORED,
 	CONSTRAINT "lowercase_word" CHECK (word = lower(word))
 );

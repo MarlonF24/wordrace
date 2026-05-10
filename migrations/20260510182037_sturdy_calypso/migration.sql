@@ -1,3 +1,6 @@
+-- Custom SQL migration file, put your code below! --
+CREATE SCHEMA IF NOT EXISTS "dictionary";
+
 CREATE OR REPLACE FUNCTION "dictionary".flatten_lexical_blob_mapped(input_data jsonb, filter_keys text[]) 
 RETURNS jsonb AS $$
 DECLARE
