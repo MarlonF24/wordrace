@@ -60,7 +60,7 @@ async function loadRawData(jsonlPath: string = process.env.SEED_DATA_PATH!, minR
         return;
     }
 
-    console.log(`Found ${count} < minRowsForAbort (${minRowsForAbort}): Truncating raw storage...`);
+    console.log(`Found ${count} < minRowsForAbort (${minRowsForAbort}): Truncating ${fullDictionaryRawName}...`);
     await client.query(`TRUNCATE TABLE ${fullDictionaryRawName} RESTART IDENTITY`);
 
 
@@ -81,17 +81,17 @@ async function hydrateWithProcessing(reseedWords: boolean = false, minRowsForAbo
     
     const client = new pg.Client(dbConfig);
     await client.connect();
-    const res = await client.query(`SELECT COUNT(*) FROM ${fullDictionaryRawName}`);
+    const res = await client.query(`SELECT COUNT(*) FROM ${fullDictionaryName}`);
     const count = res.rows[0].count;
     
     if (count >= minRowsForAbort) {
-        console.log(`Found ${count} which is greater than or equal to minRowsForAbort (${minRowsForAbort}) entries in ${fullDictionaryRawName}. Not touching table.`);
+        console.log(`Found ${count} which is greater than or equal to minRowsForAbort (${minRowsForAbort}) entries in ${fullDictionaryName}. Not touching table.`);
         await client.end();
         return;
     }
 
-    console.log(`Found ${count} < minRowsForAbort (${minRowsForAbort}): Truncating raw storage...`);
-    await client.query(`TRUNCATE TABLE ${fullDictionaryRawName} RESTART IDENTITY`);
+    console.log(`Found ${count} < minRowsForAbort (${minRowsForAbort}): Truncating ${fullDictionaryName}...`);
+    await client.query(`TRUNCATE TABLE ${fullDictionaryName} RESTART IDENTITY`);
 
     const readerClient = new pg.Client(dbConfig);
     const writerClient = new pg.Client(dbConfig);
