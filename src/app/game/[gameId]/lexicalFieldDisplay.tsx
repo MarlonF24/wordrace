@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 import { 
     type SelectableEntryLexicalKey, 
     OBJECT_FIELDS_TO_PRINT, 
-    type Entry,
+    type WordRecord,
     type RichText
 } from "@/lib/db/dictionary/types";
 
@@ -35,11 +35,11 @@ export function LexicalFieldBadge({
 
 export function LexicalFieldDisplay({ 
     lexicalKey, 
-    entries,
+    record,
     side
 }: { 
     lexicalKey: SelectableEntryLexicalKey; 
-    entries: Entry[]; 
+    record: WordRecord; 
     side: "start" | "target";
 }) {
     
@@ -48,7 +48,7 @@ export function LexicalFieldDisplay({
     
     return (
         <div className="flex flex-col space-y-8">
-            {entries.map((entry, entryIdx) => {
+            {record.lexicalEntries.map((entry, entryIdx) => {
                 const val = entry[lexicalKey];
                 if (!val) return null;
 

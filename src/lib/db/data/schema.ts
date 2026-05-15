@@ -96,5 +96,4 @@ export const gamePlayerLink = tableFunc("game_player_link", {
   p.primaryKey({columns: [table.gameId, table.playerId]}),
 ])
 
-console.debug("Defined tables for schema ->", schemaName)
 

@@ -3,15 +3,15 @@ import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/component
 import { ChevronDown } from 'lucide-react';
 import { RichTextRenderer } from './rich-text-renderer';
 
-import { type SelectableSenseLexicalKey, type Entry, OBJECT_FIELDS_TO_PRINT } from '@/lib/db/dictionary/types';
+import { type SelectableSenseLexicalKey, type WordRecord, OBJECT_FIELDS_TO_PRINT } from '@/lib/db/dictionary/types';
 
 import { type GlossNode, type SelectableLexicalFields } from '@/lib/db/dictionary';
 
 import { LexicalFieldBadge } from './lexicalFieldDisplay';
 import { PosBadge } from './posBadge';
 
-export function SensesDisplay({ entries, side }: { entries: Entry[]; side: 'start' | 'target' }) {
-    if (!entries || entries.length === 0) {
+export function SensesDisplay({ record, side }: { record: WordRecord; side: 'start' | 'target' }) {
+    if (!record.lexicalEntries || record.lexicalEntries.length === 0) {
         return (
             <div className="flex items-center justify-center p-8 text-center min-h-[200px]">
                 <span className="text-muted-foreground uppercase text-xs font-bold tracking-widest">
@@ -24,7 +24,7 @@ export function SensesDisplay({ entries, side }: { entries: Entry[]; side: 'star
     return (
         <div className="relative h-full">
             <div className="space-y-8 pb-20">
-                {entries.map((entry, i) => (
+                {record.lexicalEntries.map((entry, i) => (
                     <div key={i} className="flex flex-col gap-4">
                         <div className="flex items-center gap-2">
                             <PosBadge pos={entry.pos} />

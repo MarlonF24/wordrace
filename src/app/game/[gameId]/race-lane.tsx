@@ -1,15 +1,15 @@
 import { type RaceStep } from "@/lib/db/data";
 import { History } from "./history";
-import { EntriesDisplay } from "./entriesDisplay";
-import { type Entry } from "@/lib/db/dictionary/types";
+import { RecordDisplay } from "./recordDisplay";
+import { type WordRecord } from "@/lib/db/dictionary/types";
 
 export function RaceLane({
     links,
-    entries,
+    record,
     side
 }: {
     links: RaceStep[];
-    entries: Entry[];
+    record: WordRecord;
     side: "start" | "target";
     isMirrored?: boolean;
 }) {
@@ -28,9 +28,9 @@ export function RaceLane({
 
     const definitionComponent = (
         <div key={lastWord} className="flex-1 min-w-0 bg-background relative overflow-hidden flex flex-col h-full">
-             <EntriesDisplay 
+             <RecordDisplay 
                 word={lastWord} 
-                entries={entries} 
+                record={record} 
                 side={side}
              />
         </div>

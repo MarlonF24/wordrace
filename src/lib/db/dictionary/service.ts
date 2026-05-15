@@ -1,105 +1,102 @@
-import { db } from "./db";
+import { db } from './db';
 
-import { isFalsy } from "@/lib/utils";
-import { 
-    type SelectableExclusiveEntryLexicalKey, 
-    type SelectableExclusiveSenseLexicalKey, 
-    type SelectableSharedLexicalKey, 
-    type Entry,
-    type EntryKey,
+import {
+    type SelectableExclusiveEntryLexicalKey,
+    type SelectableExclusiveSenseLexicalKey,
+    type SelectableSharedLexicalKey,
+    type WordRecord,
     type GlossNode,
-    SelectableLexicalKey,
-    SelectableSenseLexicalKey,
-    SelectableEntryLexicalKey,
-} from "./types";
-
-
-
-
-type FixedEntryKey = Exclude<EntryKey, SelectableLexicalKey>;
+    type SelectableSenseLexicalKey,
+    type SelectableEntryLexicalKey,
+    SELECTABLE_ENTRY_LEXICAL_KEYS_SET,
+} from './types';
 
 type TrueJSON<T extends string> = {
     [K in T]?: true;
 };
 
-// as only the entry keys are available at runtime, we split it up to be able to filter  
-export async function getDictionaryEntries(
+// as only the entry keys are available at runtime, we split it up to be able to filter
+export async function getWordRecord(
     word: string,
     sharedLexicalFields: TrueJSON<SelectableSharedLexicalKey> = {},
     exclusiveSenseLexicalFields: TrueJSON<SelectableExclusiveSenseLexicalKey> = {},
-    exclusiveEntryLexicalFields: TrueJSON<SelectableExclusiveEntryLexicalKey> = {},
-): Promise<Entry[]> {
-
-
-    const fixedColumns: Record<FixedEntryKey, true> = {
-        word: true,
-        pos: true,
-        senses: true,
-    }
-
-
+    exclusiveEntryLexicalFields: TrueJSON<SelectableExclusiveEntryLexicalKey> = {}
+): Promise<WordRecord> {
     const queryWord = word.toLowerCase(); // dictionary fully lowercased
 
-
-
-    const entries = await db.query.dictionary.findMany({
+    const result = await db.query.dictionary.findFirst({
         columns: {
-            ...fixedColumns,
-            ...sharedLexicalFields,
-            ...exclusiveEntryLexicalFields,
+            word: true,
+            lexicalEntries: true,
         },
         where: {
             word: queryWord,
-        }
+        },
     });
 
-    const selectedSenseLexicalFields = { ...sharedLexicalFields, ...exclusiveSenseLexicalFields }
-    
+    if (!result) {
+        throw new Error(`Word "${queryWord}" does not exist in the dictionary`);
+    }
+
+    const selectedEntryLexicalFields = { ...sharedLexicalFields, ...exclusiveEntryLexicalFields };
+    const selectedSenseLexicalFields = { ...sharedLexicalFields, ...exclusiveSenseLexicalFields };
+
+    let noEntryLexicalFieldsFound = true;
     let noSenseLexicalFieldsFound = true;
 
-    const processedEntries = entries.map(entry => {
+    const processedData = result.lexicalEntries.map((entry) => {
         const { senses, ...rest } = entry;
-        
-        // remove falsy values (e.g. null, "" or []
-        const falsyCleanedRest = Object.fromEntries(Object.entries(rest).filter(([, value]) => !isFalsy(value))) as Pick<typeof rest, Exclude<FixedEntryKey, "senses"> | Extract<SelectableEntryLexicalKey, keyof typeof rest>>; 
-        
+
+        const processedRest = Object.fromEntries(
+            Object.entries(rest).filter(([key]) => {
+                if (!(SELECTABLE_ENTRY_LEXICAL_KEYS_SET.has(key as SelectableEntryLexicalKey))) {
+                    return true;
+                } else if (key in selectedEntryLexicalFields) {
+                    noEntryLexicalFieldsFound = false;
+                    return true;
+                }
+                return false;
+            })
+        ) as typeof rest;
+
         const { rootNodes, foundSenseLexicalFields } = processGlossNodes(senses, selectedSenseLexicalFields);
-        
+
         noSenseLexicalFieldsFound = noSenseLexicalFieldsFound && foundSenseLexicalFields.size === 0;
 
         return {
             senses: rootNodes,
-            ...falsyCleanedRest
+            ...processedRest,
         };
     });
 
-    // we filter here cause ijts falsy cleaned
-    const noEntryLexicalFieldsFound = processedEntries.every(entry => Object.entries(entry).length <= Object.keys(fixedColumns).length);
 
     // whether theres actually stuff to display (will always throw if entries === [])
     if (noEntryLexicalFieldsFound && noSenseLexicalFieldsFound) {
-        throw new Error(`Word "${queryWord}" does not exist in the dictionary or none of the requested lexical fields (${[...Object.keys(sharedLexicalFields), ...Object.keys(exclusiveSenseLexicalFields)].join(", ")}) were found on the entries or their senses`);
+        throw new Error(
+            `For word "${queryWord}", none of the requested lexical fields (${[...Object.keys(sharedLexicalFields), ...Object.keys(exclusiveSenseLexicalFields)].join(', ')}) were found on the entries or their senses`
+        );
     }
-    
 
-    return processedEntries;
+    return { word: result.word, lexicalEntries: processedData };
 }
 
 
 
-function processGlossNodes(rootNodes: GlossNode[], senseLexicalFields: TrueJSON<SelectableSenseLexicalKey>): { rootNodes: GlossNode[], foundSenseLexicalFields: Set<SelectableSenseLexicalKey> } {
+function processGlossNodes(
+    rootNodes: GlossNode[],
+    senseLexicalFields: TrueJSON<SelectableSenseLexicalKey>
+): { rootNodes: GlossNode[]; foundSenseLexicalFields: Set<SelectableSenseLexicalKey> } {
     // cleans glossnodes from unselected lexical fields
-        
+
     const nodesToProcess = [...rootNodes];
     const foundSenseLexicalFields = new Set<SelectableSenseLexicalKey>();
 
     // DFS
     while (nodesToProcess.length > 0) {
         const node = nodesToProcess.pop()!; // pops last element -> DFS
-   
+
         const cleanedLexicalFields = Object.fromEntries(
             Object.entries(node.lexicalFields).filter(([key]) => {
-
                 const found = senseLexicalFields[key as SelectableSenseLexicalKey];
                 if (found) foundSenseLexicalFields.add(key as SelectableSenseLexicalKey);
                 return found;
@@ -115,18 +112,10 @@ function processGlossNodes(rootNodes: GlossNode[], senseLexicalFields: TrueJSON<
 }
 
 
-// const rawEntrySample = (await db.query.dictionaryRaw.findFirst({
-//     where: {
-//         id: 1354
-//     }
-// }))!;
 
-// processRawEntry(rawEntrySample.raw_data)
 
-// const entries = await getDictionaryEntries("cpu", [], ["glosses"], []);
+// const entries = await getWordRecord("man", {synonyms: true}, { glosses: true }, {});
 
-// // entries[0].senses[0].
-// // entries[0].senses[0].examples;
+// entries[0].senses[0].
+// entries[0].senses[0].examples;
 // console.log(entries);
-
-

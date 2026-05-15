@@ -2,12 +2,8 @@ import * as p from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 
 import {
-    type LinkageType,
-    LINKAGE_TYPES,
     type RawEntry,
-    type Entry,
-    type ProcessedlexicalField,
-    type SelectableLexicalKey,
+    type WordRecord,
     SELECTABLE_LEXICAL_KEYS,
 } from './types';
 import assert from 'node:assert';
@@ -15,17 +11,14 @@ import assert from 'node:assert';
 const schemaName = process.env.DICT_SCHEMA;
 assert(schemaName, 'DICT_SCHEMA environment variable must be set');
 
-export const schema = schemaName === 'public' ? undefined : p.snakeCase.schema(schemaName);
+export const schema = schemaName !== 'public' ? p.snakeCase.schema(schemaName) : undefined;
+const tableFunc = (schema ? schema.table : p.snakeCase.table) as p.PgTableFn<string | undefined>;
 
-const tableFunc = schema
-    ? p.snakeCase.schema(schemaName).table
-    : (p.snakeCase.table as p.PgTableFn<string | undefined>);
+export const selectableLexicalKeysEnum = schema // looks goofy but idk making an enumFunc conditionally breaks
+    ? schema.enum('selectable_lexical_keys', SELECTABLE_LEXICAL_KEYS)
+    : p.pgEnum('selectable_lexical_keys', SELECTABLE_LEXICAL_KEYS);
 
-const col = (t: LinkageType) => p.jsonb(t).$type<ProcessedlexicalField<Extract<LinkageType, SelectableLexicalKey>>>();
 
-const linkageColumns = Object.fromEntries(LINKAGE_TYPES.map((type) => [type, col(type)])) as {
-    [K in LinkageType]: ReturnType<typeof col>;
-};
 
 export const dictionaryRaw = tableFunc('dictionary_raw', {
     id: p.integer().primaryKey().generatedAlwaysAsIdentity(),
@@ -34,54 +27,14 @@ export const dictionaryRaw = tableFunc('dictionary_raw', {
 
 const dictionaryTableName = 'dictionary';
 
-const baseDictionaryColumns = {
-    word: p
-        .text()
-        .notNull()
-        .$type<string>()
-        .references(() => words.word), // lowercase
-
-    pos: p.text().notNull().$type<string>(), // part of speech
-};
-
-const lexicalDictionaryColumns = {
-    senses: p.jsonb().$type<Entry['senses']>().notNull(),
-
-    categories: p.jsonb().$type<Entry['categories']>(),
-
-    // etymology_text: p.text().$type<string>(),
-
-    ...linkageColumns,
-};
-
-export const insertDictionaryColumns = {
-    ...baseDictionaryColumns,
-    ...lexicalDictionaryColumns,
-} satisfies { [K in keyof Entry]: p.Set$Type<unknown, Entry[K]> };
-
-const generatedDictionaryColumns = {
-    id: p.integer().primaryKey().generatedAlwaysAsIdentity(),
-
-    allLinks: p.jsonb().generatedAlwaysAs(
-        sql`flatten_lexical_blob_mapped(
-            ${sql.join(
-                Object.keys(lexicalDictionaryColumns).map(
-                    (k) => sql`COALESCE(${sql.identifier(k)}, '[]'::jsonb)`
-                ),
-                sql` || `
-            )},
-            ARRAY[${sql.join(
-                SELECTABLE_LEXICAL_KEYS.map((k) => sql.raw(`'${k}'`)),
-                sql`, `
-            )}]::text[]
-        )`
-    ),
-};
 
 // maybe word and pos together could be the PK, but...
 export const dictionary = tableFunc(
     dictionaryTableName,
-    { ...insertDictionaryColumns, ...generatedDictionaryColumns },
+    {
+        word: p.text().primaryKey().notNull(),
+        lexicalEntries: p.jsonb().notNull().$type<WordRecord['lexicalEntries']>(),
+    },
     (table) => [p.index('idx_word').on(table.word), p.check('lowercase_word', sql`word = lower(word)`)]
 );
 
@@ -90,5 +43,7 @@ export const words = tableFunc(
     {
         word: p.text().primaryKey().notNull(), // lowercase
     },
-    (table) => [p.check('lowercase_word', sql`word = lower(word)`)]
+    (table) => [
+        p.check('lowercase_word', sql`word = lower(word)`),
+    ]
 );

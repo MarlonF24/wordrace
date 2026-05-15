@@ -2,7 +2,7 @@ import pg from 'pg';
 import { from as copyFrom, to as copyTo } from 'pg-copy-streams';
 import { pipeline } from 'node:stream/promises';
 import { createReadStream } from 'node:fs';
-import { dictionary, dictionaryRaw, insertDictionaryColumns, words } from './schema';
+import { dictionary, dictionaryRaw, words } from './schema';
 import { getTableUniqueName } from 'drizzle-orm';
 import { tokenizeToRichText } from '@/lib/lemmatisation';
 import { stringify } from 'csv-stringify';
@@ -24,7 +24,7 @@ import {
     type GlossNode,
     type RawSenseLexicalFields,
     type SelectableSenseLexicalKey,
-    type Entry,
+    LexicalEntry,
 } from './types';
 
 const dbConfig = {
@@ -105,19 +105,20 @@ async function hydrateWithProcessing(reseedWords: boolean = false, minRowsForAbo
             await writerClient.query(`TRUNCATE TABLE ${fullWordsName} RESTART IDENTITY CASCADE`);
         }
 
-
-        const colNames = Object.keys(insertDictionaryColumns) as (keyof typeof dictionary.$inferInsert)[];
-
         console.log('Processing and hydrating...');
 
         const exportStream = readerClient.query(
             copyTo(
-                `COPY (SELECT ${dictionaryRaw.raw_data.name} FROM ${fullDictionaryRawName}) TO STDOUT WITH (FORMAT csv, QUOTE e'\\x01', DELIMITER e'\\x02')`
+                `COPY (
+                    SELECT jsonb_agg(${dictionaryRaw.raw_data.name}) 
+                    FROM ${fullDictionaryRawName} 
+                    GROUP BY LOWER(${dictionaryRaw.raw_data.name}->>'word')
+                ) TO STDOUT WITH (FORMAT csv, QUOTE e'\\x01', DELIMITER e'\\x02')`
             )
         );
         const importStream = writerClient.query(
             copyFrom(
-                `COPY ${fullDictionaryName} (${colNames.map((c) => `"${c}"`).join(', ')}) FROM STDIN WITH (FORMAT csv)`
+                `COPY ${fullDictionaryName} FROM STDIN WITH (FORMAT csv)`
             )
         );
 
@@ -132,13 +133,14 @@ async function hydrateWithProcessing(reseedWords: boolean = false, minRowsForAbo
                     if (!chunkStr) continue;
 
                     try {
-                        const raw = JSON.parse(chunkStr);
-                        const processed = processRawEntry(raw);
+                        const raw = JSON.parse(chunkStr) as RawEntry[]; // all entries for some word
+                        
+                        const processedEntry = {
+                            word: raw[0].word.toLowerCase(),
+                            data: JSON.stringify(raw.map((entry) => processRawEntry(entry))),
+                        }
 
-                        yield colNames.map((col) => {
-                            const val = processed[col];
-                            return typeof val === 'object' ? JSON.stringify(val) : val;
-                        });
+                        yield processedEntry;
 
                         count++;
                         if (count % 1000 === 0) {
@@ -178,13 +180,12 @@ async function hydrateWithProcessing(reseedWords: boolean = false, minRowsForAbo
 
 
 
-export function processRawEntry(rawEntry: RawEntry): Entry {
+export function processRawEntry(rawEntry: RawEntry): LexicalEntry {
     const entryLexicalFields = processObjectLexicalFields(rawEntry, SELECTABLE_ENTRY_LEXICAL_KEYS);
 
     const processedSenses = processSenses(rawEntry.senses);
 
     return {
-        word: rawEntry.word.toLowerCase(),
         pos: rawEntry.pos,
         senses: processedSenses,
         ...entryLexicalFields,

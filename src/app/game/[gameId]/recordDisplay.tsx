@@ -3,7 +3,7 @@ import { SensesDisplay } from "./senses";
 
 import { 
   type SelectableEntryLexicalKey, 
-  type Entry,
+  type WordRecord,
   SELECTABLE_ENTRY_LEXICAL_KEYS, 
 } from "@/lib/db/dictionary/types";
 
@@ -12,16 +12,16 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { LexicalFieldDisplay } from "./lexicalFieldDisplay";
 
 
-export function EntriesDisplay(
-  { word, entries, side}: { 
+export function RecordDisplay(
+  { word, record, side}: { 
     word: string, 
-    entries: Entry[],
+    record: WordRecord,
     side: "start" | "target"
   }
 ) {
-  const presentLexicalFields = SELECTABLE_ENTRY_LEXICAL_KEYS.filter(key => entries.some(entry => key in entry));
+  const presentEntryLexicalFields = SELECTABLE_ENTRY_LEXICAL_KEYS.filter(key => record.lexicalEntries.some(entry => key in entry));
 
-  const tabs = ["definitions", ...presentLexicalFields] as (SelectableEntryLexicalKey | "definitions")[];
+  const tabs = ["definitions", ...presentEntryLexicalFields] as (SelectableEntryLexicalKey | "definitions")[];
 
   return (
     <main className="h-full w-full flex flex-col items-center justify-start py-4 px-4 md:p-4 gap-4 md:gap-6 overflow-hidden relative">
@@ -52,10 +52,10 @@ export function EntriesDisplay(
               <Card className="h-full p-2 border-2 shadow-[4px_4px_0px_0px_var(--shadow-color)] bg-card flex flex-col rounded-xl overflow-hidden">
                 <CardContent className="flex-1 overflow-y-auto md:p-6 scrollbar-thin">
                   {tab === "definitions" ? (
-                    <SensesDisplay entries={entries} side={side} />
+                    <SensesDisplay record={record} side={side} />
                   ) : (
                     <div className="space-y-6">
-                      <LexicalFieldDisplay lexicalKey={tab} entries={entries} side={side} />
+                      <LexicalFieldDisplay lexicalKey={tab} record={record} side={side} />
                     </div>
                   )}
                 </CardContent>

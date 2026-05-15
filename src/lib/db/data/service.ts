@@ -3,11 +3,7 @@ import { playerTable, gameTable, gamePlayerLink, type RaceStep, type Game, type 
 import { eq, and, sql } from 'drizzle-orm';
 import { cache } from 'react';
 
-
-import {
-    getDictionaryEntries,
-    RichToken,
-} from '../dictionary';
+import { getWordRecord, RichToken } from '../dictionary';
 import { tokenizeToRichText } from '@/lib/lemmatisation';
 
 export async function createPlayer(playerID: string) {
@@ -30,15 +26,14 @@ export async function getGamePlayerLink(gameId: string, playerId: string) {
     });
 }
 
-
-export async function createGame(
-    playerID: string, 
-    gameData: GameInsert
-) {
-
+export async function createGame(playerID: string, gameData: GameInsert) {
     // integrity checks, some are also done by the db itself but...
 
-    if (!gameData.sharedLexicalFields && !gameData.exclusiveSenseLexicalFields && !gameData.exclusiveEntryLexicalFields) {
+    if (
+        !gameData.sharedLexicalFields &&
+        !gameData.exclusiveSenseLexicalFields &&
+        !gameData.exclusiveEntryLexicalFields
+    ) {
         throw new Error('At least one lexical field must be selected to create a game');
     }
 
@@ -47,37 +42,27 @@ export async function createGame(
 
     if (gameData.lemmatise) {
         const tokenizedStart = tokenizeToRichText(gameData.startWord)[0];
-        if (typeof tokenizedStart !== "object") throw new Error('Could not tokenize start word'); // this happens if it punctuation or something that cannot be lemmatised, look into tokenizeToRichText for details 
+        if (typeof tokenizedStart !== 'object') throw new Error('Could not tokenize start word'); // this happens if it punctuation or something that cannot be lemmatised, look into tokenizeToRichText for details
         insertStart = tokenizedStart.l;
 
         const tokenizedTarget = tokenizeToRichText(gameData.targetWord)[0];
-        if (typeof tokenizedTarget !== "object") throw new Error('Could not tokenize target word');
+        if (typeof tokenizedTarget !== 'object') throw new Error('Could not tokenize target word');
         insertTarget = tokenizedTarget.l;
     } else {
         insertStart = gameData.startWord;
         insertTarget = gameData.targetWord;
-    } 
-
+    }
 
     if (insertStart === insertTarget) {
         throw new Error('Start and target words cannot be the same');
     }
 
-    const [startEntries, targetEntries] = await Promise.all([
-        getEntriesForGame(gameData, insertStart),
-        getEntriesForGame(gameData, insertTarget),
+    const [startRecord, targetRecord] = await Promise.all([ // only for testing whether the words exist and have the at least one of the requested lexical fields, throws error otherwise
+        getRecordForGame(gameData, insertStart),
+        getRecordForGame(gameData, insertTarget),
     ]);
 
-    // thos checks should not be necessary anymore as getEntriesForGame throws an error if no entries were found, but...
-    if (!startEntries.length) {
-        throw new Error(`Start word "${insertStart}" does not exist in the dictionary`);
-    }
-
-    if (!targetEntries.length) {
-        throw new Error(`Target word "${insertTarget}" does not exist in the dictionary`);
-    }
-
-    const insert = gameData
+    const insert = gameData;
 
     insert.startWord = insertStart;
     insert.targetWord = insertTarget;
@@ -116,22 +101,25 @@ export async function joinGame(playerId: string, game: Game, admin: boolean = fa
     });
 }
 
-export const getEntriesForGame = cache(async (game: Pick<GameInsert, "sharedLexicalFields" | "exclusiveSenseLexicalFields" | "exclusiveEntryLexicalFields">, word: string) => {
+export const getRecordForGame = cache(
+    async (
+        game: Pick<GameInsert, 'sharedLexicalFields' | 'exclusiveSenseLexicalFields' | 'exclusiveEntryLexicalFields'>,
+        word: string
+    ) => {
+        return getWordRecord(
+            word,
+            game.sharedLexicalFields,
+            game.exclusiveSenseLexicalFields,
+            game.exclusiveEntryLexicalFields
+        );
+    }
+);
 
-    return getDictionaryEntries(word, game.sharedLexicalFields, game.exclusiveSenseLexicalFields, game.exclusiveEntryLexicalFields);
-});  
-
-
-export async function addRaceStep(
-    game: Game,
-    playerId: string,
-    word: RichToken,
-    side: 'start' | 'target' = 'start'
-) {
+export async function addRaceStep(game: Game, playerId: string, word: RichToken, side: 'start' | 'target' = 'start') {
     const queryWord = game.lemmatise ? word.l : word.w;
 
     // this also validates that the token is in the  and otherwise throws an error
-    const entries = await getEntriesForGame(game, queryWord);
+    const entry = await getRecordForGame(game, queryWord);
 
     const newStep: RaceStep = {
         word: queryWord,
@@ -148,5 +136,5 @@ export async function addRaceStep(
         .where(and(eq(gamePlayerLink.gameId, game.id), eq(gamePlayerLink.playerId, playerId)))
         .returning();
 
-    return { entries, newStep, found: updatedLink.found };
+    return { entry, newStep, found: updatedLink.found };
 }

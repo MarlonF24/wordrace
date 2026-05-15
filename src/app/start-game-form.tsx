@@ -40,11 +40,9 @@ const LEXICAL_KEY_DISPLAYS: Record<SelectableLexicalKey, { label: string; desc: 
     coordinate_terms: { label: 'Coordinate Terms', desc: 'Words that share a common hypernym with the base word' },
 } as const;
 
-
 const ALWAYS_SELECTED_LEXICAL_FIELDS: Set<SelectableLexicalKey> = new Set(['glosses']);
 
 export default function StartGameForm() {
-
     const [selectedExclusiveEntryLexicalKeys, setSelectedExclusiveEntryLexicalKeys] = useState<
         SelectableExclusiveEntryLexicalKey[]
     >([...SELECTABLE_EXCLUSIVE_ENTRY_LEXICAL_KEYS_SET.intersection(ALWAYS_SELECTED_LEXICAL_FIELDS)]);
@@ -100,15 +98,13 @@ export default function StartGameForm() {
         }
     }
 
-
-
     const [error, setError] = useState<string | null>(null);
 
     const [, formAction, isPending] = useActionState(async (_prevState: unknown, formData: FormData) => {
         const startWord = formData.get('startWord')!.toString();
         const targetWord = formData.get('targetWord')!.toString();
 
-        const mode = (formData.get('mode')?.toString() as GameMode);
+        const mode = formData.get('mode')?.toString() as GameMode;
         const lemmatise = formData.get('lemmatise') === 'true';
 
         const exclusiveEntryLexicalFields = Object.fromEntries(
@@ -119,7 +115,9 @@ export default function StartGameForm() {
             formData.getAll(LEXICAL_SECTIONS.exclusiveSense.name).map((k) => [k, true])
         );
 
-        const sharedLexicalFields = Object.fromEntries(formData.getAll(LEXICAL_SECTIONS.shared.name).map((k) => [k, true]));
+        const sharedLexicalFields = Object.fromEntries(
+            formData.getAll(LEXICAL_SECTIONS.shared.name).map((k) => [k, true])
+        );
 
         console.debug('Assembled lexical fields:', {
             exclusiveEntryLexicalFields,
@@ -163,11 +161,29 @@ export default function StartGameForm() {
                                 checked={(state as readonly string[]).includes(field)}
                                 onCheckedChange={(checked) => {
                                     if (key === 'shared') {
-                                        toggleLexicalField(setter as React.Dispatch<React.SetStateAction<SelectableSharedLexicalKey[]>>, field as SelectableSharedLexicalKey, !!checked);
+                                        toggleLexicalField(
+                                            setter as React.Dispatch<
+                                                React.SetStateAction<SelectableSharedLexicalKey[]>
+                                            >,
+                                            field as SelectableSharedLexicalKey,
+                                            !!checked
+                                        );
                                     } else if (key === 'exclusiveSense') {
-                                        toggleLexicalField(setter as React.Dispatch<React.SetStateAction<SelectableExclusiveSenseLexicalKey[]>>, field as SelectableExclusiveSenseLexicalKey, !!checked);
+                                        toggleLexicalField(
+                                            setter as React.Dispatch<
+                                                React.SetStateAction<SelectableExclusiveSenseLexicalKey[]>
+                                            >,
+                                            field as SelectableExclusiveSenseLexicalKey,
+                                            !!checked
+                                        );
                                     } else if (key === 'exclusiveEntry') {
-                                        toggleLexicalField(setter as React.Dispatch<React.SetStateAction<SelectableExclusiveEntryLexicalKey[]>>, field as SelectableExclusiveEntryLexicalKey, !!checked);
+                                        toggleLexicalField(
+                                            setter as React.Dispatch<
+                                                React.SetStateAction<SelectableExclusiveEntryLexicalKey[]>
+                                            >,
+                                            field as SelectableExclusiveEntryLexicalKey,
+                                            !!checked
+                                        );
                                     }
                                 }}
                             />
@@ -189,20 +205,33 @@ export default function StartGameForm() {
             className="self-start text-xs text-muted-foreground"
             onClick={() => {
                 const allKeys = Object.keys(LEXICAL_KEY_DISPLAYS) as SelectableLexicalKey[];
-                const currentTotal = Object.values(LEXICAL_SECTIONS).reduce(
-                    (acc, { state }) => acc + state.length,
-                    0
-                );
+                const currentTotal = Object.values(LEXICAL_SECTIONS).reduce((acc, { state }) => acc + state.length, 0);
 
                 const selectAll = currentTotal < allKeys.length;
-                
+
                 Object.entries(LEXICAL_SECTIONS).forEach(([key, section]) => {
                     if (key === 'shared') {
-                        setAllLexicalFields(section.setter as React.Dispatch<React.SetStateAction<SelectableSharedLexicalKey[]>>, section.keys as readonly SelectableSharedLexicalKey[], selectAll);
+                        setAllLexicalFields(
+                            section.setter as React.Dispatch<React.SetStateAction<SelectableSharedLexicalKey[]>>,
+                            section.keys as readonly SelectableSharedLexicalKey[],
+                            selectAll
+                        );
                     } else if (key === 'exclusiveSense') {
-                        setAllLexicalFields(section.setter as React.Dispatch<React.SetStateAction<SelectableExclusiveSenseLexicalKey[]>>, section.keys as readonly SelectableExclusiveSenseLexicalKey[], selectAll);
+                        setAllLexicalFields(
+                            section.setter as React.Dispatch<
+                                React.SetStateAction<SelectableExclusiveSenseLexicalKey[]>
+                            >,
+                            section.keys as readonly SelectableExclusiveSenseLexicalKey[],
+                            selectAll
+                        );
                     } else if (key === 'exclusiveEntry') {
-                        setAllLexicalFields(section.setter as React.Dispatch<React.SetStateAction<SelectableExclusiveEntryLexicalKey[]>>, section.keys as readonly SelectableExclusiveEntryLexicalKey[], selectAll);
+                        setAllLexicalFields(
+                            section.setter as React.Dispatch<
+                                React.SetStateAction<SelectableExclusiveEntryLexicalKey[]>
+                            >,
+                            section.keys as readonly SelectableExclusiveEntryLexicalKey[],
+                            selectAll
+                        );
                     }
                 });
             }}
@@ -213,8 +242,6 @@ export default function StartGameForm() {
                 : 'Select All'}
         </Button>
     );
-
-
 
     return (
         <form
@@ -320,7 +347,8 @@ export default function StartGameForm() {
                                 <div className="space-y-1 leading-none">
                                     <span className="font-semibold text-sm">Lemmatisation</span>
                                     <p className="text-xs text-muted-foreground max-w-[200px]">
-                                        Clicking a word matches its base dictionary form (e.g. &quot;running&quot; matches &quot;run&quot;).
+                                        Clicking a word matches its base dictionary form (e.g. &quot;running&quot;
+                                        matches &quot;run&quot;).
                                     </p>
                                 </div>
                             </label>
