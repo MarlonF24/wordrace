@@ -13,22 +13,21 @@ import {
     SelectableEntryLexicalKey,
 } from "./types";
 
-import { processRawEntry } from "./seed";
 
 
 
 type FixedEntryKey = Exclude<EntryKey, SelectableLexicalKey>;
 
-type Typ<T extends string> = {
+type TrueJSON<T extends string> = {
     [K in T]?: true;
 };
 
 // as only the entry keys are available at runtime, we split it up to be able to filter  
 export async function getDictionaryEntries(
     word: string,
-    sharedLexicalFields: Typ<SelectableSharedLexicalKey> = {},
-    exclusiveSenseLexicalFields: Typ<SelectableExclusiveSenseLexicalKey> = {},
-    exclusiveEntryLexicalFields: Typ<SelectableExclusiveEntryLexicalKey> = {},
+    sharedLexicalFields: TrueJSON<SelectableSharedLexicalKey> = {},
+    exclusiveSenseLexicalFields: TrueJSON<SelectableExclusiveSenseLexicalKey> = {},
+    exclusiveEntryLexicalFields: TrueJSON<SelectableExclusiveEntryLexicalKey> = {},
 ): Promise<Entry[]> {
 
 
@@ -88,7 +87,7 @@ export async function getDictionaryEntries(
 
 
 
-function processGlossNodes(rootNodes: GlossNode[], senseLexicalFields: Typ<SelectableSenseLexicalKey>): { rootNodes: GlossNode[], foundSenseLexicalFields: Set<SelectableSenseLexicalKey> } {
+function processGlossNodes(rootNodes: GlossNode[], senseLexicalFields: TrueJSON<SelectableSenseLexicalKey>): { rootNodes: GlossNode[], foundSenseLexicalFields: Set<SelectableSenseLexicalKey> } {
     // cleans glossnodes from unselected lexical fields
         
     const nodesToProcess = [...rootNodes];

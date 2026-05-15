@@ -12,12 +12,11 @@ const schemaName = process.env.DATA_SCHEMA || "public"
 assert(schemaName, "DATA_SCHEMA environment variable must be set")
 
 
-const tableFunc = (
-  schemaName === "public" // drizzle has some issue with doing schema("public")
-    ? p.snakeCase.table 
-    : p.snakeCase.schema(schemaName).table
-) as p.PgTableFn<string | undefined>;
+export const schema = schemaName === 'public' ? undefined : p.snakeCase.schema(schemaName);
 
+const tableFunc = schema
+    ? p.snakeCase.schema(schemaName).table
+    : (p.snakeCase.table as p.PgTableFn<string | undefined>);
 
 export const playerTable = tableFunc("players", {
   id: p.uuid().primaryKey().defaultRandom(),
