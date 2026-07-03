@@ -34,7 +34,7 @@ export const GAME_MODES: Record<GameMode, { label: string; description: string }
   },
   collide: {
     label: "Collide",
-    description: "Meet in the middle",
+    description: "Meet in the middle; definition filler words are locked",
   },
 } 
 
@@ -95,5 +95,4 @@ export const gamePlayerLink = tableFunc("game_player_link", {
 }, (table) => [
   p.primaryKey({columns: [table.gameId, table.playerId]}),
 ])
-
 

@@ -13,10 +13,11 @@ import { LexicalFieldDisplay } from "./lexicalFieldDisplay";
 
 
 export function RecordDisplay(
-  { word, record, side}: { 
+  { word, record, side, suppressFunctionWords}: { 
     word: string, 
     record: WordRecord,
-    side: "start" | "target"
+    side: "start" | "target",
+    suppressFunctionWords: boolean,
   }
 ) {
   const presentEntryLexicalFields = SELECTABLE_ENTRY_LEXICAL_KEYS.filter(key => record.lexicalEntries.some(entry => key in entry));
@@ -52,7 +53,7 @@ export function RecordDisplay(
               <Card className="h-full p-2 border-2 shadow-[4px_4px_0px_0px_var(--shadow-color)] bg-card flex flex-col rounded-xl overflow-hidden">
                 <CardContent className="flex-1 overflow-y-auto md:p-6 scrollbar-thin">
                   {tab === "definitions" ? (
-                    <SensesDisplay record={record} side={side} />
+                    <SensesDisplay record={record} side={side} suppressFunctionWords={suppressFunctionWords} />
                   ) : (
                     <div className="space-y-6">
                       <LexicalFieldDisplay lexicalKey={tab} record={record} side={side} />

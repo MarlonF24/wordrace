@@ -35,6 +35,7 @@ export default async function GamePage({ params }: { params: Promise<{ gameId: s
     }
 
     const currStartWord = startLinks[startLinks.length - 1].word;
+    const suppressFunctionWords = game.mode === 'collide';
 
     const startRecordPromise = getRecordForGame(game, currStartWord);
 
@@ -53,6 +54,7 @@ export default async function GamePage({ params }: { params: Promise<{ gameId: s
                 targetLinks={targetLinks}
                 startRecord={startRecord}
                 targetRecord={targetRecord}
+                suppressFunctionWords={suppressFunctionWords}
             />
         );
     } else {
@@ -60,7 +62,13 @@ export default async function GamePage({ params }: { params: Promise<{ gameId: s
 
         raceLanes = (
             <div className="w-full h-full">
-                <RaceLane links={startLinks} record={startRecord} side={'start'} isMirrored={false} />
+                <RaceLane
+                    links={startLinks}
+                    record={startRecord}
+                    side={'start'}
+                    isMirrored={false}
+                    suppressFunctionWords={suppressFunctionWords}
+                />
             </div>
         );
     }
@@ -111,22 +119,36 @@ const DoubleLane = ({
     targetLinks,
     startRecord,
     targetRecord,
+    suppressFunctionWords,
 }: {
     startLinks: RaceStep[];
     targetLinks: RaceStep[];
     startRecord: WordRecord;
     targetRecord: WordRecord;
+    suppressFunctionWords: boolean;
 }) => {
     return (
         <>
             <div className="flex-1 min-w-0 border-r-2 border-border relative">
                 <div className="absolute inset-0">
-                    <RaceLane links={startLinks} record={startRecord} side="start" isMirrored={false} />
+                    <RaceLane
+                        links={startLinks}
+                        record={startRecord}
+                        side="start"
+                        isMirrored={false}
+                        suppressFunctionWords={suppressFunctionWords}
+                    />
                 </div>
             </div>
             <div className="flex-1 min-w-0 relative">
                 <div className="absolute inset-0">
-                    <RaceLane links={targetLinks} record={targetRecord} side="target" isMirrored={true} />
+                    <RaceLane
+                        links={targetLinks}
+                        record={targetRecord}
+                        side="target"
+                        isMirrored={true}
+                        suppressFunctionWords={suppressFunctionWords}
+                    />
                 </div>
             </div>
 

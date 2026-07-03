@@ -1,3 +1,5 @@
+import { type WiktionaryPosTag } from '@/lib/part-of-speech';
+
 export interface Linkage {
     word: string; // may also be multiple words but called "word"
 }
@@ -141,6 +143,7 @@ export type SelectableLexicalKey = (typeof SELECTABLE_LEXICAL_KEYS)[number];
 
 export type RichToken = {
     l: string; // lemma
+    p: WiktionaryPosTag; // Wiktionary-style part of speech
     w: string; // original word
 };
 

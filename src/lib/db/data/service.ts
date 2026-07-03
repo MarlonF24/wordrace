@@ -5,6 +5,7 @@ import { cache } from 'react';
 
 import { getWordRecord, RichToken } from '../dictionary';
 import { tokenizeToRichText } from '@/lib/lemmatisation';
+import { isFunctionWordToken } from '@/lib/part-of-speech';
 
 export async function createPlayer(playerID: string) {
     const [player] = await db
@@ -37,24 +38,33 @@ export async function createGame(playerID: string, gameData: GameInsert) {
         throw new Error('At least one lexical field must be selected to create a game');
     }
 
+
+    
+    const startToken = tokenizeToRichText(gameData.startWord)[0];
+    if (typeof startToken !== 'object') throw new Error('Could not tokenize start word'); // this happens if it punctuation or something that cannot be lemmatised, look into tokenizeToRichText for details
+
+    const targetToken = tokenizeToRichText(gameData.targetWord)[0];
+    if (typeof targetToken !== 'object') throw new Error('Could not tokenize target word');
+
+
     let insertStart: string;
     let insertTarget: string;
 
     if (gameData.lemmatise) {
-        const tokenizedStart = tokenizeToRichText(gameData.startWord)[0];
-        if (typeof tokenizedStart !== 'object') throw new Error('Could not tokenize start word'); // this happens if it punctuation or something that cannot be lemmatised, look into tokenizeToRichText for details
-        insertStart = tokenizedStart.l;
-
-        const tokenizedTarget = tokenizeToRichText(gameData.targetWord)[0];
-        if (typeof tokenizedTarget !== 'object') throw new Error('Could not tokenize target word');
-        insertTarget = tokenizedTarget.l;
+        insertStart = startToken.l;
+        insertTarget = targetToken.l;        
     } else {
-        insertStart = gameData.startWord;
-        insertTarget = gameData.targetWord;
+        insertStart = startToken.w;
+        insertTarget = targetToken.w;
     }
 
     if (insertStart === insertTarget) {
         throw new Error('Start and target words cannot be the same');
+    }
+
+    if (gameData.mode == "collide") { // gameData.mode == undefined its "normal", so no need to check for that
+        if (isFunctionWordToken(startToken)) throw new Error(`Start Word "${startToken.w}" is a function word which are prohibited in collide mode`);
+        if (isFunctionWordToken(targetToken)) throw new Error(`Target Word "${targetToken.w}" is a function word which are prohibited in collide mode`);
     }
 
     const [startRecord, targetRecord] = await Promise.all([ // only for testing whether the words exist and have the at least one of the requested lexical fields, throws error otherwise

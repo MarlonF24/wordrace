@@ -6,12 +6,14 @@ import { type WordRecord } from "@/lib/db/dictionary/types";
 export function RaceLane({
     links,
     record,
-    side
+    side,
+    suppressFunctionWords,
 }: {
     links: RaceStep[];
     record: WordRecord;
     side: "start" | "target";
     isMirrored?: boolean;
+    suppressFunctionWords: boolean;
 }) {
     const lastWord = links.at(-1)?.word;
 
@@ -32,6 +34,7 @@ export function RaceLane({
                 word={lastWord} 
                 record={record} 
                 side={side}
+                suppressFunctionWords={suppressFunctionWords}
              />
         </div>
     );

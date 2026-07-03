@@ -10,7 +10,15 @@ import { type GlossNode, type SelectableLexicalFields } from '@/lib/db/dictionar
 import { LexicalFieldBadge } from './lexicalFieldDisplay';
 import { PosBadge } from './posBadge';
 
-export function SensesDisplay({ record, side }: { record: WordRecord; side: 'start' | 'target' }) {
+export function SensesDisplay({
+    record,
+    side,
+    suppressFunctionWords,
+}: {
+    record: WordRecord;
+    side: 'start' | 'target';
+    suppressFunctionWords: boolean;
+}) {
     if (!record.lexicalEntries || record.lexicalEntries.length === 0) {
         return (
             <div className="flex items-center justify-center p-8 text-center min-h-[200px]">
@@ -31,7 +39,14 @@ export function SensesDisplay({ record, side }: { record: WordRecord; side: 'sta
                         </div>
                         <ul className="space-y-4">
                             {entry.senses.map((node, j) => (
-                                <RenderGlossNode key={j} node={node} index={j} depth={0} side={side} />
+                                <RenderGlossNode
+                                    key={j}
+                                    node={node}
+                                    index={j}
+                                    depth={0}
+                                    side={side}
+                                    suppressFunctionWords={suppressFunctionWords}
+                                />
                             ))}
                         </ul>
                     </div>
@@ -46,11 +61,13 @@ function RenderGlossNode({
     index,
     depth = 0,
     side,
+    suppressFunctionWords,
 }: {
     node: GlossNode;
     index: number;
     depth?: number;
     side: 'start' | 'target';
+    suppressFunctionWords: boolean;
 }) {
     const isTopLevel = depth === 0;
 
@@ -84,7 +101,11 @@ function RenderGlossNode({
                             isTopLevel ? 'text-lg' : 'text-base text-muted-foreground/90'
                         )}
                     >
-                        <RichTextRenderer tokens={node.lexicalFields.glosses} side={side} />
+                        <RichTextRenderer
+                            tokens={node.lexicalFields.glosses}
+                            side={side}
+                            suppressFunctionWords={suppressFunctionWords}
+                        />
                     </div>
                 )}
             </div>
@@ -130,7 +151,14 @@ function RenderGlossNode({
             {node.children && node.children.length > 0 && (
                 <ul className={cn('space-y-2 mt-2', isTopLevel ? 'pl-10' : 'pl-6')}>
                     {node.children.map((child, idx) => (
-                        <RenderGlossNode key={idx} side={side} node={child} index={idx} depth={depth + 1} />
+                        <RenderGlossNode
+                            key={idx}
+                            side={side}
+                            node={child}
+                            index={idx}
+                            depth={depth + 1}
+                            suppressFunctionWords={suppressFunctionWords}
+                        />
                     ))}
                 </ul>
             )}
