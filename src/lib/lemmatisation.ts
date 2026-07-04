@@ -48,6 +48,13 @@ X	Other: Words that cannot be assigned any POS tag	He is my मित्र/X
 SPACE	Space: New line (\n), tab (\t), return (\r) or any combination of these characters is tagged as SPACE. This tag is not based on Universal POS tags.	Hello     /SPACE world!
 */
 
+/**
+ * Tokenize display text into strings and clickable rich tokens.
+ *
+ * Whitespace and punctuation remain strings so rendering preserves prose
+ * layout. Word-like tokens carry surface form, lemma, and Wiktionary-style POS
+ * metadata for game movement and collide-mode function-word filtering.
+ */
 export function tokenizeToRichText(text: string): RichText {
     const doc = nlp.readDoc(text);
     const tokens = doc.tokens();

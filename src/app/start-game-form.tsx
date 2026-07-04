@@ -24,7 +24,6 @@ import {
     type SelectableLexicalKey,
 } from '@/lib/db/dictionary/types';
 
-// TODO: make better descriptions
 const LEXICAL_KEY_DISPLAYS: Record<SelectableLexicalKey, { label: string; desc: string }> = {
     glosses: { label: 'Glosses', desc: 'Include the glosses of the senses of the word' },
     antonyms: { label: 'Antonyms', desc: 'Words with opposite meanings' },
@@ -40,19 +39,27 @@ const LEXICAL_KEY_DISPLAYS: Record<SelectableLexicalKey, { label: string; desc: 
     coordinate_terms: { label: 'Coordinate Terms', desc: 'Words that share a common hypernym with the base word' },
 } as const;
 
-const ALWAYS_SELECTED_LEXICAL_FIELDS: Set<SelectableLexicalKey> = new Set(['glosses']);
+const ALWAYS_SELECTED_LEXICAL_FIELDS: Set<SelectableLexicalKey> = new Set(); // "are not shown as options, always selected"
+const DEFAULT_SELECTED_LEXICAL_FIELDS: Set<SelectableLexicalKey> = new Set(["glosses"])
+const INITIAL_SELECTED_LEXICAL_FIELDS: Set<SelectableLexicalKey> = ALWAYS_SELECTED_LEXICAL_FIELDS.union(DEFAULT_SELECTED_LEXICAL_FIELDS)
 
+/**
+ * Render the game creation form and submit its selected options to the server action.
+ *
+ * The form keeps lexical-field UI state client-side, serializes selected fields
+ * into hidden inputs, and receives validation errors from `startGameAction`.
+ */
 export default function StartGameForm() {
     const [selectedExclusiveEntryLexicalKeys, setSelectedExclusiveEntryLexicalKeys] = useState<
         SelectableExclusiveEntryLexicalKey[]
-    >([...SELECTABLE_EXCLUSIVE_ENTRY_LEXICAL_KEYS_SET.intersection(ALWAYS_SELECTED_LEXICAL_FIELDS)]);
+    >([...SELECTABLE_EXCLUSIVE_ENTRY_LEXICAL_KEYS_SET.intersection(INITIAL_SELECTED_LEXICAL_FIELDS)]);
 
     const [selectedExclusiveSenseLexicalKeys, setSelectedExclusiveSenseLexicalKeys] = useState<
         SelectableExclusiveSenseLexicalKey[]
-    >([...SELECTABLE_EXCLUSIVE_SENSE_LEXICAL_KEYS_SET.intersection(ALWAYS_SELECTED_LEXICAL_FIELDS)]);
+    >([...SELECTABLE_EXCLUSIVE_SENSE_LEXICAL_KEYS_SET.intersection(INITIAL_SELECTED_LEXICAL_FIELDS)]);
 
     const [selectedSharedLexicalKeys, setSelectedSharedLexicalKeys] = useState<SelectableSharedLexicalKey[]>([
-        ...SELECTABLE_SHARED_LEXICAL_KEYS_SET.intersection(ALWAYS_SELECTED_LEXICAL_FIELDS),
+        ...SELECTABLE_SHARED_LEXICAL_KEYS_SET.intersection(INITIAL_SELECTED_LEXICAL_FIELDS),
     ]);
 
     const [lemmatise, setLemmatise] = useState(true);

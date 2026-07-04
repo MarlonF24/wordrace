@@ -3,6 +3,12 @@ import { History } from "./history";
 import { RecordDisplay } from "./recordDisplay";
 import { type WordRecord } from "@/lib/db/dictionary/types";
 
+/**
+ * Render one playable side of a race.
+ *
+ * A lane always has a history and a current dictionary record. Collide mode
+ * renders two lanes with opposite `side` values.
+ */
 export function RaceLane({
     links,
     record,

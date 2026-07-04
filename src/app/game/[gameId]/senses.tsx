@@ -10,6 +10,12 @@ import { type GlossNode, type SelectableLexicalFields } from '@/lib/db/dictionar
 import { LexicalFieldBadge } from './lexicalFieldDisplay';
 import { PosBadge } from './posBadge';
 
+/**
+ * Render the nested sense tree for one dictionary record.
+ *
+ * Function-word suppression only applies to prose glosses. Sense-level lexical
+ * fields continue through `LexicalFieldBadge`, which keeps intentional links clickable.
+ */
 export function SensesDisplay({
     record,
     side,
@@ -56,6 +62,9 @@ export function SensesDisplay({
     );
 }
 
+/**
+ * Render one gloss node and recursively render its child senses.
+ */
 function RenderGlossNode({
     node,
     index,

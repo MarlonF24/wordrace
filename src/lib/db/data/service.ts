@@ -7,6 +7,12 @@ import { getWordRecord, RichToken } from '../dictionary';
 import { tokenizeToRichText } from '@/lib/lemmatisation';
 import { isFunctionWordToken } from '@/lib/part-of-speech';
 
+/**
+ * Create a player row for the cookie identity assigned by `proxy.ts`.
+ *
+ * The caller supplies the UUID so the browser cookie and database row stay
+ * aligned. Existing players are expected to be loaded before this is called.
+ */
 export async function createPlayer(playerID: string) {
     const [player] = await db
         .insert(playerTable)
@@ -18,6 +24,12 @@ export async function createPlayer(playerID: string) {
     return player;
 }
 
+/**
+ * Load the race state for one player inside one game.
+ *
+ * The returned row contains both lanes and derived completion fields. It does
+ * not include the joined game; route-level loaders add that when needed.
+ */
 export async function getGamePlayerLink(gameId: string, playerId: string) {
     return await db.query.gamePlayerLink.findFirst({
         where: {
@@ -27,9 +39,15 @@ export async function getGamePlayerLink(gameId: string, playerId: string) {
     });
 }
 
+/**
+ * Validate and create a game, then join the creating player as admin.
+ *
+ * Start and target words are tokenized once, normalized according to the
+ * lemmatization option, checked against selected dictionary fields, and rejected
+ * when collide mode would start from a function-word shortcut.
+ */
 export async function createGame(playerID: string, gameData: GameInsert) {
-    // integrity checks, some are also done by the db itself but...
-
+    // Keep service-level checks close to the insert so server actions share the same rules.
     if (
         !gameData.sharedLexicalFields &&
         !gameData.exclusiveSenseLexicalFields &&
@@ -41,7 +59,7 @@ export async function createGame(playerID: string, gameData: GameInsert) {
 
     
     const startToken = tokenizeToRichText(gameData.startWord)[0];
-    if (typeof startToken !== 'object') throw new Error('Could not tokenize start word'); // this happens if it punctuation or something that cannot be lemmatised, look into tokenizeToRichText for details
+    if (typeof startToken !== 'object') throw new Error('Could not tokenize start word');
 
     const targetToken = tokenizeToRichText(gameData.targetWord)[0];
     if (typeof targetToken !== 'object') throw new Error('Could not tokenize target word');
@@ -62,12 +80,13 @@ export async function createGame(playerID: string, gameData: GameInsert) {
         throw new Error('Start and target words cannot be the same');
     }
 
-    if (gameData.mode == "collide") { // gameData.mode == undefined its "normal", so no need to check for that
+    if (gameData.mode === "collide") {
         if (isFunctionWordToken(startToken)) throw new Error(`Start Word "${startToken.w}" is a function word which are prohibited in collide mode`);
         if (isFunctionWordToken(targetToken)) throw new Error(`Target Word "${targetToken.w}" is a function word which are prohibited in collide mode`);
     }
 
-    const [startRecord, targetRecord] = await Promise.all([ // only for testing whether the words exist and have the at least one of the requested lexical fields, throws error otherwise
+    // Record loading validates word existence and selected-field availability before insertion.
+    await Promise.all([
         getRecordForGame(gameData, insertStart),
         getRecordForGame(gameData, insertTarget),
     ]);
@@ -100,6 +119,12 @@ export async function createGame(playerID: string, gameData: GameInsert) {
     return game;
 }
 
+/**
+ * Add a player to a game and initialize both race lanes at the game endpoints.
+ *
+ * Normal mode only renders the start lane, but the target lane is still
+ * initialized so collide-mode and derived completion fields share one shape.
+ */
 export async function joinGame(playerId: string, game: Game, admin: boolean = false) {
     const time = Date.now();
     await db.insert(gamePlayerLink).values({
@@ -112,6 +137,12 @@ export async function joinGame(playerId: string, game: Game, admin: boolean = fa
 }
 
 export const getRecordForGame = cache(
+    /**
+     * Load the dictionary record for a word using one game's selected fields.
+     *
+     * React caches this per request so both collide lanes can ask for records
+     * without duplicated database work when the same word appears.
+     */
     async (
         game: Pick<GameInsert, 'sharedLexicalFields' | 'exclusiveSenseLexicalFields' | 'exclusiveEntryLexicalFields'>,
         word: string
@@ -125,10 +156,18 @@ export const getRecordForGame = cache(
     }
 );
 
+/**
+ * Append a clicked rich token to one side of the player's race history.
+ *
+ * The clicked token is normalized according to the game lemmatization setting,
+ * then resolved through `getRecordForGame`. That query is also the validation
+ * step: invalid words or unavailable lexical fields throw before history is
+ * updated.
+ */
 export async function addRaceStep(game: Game, playerId: string, word: RichToken, side: 'start' | 'target' = 'start') {
     const queryWord = game.lemmatise ? word.l : word.w;
 
-    // this also validates that the token is in the  and otherwise throws an error
+    // Loading the record validates the clicked token before appending history.
     const entry = await getRecordForGame(game, queryWord);
 
     const newStep: RaceStep = {

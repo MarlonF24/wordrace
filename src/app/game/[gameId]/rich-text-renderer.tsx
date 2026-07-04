@@ -2,6 +2,12 @@ import { type RichText } from "@/lib/db/dictionary/types";
 import { isFunctionWordToken } from "@/lib/part-of-speech";
 import { WordButton } from "./word-button";
 
+/**
+ * Render rich text as literal strings plus clickable word tokens.
+ *
+ * `suppressFunctionWords` is used for collide-mode prose only. Explicit lexical
+ * links leave it disabled so dictionary-provided links stay clickable.
+ */
 export function RichTextRenderer({
     tokens,
     side,

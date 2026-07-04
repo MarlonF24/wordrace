@@ -48,8 +48,6 @@ export type RawSense = {
     senseid: string[];
 } & Partial<RawSenseLexicalFields>;
 
-type RawSenseKey = keyof RawSense;
-
 // ----------------------------------------
 export interface Category {
     kind: string;
@@ -74,8 +72,6 @@ export type RawEntry = {
     senses: RawSense[];
 } & Partial<RawExclusiveEntryLexicalFields> &
     Partial<RawSharedLexicalFields>;
-
-type RawEntryKey = keyof RawEntry;
 
 export type RawLexicalFields = RawExclusiveEntryLexicalFields & RawExclusiveSenseLexicalFields & RawSharedLexicalFields;
 

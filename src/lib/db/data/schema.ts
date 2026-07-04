@@ -8,6 +8,7 @@ import {
 } from "../dictionary/types";
 import assert from "node:assert";
 
+// Live game data can live in `public` or in a configured schema for isolated environments.
 const schemaName = process.env.DATA_SCHEMA || "public" 
 assert(schemaName, "DATA_SCHEMA environment variable must be set")
 
@@ -39,8 +40,7 @@ export const GAME_MODES: Record<GameMode, { label: string; description: string }
 } 
 
 
-
-
+// Games store immutable setup plus generated lexical-field unions for querying records.
 export const gameTable = tableFunc("games", {
   id: p.uuid().primaryKey().defaultRandom().notNull(),
   startWord: p.text().notNull(),
@@ -77,6 +77,7 @@ export interface RaceStep {
   timestamp: number;
 }
 
+// Player links store mutable race history and generated completion/stat fields.
 export const gamePlayerLink = tableFunc("game_player_link", {
   gameId: p.uuid().references(() => gameTable.id).notNull(),
   playerId: p.uuid().references(() => playerTable.id).notNull(),
@@ -95,4 +96,3 @@ export const gamePlayerLink = tableFunc("game_player_link", {
 }, (table) => [
   p.primaryKey({columns: [table.gameId, table.playerId]}),
 ])
-

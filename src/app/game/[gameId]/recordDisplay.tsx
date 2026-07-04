@@ -11,7 +11,12 @@ import {
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { LexicalFieldDisplay } from "./lexicalFieldDisplay";
 
-
+/**
+ * Render the current word and its selected dictionary fields.
+ *
+ * Definitions are always available as the first tab. Entry-level lexical fields
+ * appear as additional tabs only when the loaded record contains them.
+ */
 export function RecordDisplay(
   { word, record, side, suppressFunctionWords}: { 
     word: string, 

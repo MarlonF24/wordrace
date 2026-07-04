@@ -66,6 +66,12 @@ export const FUNCTION_WORD_AUXILIARY_LEMMAS: ReadonlySet<string> = new Set([
     "would",
 ]);
 
+/**
+ * Convert one Wink NLP POS tag into the Wiktionary-style tag stored on `RichToken`.
+ *
+ * Throws when Wink returns a tag outside the known mapping so reseeding fails
+ * loudly instead of storing malformed rich-token metadata.
+ */
 export function getWiktionaryPosTag(winkPos: string): WiktionaryPosTag {
     const wiktionaryPos = WIKTIONARY_POS_BY_WINK_POS[winkPos];
     if (!wiktionaryPos) {
@@ -75,6 +81,12 @@ export function getWiktionaryPosTag(winkPos: string): WiktionaryPosTag {
     return wiktionaryPos;
 }
 
+/**
+ * Return whether a rich token should be non-clickable in collide-mode prose.
+ *
+ * POS handles most function words. Auxiliary lemmas cover Wink's `AUX` tags
+ * after they are collapsed into the Wiktionary-style `verb` tag.
+ */
 export function isFunctionWordToken(token: { l: string; p: WiktionaryPosTag }): boolean {
     return FUNCTION_WORD_POS_TAGS.has(token.p) || FUNCTION_WORD_AUXILIARY_LEMMAS.has(token.l.toLowerCase());
 }

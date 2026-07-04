@@ -6,6 +6,12 @@ import { type WordRecord } from '@/lib/db/dictionary';
 import { FoundPopup } from './foundPopup';
 import { ErrorDisplay } from './error-display';
 
+/**
+ * Render the active game for the current player.
+ *
+ * This loader owns the player/game link query, current dictionary-record loads,
+ * and the normal-vs-collide layout decision.
+ */
 export default async function GamePage({ params }: { params: Promise<{ gameId: string }> }) {
     const { gameId } = await params;
     const playerId = await getPlayerId();
@@ -114,6 +120,9 @@ export default async function GamePage({ params }: { params: Promise<{ gameId: s
     );
 }
 
+/**
+ * Render collide mode as two independent lanes that meet when their histories share a word.
+ */
 const DoubleLane = ({
     startLinks,
     targetLinks,

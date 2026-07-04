@@ -15,14 +15,21 @@ type TrueJSON<T extends string> = {
     [K in T]?: true;
 };
 
-// as only the entry keys are available at runtime, we split it up to be able to filter
+/**
+ * Load one processed dictionary record and filter it to the lexical fields selected for a game.
+ *
+ * The stored dictionary row keeps all processed fields. This function builds the
+ * entry-level and sense-level field selections, removes unselected fields from
+ * the returned copy, and throws when the selected fields have nothing displayable
+ * for the requested word.
+ */
 export async function getWordRecord(
     word: string,
     sharedLexicalFields: TrueJSON<SelectableSharedLexicalKey> = {},
     exclusiveSenseLexicalFields: TrueJSON<SelectableExclusiveSenseLexicalKey> = {},
     exclusiveEntryLexicalFields: TrueJSON<SelectableExclusiveEntryLexicalKey> = {}
 ): Promise<WordRecord> {
-    const queryWord = word.toLowerCase(); // dictionary fully lowercased
+    const queryWord = word.toLowerCase();
 
     const result = await db.query.dictionary.findFirst({
         columns: {
@@ -70,7 +77,7 @@ export async function getWordRecord(
     });
 
 
-    // whether theres actually stuff to display (will always throw if entries === [])
+    // A record must expose at least one selected field to be playable/displayable.
     if (noEntryLexicalFieldsFound && noSenseLexicalFieldsFound) {
         throw new Error(
             `For word "${queryWord}", none of the requested lexical fields (${[...Object.keys(sharedLexicalFields), ...Object.keys(exclusiveSenseLexicalFields)].join(', ')}) were found on the entries or their senses`
@@ -82,18 +89,23 @@ export async function getWordRecord(
 
 
 
+/**
+ * Remove unselected sense-level fields from a gloss tree.
+ *
+ * The seed step has already built nested gloss nodes. Query-time filtering keeps
+ * that tree shape and tracks whether any requested sense field was present so
+ * callers can reject empty records.
+ */
 function processGlossNodes(
     rootNodes: GlossNode[],
     senseLexicalFields: TrueJSON<SelectableSenseLexicalKey>
 ): { rootNodes: GlossNode[]; foundSenseLexicalFields: Set<SelectableSenseLexicalKey> } {
-    // cleans glossnodes from unselected lexical fields
-
     const nodesToProcess = [...rootNodes];
     const foundSenseLexicalFields = new Set<SelectableSenseLexicalKey>();
 
-    // DFS
+    // DFS mutates the returned record copy so nested gloss nodes keep only selected fields.
     while (nodesToProcess.length > 0) {
-        const node = nodesToProcess.pop()!; // pops last element -> DFS
+        const node = nodesToProcess.pop()!;
 
         const cleanedLexicalFields = Object.fromEntries(
             Object.entries(node.lexicalFields).filter(([key]) => {

@@ -180,6 +180,12 @@ async function hydrateWithProcessing(reseedWords: boolean = false, minRowsForAbo
 
 
 
+/**
+ * Convert one raw Kaikki entry into the processed entry shape stored by the app.
+ *
+ * Entry-level lexical fields are copied when supported, while senses are
+ * normalized into a nested gloss tree with rich-token text.
+ */
 export function processRawEntry(rawEntry: RawEntry): LexicalEntry {
     const entryLexicalFields = processObjectLexicalFields(rawEntry, SELECTABLE_ENTRY_LEXICAL_KEYS);
 
@@ -192,6 +198,13 @@ export function processRawEntry(rawEntry: RawEntry): LexicalEntry {
     };
 }
 
+/**
+ * Convert the selected object-valued lexical fields on one raw entry or sense.
+ *
+ * The helper keeps the correlation between a lexical key and its value shape,
+ * then delegates tokenization of printable object fields to
+ * `processObjectLexicalField`.
+ */
 function processObjectLexicalFields<T extends FlatObjectSelectableLexicalKey>(
     rawObj: Partial<Pick<RawLexicalFields, T>>,
     lexicalKeys: readonly T[]
@@ -208,6 +221,12 @@ function processObjectLexicalFields<T extends FlatObjectSelectableLexicalKey>(
     );
 }
 
+/**
+ * Convert one object-valued lexical field into display-ready rich text.
+ *
+ * Only fields listed in `OBJECT_FIELDS_TO_PRINT` are rendered; each configured
+ * string field is tokenized so game UI can turn words into links.
+ */
 function processObjectLexicalField<K extends FlatObjectSelectableLexicalKey>(
     lexVal: RawLexicalFields[K],
     lexicalKey: K
@@ -249,6 +268,13 @@ function processObjectLexicalField<K extends FlatObjectSelectableLexicalKey>(
     return result as SelectableLexicalFields[K];
 }
 
+/**
+ * Build a gloss tree from the ordered raw Wiktionary sense list.
+ *
+ * Raw child senses repeat their parent gloss path. The processed tree stores
+ * shared gloss text on the highest common node and only keeps each child's
+ * additional text/fields on that child.
+ */
 export function processSenses(senses: RawSense[]): GlossNode[] {
     /*
      Senses are hierarchical, with glosses potentially being subdefinitions of previous glosses. However, each gloss stores the complete information of its gloss path. We convert that into a tree, removing the redundant information by storing each shared bit on the highest possible shared parent.
@@ -315,6 +341,12 @@ export function processSenses(senses: RawSense[]): GlossNode[] {
     return rootLevel;
 }
 
+/**
+ * Return object-valued sense fields that are new relative to the parent sense.
+ *
+ * Wiktionary child senses usually repeat parent lexical arrays. This function
+ * removes those repeated prefixes so nested UI nodes only display new data.
+ */
 function getDiffObjectSenseLexicalFields(sense: RawSense, parentSense?: RawSense) {
     /* 
     Extract object lexical fields. Given a parentSense, leave only the difference in those to the parent.

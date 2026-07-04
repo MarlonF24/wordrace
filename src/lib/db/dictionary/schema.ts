@@ -8,6 +8,7 @@ import {
 } from './types';
 import assert from 'node:assert';
 
+// Dictionary tables are schema-qualified so seed data can be isolated from game data.
 const schemaName = process.env.DICT_SCHEMA;
 assert(schemaName, 'DICT_SCHEMA environment variable must be set');
 
@@ -18,7 +19,7 @@ export const selectableLexicalKeysEnum = schema // looks goofy but idk making an
 ? schema.enum('selectable_lexical_keys', SELECTABLE_LEXICAL_KEYS)
 : p.pgEnum('selectable_lexical_keys', SELECTABLE_LEXICAL_KEYS);
 
-// dummy table ti get generators to consider the selectable lexical keys enum, otherwise they dont care
+// Dummy table makes Drizzle include the selectable lexical-key enum in generated migrations.
 export const dummyTable = tableFunc(
     'dummy_table',
     {
@@ -33,7 +34,7 @@ export const dictionaryRaw = tableFunc('dictionary_raw', {
 
 const dictionaryTableName = 'dictionary';
 
-// maybe word and pos together could be the PK, but...
+// Processed records are keyed by lowercased word; entries inside the JSON keep their own POS.
 export const dictionary = tableFunc(
     dictionaryTableName,
     {
@@ -58,7 +59,6 @@ export const words = tableFunc(
         word: p.text().primaryKey().notNull(), // lowercase
     },
     (table) => [
-        p.check('lowercase_word', sql`word = lower(word)`),
+        p.check('lowercase_word', sql`${table.word} = lower(${table.word})`),
     ]
 );
-

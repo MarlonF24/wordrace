@@ -3,16 +3,18 @@
 import { redirect } from "next/navigation";
 import { DATA_DB } from "@/lib/db";
 import { getPlayerId } from "@/lib/server/utils";
-import { type SelectableLexicalKey} from "@/lib/db/dictionary/types";
 
-
+/**
+ * Create a game from the submitted form state and redirect into the game route.
+ *
+ * `redirect` throws internally in Next.js, so game creation is isolated from the
+ * redirect call. Creation errors are returned to the client form as plain state.
+ */
 export const startGameAction = async (
     gameData: DATA_DB.GameInsert,
 ) => {
     const playerId = await getPlayerId();
     
-    // again, looks stupid but redirect throws a "NEXT_REDIRECT_ERROR" and thus cant be put into the try without game logic, and game is unbound for some reason even if no error is thrown
-
     let gameId: string;
     
     try {
