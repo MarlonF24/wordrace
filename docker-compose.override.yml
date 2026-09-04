@@ -1,44 +1,28 @@
-
 services:
   db:
-    image: postgres:16-alpine
-    restart: always
-    environment:
-      POSTGRES_USER: ${DB_USER:?Missing DB_USER environment variable}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:?Missing DB_PASSWORD environment variable}
-      POSTGRES_DB: ${DB_NAME:-wordrace}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
     ports:
-      - "5433:5432"
-    healthcheck: # check so that the db is ready before starting the app
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-user} -d ${DB_NAME:-wordrace}"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
+      - "127.0.0.1:${DB_HOST_PORT:-5432}:5432"
 
-  app:
-    build: .
-    volumes:
-      - ${SEED_FILE_PATH:?Missing SEED_FILE_PATH environment variable, you need to specify where the jsonl file with the raw dictionary data is located}:/app/seed_data.jsonl:ro
-    environment:
-      DB_USER: ${DB_USER}
-      DB_PASSWORD: ${DB_PASSWORD}
-      DB_HOST: db
-      DB_PORT: 5432
-      DB_NAME: ${DB_NAME:-wordrace}
-      SEED_DATA_PATH: /app/seed_data.jsonl
-    depends_on:
-      db:
-        condition: service_healthy
-    command: >
-      sh -c "bunx drizzle-kit migrate && 
-             bun \$$SEED_SCRIPT_PATH &&
-             bun run start"
+  nextjs_migrate:
+    build:
+      context: ./apps/nextjs_app
+    image: wordrace-nextjs:development
+
+  nextjs_app:
+    build:
+      context: ./apps/nextjs_app
+    image: wordrace-nextjs:development
     ports:
       - "3000:3000"
-    
-    restart: always
 
-volumes:
-  postgres_data:
+  search_agent_migrate:
+    build:
+      context: ./apps/search_agent
+    image: wordrace-search-agent:development
+
+  search_agent_app:
+    build:
+      context: ./apps/search_agent
+    image: wordrace-search-agent:development
+    ports:
+      - "${SEARCH_AGENT_PORT:-8000}:${SEARCH_AGENT_PORT:-8000}"

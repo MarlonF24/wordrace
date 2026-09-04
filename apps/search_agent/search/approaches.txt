@@ -1,0 +1,43 @@
+1. Classical decision-time search
+   BFS, 
+   A*, 
+   greedy, 
+   beam, 
+   bidirectional (certainly to be implemented for collision mode, but gotta have a look into how to choose reverse transitions for normal mode, querying from the DB might be costly, maybe use some kind of heuristic backward stepping), 
+   MCTS-ish variants (could look at f(n) values achieved in rollouts or something idk).
+
+2. Learned cost/ranking
+   h/Q approximation, 
+   imitation-with-multiple-valid-actions (basically gotta make sure it doesnt overfit on ONE single path, there might be others with equal cost, but tbh if it always picks the same optimal one its fine; main issue prolly that you have to show loads of different paths for different search settings (different lexical fields etc.)), 
+   candidate ranking (works only for hill-climb search where we only compare actions from one state).
+
+3. Learned graph representations (graph-structure-based embeddings additional to the semantic embeddings, for maybe better similarities)
+   Node2Vec, 
+   GNNs, 
+   typed-edge embeddings, 
+   semantic + structural embeddings.
+
+4a. Network-science routing (Use network science to preprocess the graph and extract useful structural information to guide search, like identifying) 
+   hubs, 
+   landmarks, 
+   communities, 
+   centrality, 
+   highway/tiered routing.
+
+4b. Precomputed routing / graph compression
+   landmarks, 
+   hub labels, 
+   shortcut edges, 
+   contraction/tiered graph, 
+   cached partial paths.
+
+   """raw word graph:
+    every word is a node
+
+   compressed routing graph:
+      important hubs / communities / landmarks become upper-tier nodes
+
+   query-time:
+      search locally from start
+      jump into upper-tier routing structure
+      search locally into target"""

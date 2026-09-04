@@ -1,0 +1,2094 @@
+[
+    {
+        "pos": "verb",
+        "senses": [
+            {
+                "children": [],
+                "lexicalFields": {
+                    "glosses": [
+                        {
+                            "l": "to",
+                            "p": "particle",
+                            "w": "To"
+                        },
+                        " ",
+                        {
+                            "l": "find",
+                            "p": "verb",
+                            "w": "find"
+                        },
+                        " ",
+                        {
+                            "l": "fault",
+                            "p": "noun",
+                            "w": "fault"
+                        },
+                        " ",
+                        {
+                            "l": "with",
+                            "p": "prep",
+                            "w": "with"
+                        },
+                        ",",
+                        " ",
+                        {
+                            "l": "blame",
+                            "p": "verb",
+                            "w": "blame"
+                        },
+                        ",",
+                        " ",
+                        {
+                            "l": "censure",
+                            "p": "noun",
+                            "w": "censure"
+                        },
+                        "."
+                    ],
+                    "examples": [
+                        {
+                            "text": [
+                                "[",
+                                "…",
+                                "]",
+                                " ",
+                                {
+                                    "l": "and",
+                                    "p": "conj",
+                                    "w": "and"
+                                },
+                                " ",
+                                {
+                                    "l": "their",
+                                    "p": "pron",
+                                    "w": "their"
+                                },
+                                " ",
+                                {
+                                    "l": "thought",
+                                    "p": "noun",
+                                    "w": "thoughts"
+                                },
+                                " ",
+                                {
+                                    "l": "the",
+                                    "p": "det",
+                                    "w": "the"
+                                },
+                                " ",
+                                {
+                                    "l": "meanwhile",
+                                    "p": "adv",
+                                    "w": "meanwhile"
+                                },
+                                " ",
+                                {
+                                    "l": "accuse",
+                                    "p": "verb",
+                                    "w": "accusing"
+                                },
+                                " ",
+                                {
+                                    "l": "or",
+                                    "p": "conj",
+                                    "w": "or"
+                                },
+                                " ",
+                                {
+                                    "l": "else",
+                                    "p": "adv",
+                                    "w": "else"
+                                },
+                                " ",
+                                {
+                                    "l": "excuse",
+                                    "p": "verb",
+                                    "w": "excusing"
+                                },
+                                " ",
+                                {
+                                    "l": "one",
+                                    "p": "num",
+                                    "w": "one"
+                                },
+                                " ",
+                                {
+                                    "l": "another",
+                                    "p": "det",
+                                    "w": "another"
+                                },
+                                "."
+                            ]
+                        },
+                        {
+                            "text": [
+                                {
+                                    "l": "we",
+                                    "p": "pron",
+                                    "w": "We"
+                                },
+                                " ",
+                                {
+                                    "l": "be",
+                                    "p": "verb",
+                                    "w": "are"
+                                },
+                                " ",
+                                {
+                                    "l": "accuse",
+                                    "p": "verb",
+                                    "w": "accused"
+                                },
+                                " ",
+                                {
+                                    "l": "of",
+                                    "p": "prep",
+                                    "w": "of"
+                                },
+                                " ",
+                                {
+                                    "l": "have",
+                                    "p": "verb",
+                                    "w": "having"
+                                },
+                                " ",
+                                {
+                                    "l": "persuade",
+                                    "p": "verb",
+                                    "w": "persuaded"
+                                },
+                                " ",
+                                {
+                                    "l": "Austria",
+                                    "p": "name",
+                                    "w": "Austria"
+                                },
+                                " ",
+                                {
+                                    "l": "and",
+                                    "p": "conj",
+                                    "w": "and"
+                                },
+                                " ",
+                                {
+                                    "l": "sardinia",
+                                    "p": "name",
+                                    "w": "Sardinia"
+                                },
+                                " ",
+                                {
+                                    "l": "to",
+                                    "p": "particle",
+                                    "w": "to"
+                                },
+                                " ",
+                                {
+                                    "l": "lie",
+                                    "p": "verb",
+                                    "w": "lay"
+                                },
+                                " ",
+                                {
+                                    "l": "down",
+                                    "p": "prep",
+                                    "w": "down"
+                                },
+                                " ",
+                                {
+                                    "l": "their",
+                                    "p": "pron",
+                                    "w": "their"
+                                },
+                                " ",
+                                {
+                                    "l": "arm",
+                                    "p": "noun",
+                                    "w": "arms"
+                                },
+                                " ",
+                                {
+                                    "l": "when",
+                                    "p": "adv",
+                                    "w": "when"
+                                },
+                                " ",
+                                {
+                                    "l": "their",
+                                    "p": "pron",
+                                    "w": "their"
+                                },
+                                " ",
+                                {
+                                    "l": "difference",
+                                    "p": "noun",
+                                    "w": "differences"
+                                },
+                                " ",
+                                {
+                                    "l": "might",
+                                    "p": "verb",
+                                    "w": "might"
+                                },
+                                " ",
+                                {
+                                    "l": "have",
+                                    "p": "verb",
+                                    "w": "have"
+                                },
+                                " ",
+                                {
+                                    "l": "involved",
+                                    "p": "adj",
+                                    "w": "involved"
+                                },
+                                " ",
+                                {
+                                    "l": "the",
+                                    "p": "det",
+                                    "w": "the"
+                                },
+                                " ",
+                                {
+                                    "l": "powers",
+                                    "p": "name",
+                                    "w": "Powers"
+                                },
+                                " ",
+                                {
+                                    "l": "of",
+                                    "p": "prep",
+                                    "w": "of"
+                                },
+                                " ",
+                                {
+                                    "l": "europe",
+                                    "p": "name",
+                                    "w": "Europe"
+                                },
+                                " ",
+                                {
+                                    "l": "in",
+                                    "p": "prep",
+                                    "w": "in"
+                                },
+                                " ",
+                                {
+                                    "l": "contention",
+                                    "p": "noun",
+                                    "w": "contention"
+                                },
+                                "."
+                            ]
+                        }
+                    ],
+                    "synonyms": [
+                        {
+                            "word": [
+                                {
+                                    "l": "denounce",
+                                    "p": "verb",
+                                    "w": "denounce"
+                                }
+                            ]
+                        },
+                        {
+                            "word": [
+                                {
+                                    "l": "fault",
+                                    "p": "noun",
+                                    "w": "fault"
+                                }
+                            ]
+                        },
+                        {
+                            "word": [
+                                {
+                                    "l": "put",
+                                    "p": "verb",
+                                    "w": "put"
+                                },
+                                " ",
+                                {
+                                    "l": "the",
+                                    "p": "det",
+                                    "w": "the"
+                                },
+                                " ",
+                                {
+                                    "l": "blame",
+                                    "p": "noun",
+                                    "w": "blame"
+                                },
+                                " ",
+                                {
+                                    "l": "on",
+                                    "p": "prep",
+                                    "w": "on"
+                                }
+                            ]
+                        },
+                        {
+                            "word": [
+                                {
+                                    "l": "accuse",
+                                    "p": "verb",
+                                    "w": "accuse"
+                                }
+                            ]
+                        },
+                        {
+                            "word": [
+                                {
+                                    "l": "atwite",
+                                    "p": "noun",
+                                    "w": "atwite"
+                                }
+                            ]
+                        },
+                        {
+                            "word": [
+                                {
+                                    "l": "blame",
+                                    "p": "verb",
+                                    "w": "blame"
+                                }
+                            ]
+                        },
+                        {
+                            "word": [
+                                {
+                                    "l": "bumble",
+                                    "p": "verb",
+                                    "w": "bumble"
+                                }
+                            ]
+                        },
+                        {
+                            "word": [
+                                {
+                                    "l": "challenge",
+                                    "p": "noun",
+                                    "w": "challenge"
+                                }
+                            ]
+                        },
+                        {
+                            "word": [
+                                {
+                                    "l": "cop",
+                                    "p": "noun",
+                                    "w": "cop"
+                                },
+                                " ",
+                                {
+                                    "l": "out",
+                                    "p": "prep",
+                                    "w": "out"
+                                }
+                            ]
+                        },
+                        {
+                            "word": [
+                                {
+                                    "l": "decry",
+                                    "p": "verb",
+                                    "w": "decry"
+                                }
+                            ]
+                        },
+                        {
+                            "word": [
+                                {
+                                    "l": "defame",
+                                    "p": "verb",
+                                    "w": "defame"
+                                }
+                            ]
+                        },
+                        {
+                            "word": [
+                                {
+                                    "l": "denounce",
+                                    "p": "verb",
+                                    "w": "denounce"
+                                }
+                            ]
+                        },
+                        {
+                            "word": [
+                                {
+                                    "l": "fault",
+                                    "p": "noun",
+                                    "w": "fault"
+                                }
+                            ]
+                        },
+                        {
+                            "word": [
+                                {
+                                    "l": "finger",
+                                    "p": "noun",
+                                    "w": "finger"
+                                }
+                            ]
+                        },
+                        {
+                            "word": [
+                                {
+                                    "l": "inculpate",
+                                    "p": "verb",
+                                    "w": "inculpate"
+                                }
+                            ]
+                        },
+                        {
+                            "word": [
+                                {
+                                    "l": "lie",
+                                    "p": "verb",
+                                    "w": "lay"
+                                },
+                                " ",
+                                {
+                                    "l": "at",
+                                    "p": "prep",
+                                    "w": "at"
+                                },
+                                " ",
+                                {
+                                    "l": "someone",
+                                    "p": "pron",
+                                    "w": "someone"
+                                },
+                                {
+                                    "l": "'s",
+                                    "p": "particle",
+                                    "w": "'s"
+                                },
+                                " ",
+                                {
+                                    "l": "door",
+                                    "p": "noun",
+                                    "w": "door"
+                                }
+                            ]
+                        },
+                        {
+                            "word": [
+                                {
+                                    "l": "lie",
+                                    "p": "verb",
+                                    "w": "lay"
+                                },
+                                " ",
+                                {
+                                    "l": "on",
+                                    "p": "prep",
+                                    "w": "on"
+                                }
+                            ]
+                        },
+                        {
+                            "word": [
+                                {
+                                    "l": "lie",
+                                    "p": "verb",
+                                    "w": "lay"
+                                },
+                                " ",
+                                {
+                                    "l": "something",
+                                    "p": "pron",
+                                    "w": "something"
+                                },
+                                " ",
+                                {
+                                    "l": "at",
+                                    "p": "prep",
+                                    "w": "at"
+                                },
+                                " ",
+                                {
+                                    "l": "the",
+                                    "p": "det",
+                                    "w": "the"
+                                },
+                                " ",
+                                {
+                                    "l": "foot",
+                                    "p": "noun",
+                                    "w": "feet"
+                                },
+                                " ",
+                                {
+                                    "l": "of",
+                                    "p": "prep",
+                                    "w": "of"
+                                }
+                            ]
+                        },
+                        {
+                            "word": [
+                                {
+                                    "l": "patronize",
+                                    "p": "verb",
+                                    "w": "patronize"
+                                }
+                            ]
+                        },
+                        {
+                            "word": [
+                                {
+                                    "l": "point",
+                                    "p": "noun",
+                                    "w": "point"
+                                },
+                                " ",
+                                {
+                                    "l": "the",
+                                    "p": "det",
+                                    "w": "the"
+                                },
+                                " ",
+                                {
+                                    "l": "bone",
+                                    "p": "noun",
+                                    "w": "bone"
+                                }
+                            ]
+                        },
+                        {
+                            "word": [
+                                {
+                                    "l": "put",
+                                    "p": "verb",
+                                    "w": "put"
+                                },
+                                " ",
+                                {
+                                    "l": "it",
+                                    "p": "pron",
+                                    "w": "it"
+                                },
+                                " ",
+                                {
+                                    "l": "to",
+                                    "p": "particle",
+                                    "w": "to"
+                                }
+                            ]
+                        },
+                        {
+                            "word": [
+                                {
+                                    "l": "put",
+                                    "p": "verb",
+                                    "w": "put"
+                                },
+                                " ",
+                                {
+                                    "l": "the",
+                                    "p": "det",
+                                    "w": "the"
+                                },
+                                " ",
+                                {
+                                    "l": "blame",
+                                    "p": "noun",
+                                    "w": "blame"
+                                },
+                                " ",
+                                {
+                                    "l": "on",
+                                    "p": "prep",
+                                    "w": "on"
+                                }
+                            ]
+                        },
+                        {
+                            "word": [
+                                {
+                                    "l": "shend",
+                                    "p": "noun",
+                                    "w": "shend"
+                                }
+                            ]
+                        },
+                        {
+                            "word": [
+                                {
+                                    "l": "twit",
+                                    "p": "noun",
+                                    "w": "twit"
+                                }
+                            ]
+                        },
+                        {
+                            "word": [
+                                {
+                                    "l": "wite",
+                                    "p": "noun",
+                                    "w": "wite"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            },
+            {
+                "children": [],
+                "lexicalFields": {
+                    "glosses": [
+                        {
+                            "l": "to",
+                            "p": "particle",
+                            "w": "To"
+                        },
+                        " ",
+                        {
+                            "l": "charge",
+                            "p": "noun",
+                            "w": "charge"
+                        },
+                        " ",
+                        {
+                            "l": "with",
+                            "p": "prep",
+                            "w": "with"
+                        },
+                        " ",
+                        {
+                            "l": "have",
+                            "p": "verb",
+                            "w": "having"
+                        },
+                        " ",
+                        {
+                            "l": "commit",
+                            "p": "verb",
+                            "w": "committed"
+                        },
+                        " ",
+                        {
+                            "l": "a",
+                            "p": "det",
+                            "w": "a"
+                        },
+                        " ",
+                        {
+                            "l": "crime",
+                            "p": "noun",
+                            "w": "crime"
+                        },
+                        " ",
+                        {
+                            "l": "or",
+                            "p": "conj",
+                            "w": "or"
+                        },
+                        " ",
+                        {
+                            "l": "offense",
+                            "p": "noun",
+                            "w": "offence"
+                        },
+                        "."
+                    ],
+                    "examples": [
+                        {
+                            "text": [
+                                {
+                                    "l": "for",
+                                    "p": "prep",
+                                    "w": "For"
+                                },
+                                " ",
+                                {
+                                    "l": "the",
+                                    "p": "det",
+                                    "w": "the"
+                                },
+                                " ",
+                                {
+                                    "l": "u.s.",
+                                    "p": "name",
+                                    "w": "U.S."
+                                },
+                                " ",
+                                {
+                                    "l": "president",
+                                    "p": "noun",
+                                    "w": "President"
+                                },
+                                " ",
+                                {
+                                    "l": "to",
+                                    "p": "particle",
+                                    "w": "to"
+                                },
+                                " ",
+                                {
+                                    "l": "be",
+                                    "p": "verb",
+                                    "w": "be"
+                                },
+                                " ",
+                                {
+                                    "l": "impeach",
+                                    "p": "verb",
+                                    "w": "impeached"
+                                },
+                                ",",
+                                " ",
+                                {
+                                    "l": "he",
+                                    "p": "pron",
+                                    "w": "he"
+                                },
+                                " ",
+                                {
+                                    "l": "must",
+                                    "p": "verb",
+                                    "w": "must"
+                                },
+                                " ",
+                                {
+                                    "l": "be",
+                                    "p": "verb",
+                                    "w": "be"
+                                },
+                                " ",
+                                {
+                                    "l": "accuse",
+                                    "p": "verb",
+                                    "w": "accused"
+                                },
+                                " ",
+                                {
+                                    "l": "of",
+                                    "p": "prep",
+                                    "w": "of"
+                                },
+                                " ",
+                                {
+                                    "l": "a",
+                                    "p": "det",
+                                    "w": "a"
+                                },
+                                " ",
+                                {
+                                    "l": "high",
+                                    "p": "adj",
+                                    "w": "high"
+                                },
+                                " ",
+                                {
+                                    "l": "crime",
+                                    "p": "noun",
+                                    "w": "crime"
+                                },
+                                " ",
+                                {
+                                    "l": "or",
+                                    "p": "conj",
+                                    "w": "or"
+                                },
+                                " ",
+                                {
+                                    "l": "misdemeanor",
+                                    "p": "noun",
+                                    "w": "misdemeanor"
+                                },
+                                "."
+                            ]
+                        },
+                        {
+                            "text": [
+                                {
+                                    "l": "neither",
+                                    "p": "det",
+                                    "w": "Neither"
+                                },
+                                " ",
+                                {
+                                    "l": "can",
+                                    "p": "noun",
+                                    "w": "can"
+                                },
+                                " ",
+                                {
+                                    "l": "they",
+                                    "p": "pron",
+                                    "w": "they"
+                                },
+                                " ",
+                                {
+                                    "l": "prove",
+                                    "p": "verb",
+                                    "w": "prove"
+                                },
+                                " ",
+                                {
+                                    "l": "the",
+                                    "p": "det",
+                                    "w": "the"
+                                },
+                                " ",
+                                {
+                                    "l": "thing",
+                                    "p": "noun",
+                                    "w": "things"
+                                },
+                                " ",
+                                {
+                                    "l": "whereof",
+                                    "p": "noun",
+                                    "w": "whereof"
+                                },
+                                " ",
+                                {
+                                    "l": "they",
+                                    "p": "pron",
+                                    "w": "they"
+                                },
+                                " ",
+                                {
+                                    "l": "now",
+                                    "p": "adv",
+                                    "w": "now"
+                                },
+                                " ",
+                                {
+                                    "l": "accuse",
+                                    "p": "verb",
+                                    "w": "accuse"
+                                },
+                                " ",
+                                {
+                                    "l": "me",
+                                    "p": "pron",
+                                    "w": "me"
+                                },
+                                "."
+                            ]
+                        },
+                        {
+                            "text": [
+                                {
+                                    "l": "ting",
+                                    "p": "name",
+                                    "w": "Ting"
+                                },
+                                " ",
+                                {
+                                    "l": "ling",
+                                    "p": "name",
+                                    "w": "Ling"
+                                },
+                                " ",
+                                {
+                                    "l": "have",
+                                    "p": "verb",
+                                    "w": "had"
+                                },
+                                " ",
+                                {
+                                    "l": "disappear",
+                                    "p": "verb",
+                                    "w": "disappeared"
+                                },
+                                " ",
+                                {
+                                    "l": "from",
+                                    "p": "prep",
+                                    "w": "from"
+                                },
+                                " ",
+                                {
+                                    "l": "public",
+                                    "p": "adj",
+                                    "w": "public"
+                                },
+                                " ",
+                                {
+                                    "l": "life",
+                                    "p": "noun",
+                                    "w": "life"
+                                },
+                                " ",
+                                {
+                                    "l": "in",
+                                    "p": "prep",
+                                    "w": "in"
+                                },
+                                " ",
+                                {
+                                    "l": "1958",
+                                    "p": "num",
+                                    "w": "1958"
+                                },
+                                ".",
+                                " ",
+                                {
+                                    "l": "she",
+                                    "p": "pron",
+                                    "w": "She"
+                                },
+                                " ",
+                                {
+                                    "l": "be",
+                                    "p": "verb",
+                                    "w": "was"
+                                },
+                                " ",
+                                {
+                                    "l": "accuse",
+                                    "p": "verb",
+                                    "w": "accused"
+                                },
+                                " ",
+                                {
+                                    "l": "of",
+                                    "p": "prep",
+                                    "w": "of"
+                                },
+                                " ",
+                                {
+                                    "l": "being",
+                                    "p": "verb",
+                                    "w": "being"
+                                },
+                                " ",
+                                {
+                                    "l": "a",
+                                    "p": "det",
+                                    "w": "a"
+                                },
+                                " ",
+                                "\"",
+                                {
+                                    "l": "rightist",
+                                    "p": "name",
+                                    "w": "Rightist"
+                                },
+                                "\"",
+                                " ",
+                                {
+                                    "l": "and",
+                                    "p": "conj",
+                                    "w": "and"
+                                },
+                                " ",
+                                {
+                                    "l": "be",
+                                    "p": "verb",
+                                    "w": "was"
+                                },
+                                " ",
+                                {
+                                    "l": "send",
+                                    "p": "verb",
+                                    "w": "sent"
+                                },
+                                " ",
+                                {
+                                    "l": "to",
+                                    "p": "prep",
+                                    "w": "to"
+                                },
+                                " ",
+                                {
+                                    "l": "a",
+                                    "p": "det",
+                                    "w": "a"
+                                },
+                                " ",
+                                {
+                                    "l": "farm",
+                                    "p": "noun",
+                                    "w": "farm"
+                                },
+                                " ",
+                                {
+                                    "l": "in",
+                                    "p": "prep",
+                                    "w": "in"
+                                },
+                                " ",
+                                {
+                                    "l": "hei",
+                                    "p": "name",
+                                    "w": "Hei"
+                                },
+                                "-",
+                                {
+                                    "l": "l",
+                                    "p": "noun",
+                                    "w": "l"
+                                },
+                                {
+                                    "l": "u",
+                                    "p": "adj",
+                                    "w": "u"
+                                },
+                                {
+                                    "l": "ng",
+                                    "p": "noun",
+                                    "w": "ng"
+                                },
+                                "-",
+                                {
+                                    "l": "chiang",
+                                    "p": "noun",
+                                    "w": "chiang"
+                                },
+                                " ",
+                                {
+                                    "l": "province",
+                                    "p": "name",
+                                    "w": "Province"
+                                },
+                                " ",
+                                {
+                                    "l": "in",
+                                    "p": "prep",
+                                    "w": "in"
+                                },
+                                " ",
+                                {
+                                    "l": "remote",
+                                    "p": "adj",
+                                    "w": "remote"
+                                },
+                                " ",
+                                {
+                                    "l": "northeast",
+                                    "p": "adv",
+                                    "w": "northeast"
+                                },
+                                " ",
+                                {
+                                    "l": "China",
+                                    "p": "name",
+                                    "w": "China"
+                                },
+                                ",",
+                                " ",
+                                {
+                                    "l": "work",
+                                    "p": "verb",
+                                    "w": "worked"
+                                },
+                                " ",
+                                {
+                                    "l": "there",
+                                    "p": "pron",
+                                    "w": "there"
+                                },
+                                " ",
+                                {
+                                    "l": "twelve",
+                                    "p": "num",
+                                    "w": "twelve"
+                                },
+                                " ",
+                                {
+                                    "l": "year",
+                                    "p": "noun",
+                                    "w": "years"
+                                },
+                                " ",
+                                {
+                                    "l": "raise",
+                                    "p": "verb",
+                                    "w": "raising"
+                                },
+                                " ",
+                                {
+                                    "l": "chicken",
+                                    "p": "noun",
+                                    "w": "chickens"
+                                },
+                                ",",
+                                " ",
+                                {
+                                    "l": "be",
+                                    "p": "verb",
+                                    "w": "was"
+                                },
+                                " ",
+                                {
+                                    "l": "in",
+                                    "p": "prep",
+                                    "w": "in"
+                                },
+                                " ",
+                                {
+                                    "l": "prison",
+                                    "p": "noun",
+                                    "w": "prison"
+                                },
+                                " ",
+                                {
+                                    "l": "five",
+                                    "p": "num",
+                                    "w": "five"
+                                },
+                                " ",
+                                {
+                                    "l": "year",
+                                    "p": "noun",
+                                    "w": "years"
+                                },
+                                " ",
+                                "(",
+                                {
+                                    "l": "1970-1975",
+                                    "p": "num",
+                                    "w": "1970-1975"
+                                },
+                                ")",
+                                ",",
+                                " ",
+                                {
+                                    "l": "and",
+                                    "p": "conj",
+                                    "w": "and"
+                                },
+                                " ",
+                                {
+                                    "l": "begin",
+                                    "p": "verb",
+                                    "w": "began"
+                                },
+                                " ",
+                                {
+                                    "l": "to",
+                                    "p": "particle",
+                                    "w": "to"
+                                },
+                                " ",
+                                {
+                                    "l": "live",
+                                    "p": "verb",
+                                    "w": "live"
+                                },
+                                " ",
+                                {
+                                    "l": "in",
+                                    "p": "prep",
+                                    "w": "in"
+                                },
+                                " ",
+                                {
+                                    "l": "a",
+                                    "p": "det",
+                                    "w": "a"
+                                },
+                                " ",
+                                {
+                                    "l": "village",
+                                    "p": "noun",
+                                    "w": "village"
+                                },
+                                " ",
+                                {
+                                    "l": "in",
+                                    "p": "prep",
+                                    "w": "in"
+                                },
+                                " ",
+                                {
+                                    "l": "shansi",
+                                    "p": "name",
+                                    "w": "Shansi"
+                                },
+                                " ",
+                                {
+                                    "l": "in",
+                                    "p": "prep",
+                                    "w": "in"
+                                },
+                                " ",
+                                {
+                                    "l": "1975",
+                                    "p": "num",
+                                    "w": "1975"
+                                },
+                                "."
+                            ]
+                        }
+                    ],
+                    "synonyms": [
+                        {
+                            "word": [
+                                {
+                                    "l": "charge",
+                                    "p": "noun",
+                                    "w": "charge"
+                                }
+                            ]
+                        },
+                        {
+                            "word": [
+                                {
+                                    "l": "indict",
+                                    "p": "verb",
+                                    "w": "indict"
+                                }
+                            ]
+                        },
+                        {
+                            "word": [
+                                {
+                                    "l": "impeach",
+                                    "p": "verb",
+                                    "w": "impeach"
+                                }
+                            ]
+                        },
+                        {
+                            "word": [
+                                {
+                                    "l": "arraign",
+                                    "p": "verb",
+                                    "w": "arraign"
+                                }
+                            ]
+                        },
+                        {
+                            "word": [
+                                {
+                                    "l": "accriminate",
+                                    "p": "noun",
+                                    "w": "accriminate"
+                                }
+                            ]
+                        },
+                        {
+                            "word": [
+                                {
+                                    "l": "accuse",
+                                    "p": "verb",
+                                    "w": "accuse"
+                                }
+                            ]
+                        },
+                        {
+                            "word": [
+                                {
+                                    "l": "appeach",
+                                    "p": "noun",
+                                    "w": "appeach"
+                                }
+                            ]
+                        },
+                        {
+                            "word": [
+                                {
+                                    "l": "arraign",
+                                    "p": "verb",
+                                    "w": "arraign"
+                                }
+                            ]
+                        },
+                        {
+                            "word": [
+                                {
+                                    "l": "becry",
+                                    "p": "noun",
+                                    "w": "becry"
+                                }
+                            ]
+                        },
+                        {
+                            "word": [
+                                {
+                                    "l": "charge",
+                                    "p": "noun",
+                                    "w": "charge"
+                                }
+                            ]
+                        },
+                        {
+                            "word": [
+                                {
+                                    "l": "criminate",
+                                    "p": "verb",
+                                    "w": "criminate"
+                                }
+                            ]
+                        },
+                        {
+                            "word": [
+                                {
+                                    "l": "have",
+                                    "p": "verb",
+                                    "w": "have"
+                                },
+                                " ",
+                                {
+                                    "l": "up",
+                                    "p": "prep",
+                                    "w": "up"
+                                }
+                            ]
+                        },
+                        {
+                            "word": [
+                                {
+                                    "l": "incriminate",
+                                    "p": "verb",
+                                    "w": "incriminate"
+                                }
+                            ]
+                        },
+                        {
+                            "word": [
+                                {
+                                    "l": "inculpate",
+                                    "p": "verb",
+                                    "w": "inculpate"
+                                }
+                            ]
+                        },
+                        {
+                            "word": [
+                                {
+                                    "l": "indict",
+                                    "p": "verb",
+                                    "w": "indict"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            },
+            {
+                "children": [],
+                "lexicalFields": {
+                    "glosses": [
+                        {
+                            "l": "to",
+                            "p": "particle",
+                            "w": "To"
+                        },
+                        " ",
+                        {
+                            "l": "make",
+                            "p": "verb",
+                            "w": "make"
+                        },
+                        " ",
+                        {
+                            "l": "an",
+                            "p": "det",
+                            "w": "an"
+                        },
+                        " ",
+                        {
+                            "l": "accusation",
+                            "p": "noun",
+                            "w": "accusation"
+                        },
+                        " ",
+                        {
+                            "l": "against",
+                            "p": "prep",
+                            "w": "against"
+                        },
+                        " ",
+                        {
+                            "l": "someone",
+                            "p": "pron",
+                            "w": "someone"
+                        },
+                        "."
+                    ],
+                    "examples": [
+                        {
+                            "text": [
+                                {
+                                    "l": "accord",
+                                    "p": "verb",
+                                    "w": "According"
+                                },
+                                " ",
+                                {
+                                    "l": "to",
+                                    "p": "prep",
+                                    "w": "to"
+                                },
+                                " ",
+                                {
+                                    "l": "this",
+                                    "p": "det",
+                                    "w": "this"
+                                },
+                                " ",
+                                {
+                                    "l": "saga",
+                                    "p": "noun",
+                                    "w": "saga"
+                                },
+                                " ",
+                                {
+                                    "l": "of",
+                                    "p": "prep",
+                                    "w": "of"
+                                },
+                                " ",
+                                {
+                                    "l": "intellect",
+                                    "p": "noun",
+                                    "w": "intellect"
+                                },
+                                {
+                                    "l": "u",
+                                    "p": "adj",
+                                    "w": "u"
+                                },
+                                {
+                                    "l": "al",
+                                    "p": "noun",
+                                    "w": "al"
+                                },
+                                "-",
+                                {
+                                    "l": "property",
+                                    "p": "noun",
+                                    "w": "property"
+                                },
+                                " ",
+                                {
+                                    "l": "misanthropy",
+                                    "p": "noun",
+                                    "w": "misanthropy"
+                                },
+                                ",",
+                                " ",
+                                {
+                                    "l": "these",
+                                    "p": "det",
+                                    "w": "these"
+                                },
+                                " ",
+                                {
+                                    "l": "creature",
+                                    "p": "noun",
+                                    "w": "creatures"
+                                },
+                                " ",
+                                "[",
+                                {
+                                    "l": "patent",
+                                    "p": "noun",
+                                    "w": "patent"
+                                },
+                                " ",
+                                {
+                                    "l": "troll",
+                                    "p": "noun",
+                                    "w": "trolls"
+                                },
+                                "]",
+                                " ",
+                                {
+                                    "l": "roam",
+                                    "p": "verb",
+                                    "w": "roam"
+                                },
+                                " ",
+                                {
+                                    "l": "the",
+                                    "p": "det",
+                                    "w": "the"
+                                },
+                                " ",
+                                {
+                                    "l": "business",
+                                    "p": "noun",
+                                    "w": "business"
+                                },
+                                " ",
+                                {
+                                    "l": "world",
+                                    "p": "noun",
+                                    "w": "world"
+                                },
+                                ",",
+                                " ",
+                                {
+                                    "l": "buy",
+                                    "p": "verb",
+                                    "w": "buying"
+                                },
+                                " ",
+                                {
+                                    "l": "up",
+                                    "p": "prep",
+                                    "w": "up"
+                                },
+                                " ",
+                                {
+                                    "l": "patent",
+                                    "p": "noun",
+                                    "w": "patents"
+                                },
+                                " ",
+                                {
+                                    "l": "and",
+                                    "p": "conj",
+                                    "w": "and"
+                                },
+                                " ",
+                                {
+                                    "l": "then",
+                                    "p": "adv",
+                                    "w": "then"
+                                },
+                                " ",
+                                {
+                                    "l": "use",
+                                    "p": "verb",
+                                    "w": "using"
+                                },
+                                " ",
+                                {
+                                    "l": "them",
+                                    "p": "pron",
+                                    "w": "them"
+                                },
+                                " ",
+                                {
+                                    "l": "to",
+                                    "p": "particle",
+                                    "w": "to"
+                                },
+                                " ",
+                                {
+                                    "l": "demand",
+                                    "p": "verb",
+                                    "w": "demand"
+                                },
+                                " ",
+                                {
+                                    "l": "extravagant",
+                                    "p": "adj",
+                                    "w": "extravagant"
+                                },
+                                " ",
+                                {
+                                    "l": "payouts",
+                                    "p": "noun",
+                                    "w": "payouts"
+                                },
+                                " ",
+                                {
+                                    "l": "from",
+                                    "p": "prep",
+                                    "w": "from"
+                                },
+                                " ",
+                                {
+                                    "l": "company",
+                                    "p": "noun",
+                                    "w": "companies"
+                                },
+                                " ",
+                                {
+                                    "l": "they",
+                                    "p": "pron",
+                                    "w": "they"
+                                },
+                                " ",
+                                {
+                                    "l": "accuse",
+                                    "p": "verb",
+                                    "w": "accuse"
+                                },
+                                " ",
+                                {
+                                    "l": "of",
+                                    "p": "prep",
+                                    "w": "of"
+                                },
+                                " ",
+                                {
+                                    "l": "infringe",
+                                    "p": "verb",
+                                    "w": "infringing"
+                                },
+                                " ",
+                                {
+                                    "l": "them",
+                                    "p": "pron",
+                                    "w": "them"
+                                },
+                                ".",
+                                " ",
+                                {
+                                    "l": "often",
+                                    "p": "adv",
+                                    "w": "Often"
+                                },
+                                ",",
+                                " ",
+                                {
+                                    "l": "their",
+                                    "p": "pron",
+                                    "w": "their"
+                                },
+                                " ",
+                                {
+                                    "l": "victim",
+                                    "p": "noun",
+                                    "w": "victims"
+                                },
+                                " ",
+                                {
+                                    "l": "pay",
+                                    "p": "verb",
+                                    "w": "pay"
+                                },
+                                " ",
+                                {
+                                    "l": "up",
+                                    "p": "prep",
+                                    "w": "up"
+                                },
+                                " ",
+                                {
+                                    "l": "rather",
+                                    "p": "adv",
+                                    "w": "rather"
+                                },
+                                " ",
+                                {
+                                    "l": "than",
+                                    "p": "prep",
+                                    "w": "than"
+                                },
+                                " ",
+                                {
+                                    "l": "face",
+                                    "p": "noun",
+                                    "w": "face"
+                                },
+                                " ",
+                                {
+                                    "l": "the",
+                                    "p": "det",
+                                    "w": "the"
+                                },
+                                " ",
+                                {
+                                    "l": "cost",
+                                    "p": "noun",
+                                    "w": "costs"
+                                },
+                                " ",
+                                {
+                                    "l": "of",
+                                    "p": "prep",
+                                    "w": "of"
+                                },
+                                " ",
+                                {
+                                    "l": "a",
+                                    "p": "det",
+                                    "w": "a"
+                                },
+                                " ",
+                                {
+                                    "l": "legal",
+                                    "p": "adj",
+                                    "w": "legal"
+                                },
+                                " ",
+                                {
+                                    "l": "battle",
+                                    "p": "noun",
+                                    "w": "battle"
+                                },
+                                "."
+                            ]
+                        }
+                    ],
+                    "synonyms": [
+                        {
+                            "word": [
+                                {
+                                    "l": "blame",
+                                    "p": "verb",
+                                    "w": "blame"
+                                }
+                            ]
+                        },
+                        {
+                            "word": [
+                                {
+                                    "l": "censure",
+                                    "p": "noun",
+                                    "w": "censure"
+                                }
+                            ]
+                        },
+                        {
+                            "word": [
+                                {
+                                    "l": "reproach",
+                                    "p": "noun",
+                                    "w": "reproach"
+                                }
+                            ]
+                        },
+                        {
+                            "word": [
+                                {
+                                    "l": "criminate",
+                                    "p": "verb",
+                                    "w": "criminate"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            }
+        ],
+        "derived": [
+            {
+                "word": [
+                    {
+                        "l": "accusal",
+                        "p": "noun",
+                        "w": "accusal"
+                    }
+                ]
+            },
+            {
+                "word": [
+                    {
+                        "l": "accusee",
+                        "p": "noun",
+                        "w": "accusee"
+                    }
+                ]
+            },
+            {
+                "word": [
+                    {
+                        "l": "accusement",
+                        "p": "noun",
+                        "w": "accusement"
+                    }
+                ]
+            },
+            {
+                "word": [
+                    {
+                        "l": "accusive",
+                        "p": "adj",
+                        "w": "accusive"
+                    }
+                ]
+            },
+            {
+                "word": [
+                    {
+                        "l": "accusor",
+                        "p": "noun",
+                        "w": "accusor"
+                    }
+                ]
+            },
+            {
+                "word": [
+                    {
+                        "l": "counteraccuse",
+                        "p": "noun",
+                        "w": "counteraccuse"
+                    }
+                ]
+            },
+            {
+                "word": [
+                    {
+                        "l": "hackusate",
+                        "p": "noun",
+                        "w": "hackusate"
+                    }
+                ]
+            },
+            {
+                "word": [
+                    {
+                        "l": "misaccuse",
+                        "p": "noun",
+                        "w": "misaccuse"
+                    }
+                ]
+            },
+            {
+                "word": [
+                    {
+                        "l": "reaccuse",
+                        "p": "noun",
+                        "w": "reaccuse"
+                    }
+                ]
+            }
+        ],
+        "related": [
+            {
+                "word": [
+                    {
+                        "l": "accusable",
+                        "p": "adj",
+                        "w": "accusable"
+                    }
+                ]
+            },
+            {
+                "word": [
+                    {
+                        "l": "accusation",
+                        "p": "noun",
+                        "w": "accusation"
+                    }
+                ]
+            },
+            {
+                "word": [
+                    {
+                        "l": "accusative",
+                        "p": "noun",
+                        "w": "accusative"
+                    }
+                ]
+            },
+            {
+                "word": [
+                    {
+                        "l": "accusatory",
+                        "p": "adj",
+                        "w": "accusatory"
+                    }
+                ]
+            },
+            {
+                "word": [
+                    {
+                        "l": "accuser",
+                        "p": "noun",
+                        "w": "accuser"
+                    }
+                ]
+            },
+            {
+                "word": [
+                    {
+                        "l": "excuse",
+                        "p": "noun",
+                        "w": "excuse"
+                    }
+                ]
+            },
+            {
+                "word": [
+                    {
+                        "l": "recuse",
+                        "p": "verb",
+                        "w": "recuse"
+                    }
+                ]
+            },
+            {
+                "word": [
+                    {
+                        "l": "ruse",
+                        "p": "noun",
+                        "w": "ruse"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "pos": "noun",
+        "senses": [
+            {
+                "children": [],
+                "lexicalFields": {
+                    "glosses": [
+                        {
+                            "l": "accusation",
+                            "p": "name",
+                            "w": "Accusation"
+                        },
+                        "."
+                    ],
+                    "examples": [
+                        {
+                            "text": [
+                                {
+                                    "l": "and",
+                                    "p": "conj",
+                                    "w": "And"
+                                },
+                                " ",
+                                {
+                                    "l": "dog",
+                                    "p": "verb",
+                                    "w": "dogged"
+                                },
+                                " ",
+                                {
+                                    "l": "York",
+                                    "p": "name",
+                                    "w": "York"
+                                },
+                                ",",
+                                " ",
+                                {
+                                    "l": "that",
+                                    "p": "pron",
+                                    "w": "that"
+                                },
+                                " ",
+                                {
+                                    "l": "reach",
+                                    "p": "verb",
+                                    "w": "reaches"
+                                },
+                                " ",
+                                {
+                                    "l": "at",
+                                    "p": "prep",
+                                    "w": "at"
+                                },
+                                " ",
+                                {
+                                    "l": "the",
+                                    "p": "det",
+                                    "w": "the"
+                                },
+                                " ",
+                                {
+                                    "l": "moon",
+                                    "p": "noun",
+                                    "w": "moon"
+                                },
+                                ",",
+                                " ",
+                                {
+                                    "l": "/",
+                                    "p": "symbol",
+                                    "w": "/"
+                                },
+                                " ",
+                                {
+                                    "l": "whose",
+                                    "p": "det",
+                                    "w": "Whose"
+                                },
+                                " ",
+                                {
+                                    "l": "overweening",
+                                    "p": "adj",
+                                    "w": "overweening"
+                                },
+                                " ",
+                                {
+                                    "l": "arm",
+                                    "p": "noun",
+                                    "w": "arm"
+                                },
+                                " ",
+                                {
+                                    "l": "i",
+                                    "p": "pron",
+                                    "w": "I"
+                                },
+                                " ",
+                                {
+                                    "l": "have",
+                                    "p": "verb",
+                                    "w": "have"
+                                },
+                                " ",
+                                {
+                                    "l": "pluck",
+                                    "p": "verb",
+                                    "w": "plucked"
+                                },
+                                " ",
+                                {
+                                    "l": "back",
+                                    "p": "adv",
+                                    "w": "back"
+                                },
+                                ",",
+                                " ",
+                                {
+                                    "l": "/",
+                                    "p": "symbol",
+                                    "w": "/"
+                                },
+                                " ",
+                                {
+                                    "l": "by",
+                                    "p": "prep",
+                                    "w": "By"
+                                },
+                                " ",
+                                {
+                                    "l": "false",
+                                    "p": "adv",
+                                    "w": "false"
+                                },
+                                " ",
+                                {
+                                    "l": "accuse",
+                                    "p": "verb",
+                                    "w": "accuse"
+                                },
+                                " ",
+                                {
+                                    "l": "doth",
+                                    "p": "noun",
+                                    "w": "doth"
+                                },
+                                " ",
+                                {
+                                    "l": "level",
+                                    "p": "noun",
+                                    "w": "level"
+                                },
+                                " ",
+                                {
+                                    "l": "at",
+                                    "p": "prep",
+                                    "w": "at"
+                                },
+                                " ",
+                                {
+                                    "l": "my",
+                                    "p": "pron",
+                                    "w": "my"
+                                },
+                                " ",
+                                {
+                                    "l": "life",
+                                    "p": "noun",
+                                    "w": "life"
+                                },
+                                "."
+                            ]
+                        }
+                    ]
+                }
+            }
+        ]
+    }
+]

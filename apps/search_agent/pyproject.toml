@@ -1,0 +1,45 @@
+[project]
+name = "wordrace-search-agent"
+version = "0.1.0"
+description = "WordRace graph search and learned route-hint service"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "alembic>=1.18.4",
+    "asyncpg>=0.31.0",
+    "fastapi[standard]>=0.139.0",
+    "igraph>=1.0.0",
+    "jaxtyping>=0.3.10",
+    "numpy>=2.4.4",
+    "pgvector>=0.4.2",
+    "polars>=1.40.1",
+    "psycopg2-binary>=2.9.12",
+    "pqdict>=1.5.1",
+    "pydantic>=2.13.3",
+    "pydantic-settings>=2.14.0",
+    "sqlalchemy[asyncio]>=2.0.49",
+    "torch",
+    "tqdm>=4.68.1",
+    "typer>=0.26.8",
+]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[tool.uv.sources]
+torch = { index = "pytorch-cpu" }
+
+[dependency-groups]
+dev = [
+    "connectorx>=0.4.5",
+    "matplotlib>=3.11.0",
+    "nbstripout>=0.9.1",
+    "pyarrow>=24.0.0",
+    "pytest>=8.4.2",
+    "sqlacodegen[pgvector]>=4.0.3",
+    "pyright[nodejs]",
+]
+[tool.fastapi]
+entrypoint = "search_agent.api:app"

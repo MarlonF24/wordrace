@@ -1,0 +1,29 @@
+{
+    "prettier.bracketSameLine": true,
+    "python.analysis.typeCheckingMode": "standard",
+    "pgsql.connections": [
+        {
+            "id": "B966DAAC-F5B5-48B2-93C1-819001549AB3",
+            "groupId": "FE2FFAEE-9F79-4E27-A7B9-99B740CA7975",
+            "authenticationType": "SqlLogin",
+            "connectTimeout": 15,
+            "applicationName": "vscode-pgsql",
+            "clientEncoding": "utf8",
+            "sslmode": "prefer",
+            "sshSavePassword": true,
+            "savePassword": true,
+            "sslRootCertMode": "none",
+            "server": "WordRace Local Docker",
+            "user": "postgres",
+            "password": "",
+            "database": "wordrace",
+            "port": "5433",
+            "profileName": "WordRace Local Docker, (postgres)",
+            "hostaddr": "127.0.0.1",
+            "sshPassword": "",
+            "displayName": "WordRace Local Docker, <default> (postgres)",
+            "expiresOn": 0
+        }
+    ],
+    "python-envs.defaultEnvManager": "ms-python.python:venv"
+}

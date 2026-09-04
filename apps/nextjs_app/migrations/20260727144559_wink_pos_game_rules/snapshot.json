@@ -1,0 +1,763 @@
+{
+  "version": "8",
+  "dialect": "postgres",
+  "id": "6ec5f894-585a-4806-9edb-2db049ada4a8",
+  "prevIds": [
+    "b0fe61b3-2d37-42dc-8226-3a05c7c3c98d"
+  ],
+  "ddl": [
+    {
+      "name": "dictionary",
+      "entityType": "schemas"
+    },
+    {
+      "values": [
+        "normal",
+        "collide"
+      ],
+      "name": "game_mode",
+      "entityType": "enums",
+      "schema": "public"
+    },
+    {
+      "values": [
+        "antonyms",
+        "synonyms",
+        "hypernyms",
+        "hyponyms",
+        "holonyms",
+        "meronyms",
+        "derived",
+        "related",
+        "coordinate_terms",
+        "glosses",
+        "examples",
+        "categories"
+      ],
+      "name": "selectable_lexical_key",
+      "entityType": "enums",
+      "schema": "dictionary"
+    },
+    {
+      "values": [
+        "phrase",
+        "adv_phrase",
+        "suffix",
+        "infix",
+        "prep",
+        "adv",
+        "article",
+        "prep_phrase",
+        "contraction",
+        "intj",
+        "name",
+        "pron",
+        "postp",
+        "adj",
+        "circumfix",
+        "num",
+        "verb",
+        "proverb",
+        "conj",
+        "affix",
+        "noun",
+        "punct",
+        "symbol",
+        "prefix",
+        "character",
+        "particle",
+        "det",
+        "interfix"
+      ],
+      "name": "wiktionary_pos_tag",
+      "entityType": "enums",
+      "schema": "dictionary"
+    },
+    {
+      "values": [
+        "ADJ",
+        "ADP",
+        "ADV",
+        "AUX",
+        "CCONJ",
+        "DET",
+        "INTJ",
+        "NOUN",
+        "NUM",
+        "PART",
+        "PRON",
+        "PROPN",
+        "PUNCT",
+        "SCONJ",
+        "SYM",
+        "VERB",
+        "X",
+        "SPACE"
+      ],
+      "name": "wink_pos_tag",
+      "entityType": "enums",
+      "schema": "dictionary"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "game_player_link",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "games",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "players",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "dictionary",
+      "entityType": "tables",
+      "schema": "dictionary"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "dictionary_raw",
+      "entityType": "tables",
+      "schema": "dictionary"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "dummy_table",
+      "entityType": "tables",
+      "schema": "dictionary"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "words",
+      "entityType": "tables",
+      "schema": "dictionary"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "game_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "game_player_link"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "player_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "game_player_link"
+    },
+    {
+      "type": "boolean",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "false",
+      "generated": null,
+      "identity": null,
+      "name": "admin",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "game_player_link"
+    },
+    {
+      "type": "jsonb",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "start_links",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "game_player_link"
+    },
+    {
+      "type": "jsonb",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "target_links",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "game_player_link"
+    },
+    {
+      "type": "boolean",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": {
+        "as": "(start_links -> -1 ->> 'word') = (target_links -> -1 ->> 'word')",
+        "type": "stored"
+      },
+      "identity": null,
+      "name": "found",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "game_player_link"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": {
+        "as": "jsonb_array_length(start_links) - 1 + jsonb_array_length(target_links) - 1",
+        "type": "stored"
+      },
+      "identity": null,
+      "name": "link_count",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "game_player_link"
+    },
+    {
+      "type": "bigint",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": {
+        "as": "\n    greatest(\n      (start_links -> -1 ->> 'timestamp')::bigint - (start_links -> 0 ->> 'timestamp')::bigint,\n      (target_links -> -1 ->> 'timestamp')::bigint - (target_links -> 0 ->> 'timestamp')::bigint\n    )\n  ",
+        "type": "stored"
+      },
+      "identity": null,
+      "name": "duration_ms",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "game_player_link"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "gen_random_uuid()",
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "games"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "start_word",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "games"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "target_word",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "games"
+    },
+    {
+      "type": "game_mode",
+      "typeSchema": "public",
+      "notNull": true,
+      "dimensions": 0,
+      "default": "'normal'",
+      "generated": null,
+      "identity": null,
+      "name": "mode",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "games"
+    },
+    {
+      "type": "boolean",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "true",
+      "generated": null,
+      "identity": null,
+      "name": "lemmatise",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "games"
+    },
+    {
+      "type": "boolean",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "false",
+      "generated": null,
+      "identity": null,
+      "name": "ai_hints_enabled",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "games"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "games"
+    },
+    {
+      "type": "jsonb",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "'{\"ADJ\":true,\"ADP\":true,\"ADV\":true,\"AUX\":true,\"CCONJ\":true,\"DET\":true,\"INTJ\":true,\"NOUN\":true,\"NUM\":true,\"PART\":true,\"PRON\":true,\"PROPN\":true,\"PUNCT\":true,\"SCONJ\":true,\"SYM\":true,\"VERB\":true,\"X\":true,\"SPACE\":true}'",
+      "generated": null,
+      "identity": null,
+      "name": "available_pos",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "games"
+    },
+    {
+      "type": "jsonb",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "'{}'",
+      "generated": null,
+      "identity": null,
+      "name": "exclusive_entry_lexical_fields",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "games"
+    },
+    {
+      "type": "jsonb",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "'{}'",
+      "generated": null,
+      "identity": null,
+      "name": "exclusive_sense_lexical_fields",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "games"
+    },
+    {
+      "type": "jsonb",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "'{}'",
+      "generated": null,
+      "identity": null,
+      "name": "shared_lexical_fields",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "games"
+    },
+    {
+      "type": "jsonb",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": {
+        "as": "(exclusive_entry_lexical_fields || exclusive_sense_lexical_fields || shared_lexical_fields)",
+        "type": "stored"
+      },
+      "identity": null,
+      "name": "entry_lexical_fields",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "games"
+    },
+    {
+      "type": "jsonb",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": {
+        "as": "(exclusive_sense_lexical_fields || shared_lexical_fields)",
+        "type": "stored"
+      },
+      "identity": null,
+      "name": "sense_lexical_fields",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "games"
+    },
+    {
+      "type": "jsonb",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": {
+        "as": "(exclusive_entry_lexical_fields || exclusive_sense_lexical_fields || shared_lexical_fields)",
+        "type": "stored"
+      },
+      "identity": null,
+      "name": "lexical_fields",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "games"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "gen_random_uuid()",
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "players"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "players"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "word",
+      "entityType": "columns",
+      "schema": "dictionary",
+      "table": "dictionary"
+    },
+    {
+      "type": "jsonb",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "lexical_entries",
+      "entityType": "columns",
+      "schema": "dictionary",
+      "table": "dictionary"
+    },
+    {
+      "type": "jsonb",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": {
+        "as": "flatten_lexical_blob_mapped(\n            lexical_entries,\n            ARRAY['antonyms', 'synonyms', 'hypernyms', 'hyponyms', 'holonyms', 'meronyms', 'derived', 'related', 'coordinate_terms', 'glosses', 'examples', 'categories']::text[]\n        )",
+        "type": "stored"
+      },
+      "identity": null,
+      "name": "all_links",
+      "entityType": "columns",
+      "schema": "dictionary",
+      "table": "dictionary"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": {
+        "type": "always",
+        "name": "dictionary_raw_id_seq",
+        "increment": "1",
+        "startWith": "1",
+        "minValue": "1",
+        "maxValue": "2147483647",
+        "cache": 1,
+        "cycle": false
+      },
+      "name": "id",
+      "entityType": "columns",
+      "schema": "dictionary",
+      "table": "dictionary_raw"
+    },
+    {
+      "type": "jsonb",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "raw_data",
+      "entityType": "columns",
+      "schema": "dictionary",
+      "table": "dictionary_raw"
+    },
+    {
+      "type": "selectable_lexical_key",
+      "typeSchema": "dictionary",
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "selectable_lexical_keys_dummy",
+      "entityType": "columns",
+      "schema": "dictionary",
+      "table": "dummy_table"
+    },
+    {
+      "type": "wiktionary_pos_tag",
+      "typeSchema": "dictionary",
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "wiktionary_pos_tags_dummy",
+      "entityType": "columns",
+      "schema": "dictionary",
+      "table": "dummy_table"
+    },
+    {
+      "type": "wink_pos_tag",
+      "typeSchema": "dictionary",
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "wink_pos_tags_dummy",
+      "entityType": "columns",
+      "schema": "dictionary",
+      "table": "dummy_table"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "word",
+      "entityType": "columns",
+      "schema": "dictionary",
+      "table": "words"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "word",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "idx_word",
+      "entityType": "indexes",
+      "schema": "dictionary",
+      "table": "dictionary"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "game_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "games",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "game_player_link_game_id_games_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "game_player_link"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "player_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "players",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "game_player_link_player_id_players_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "game_player_link"
+    },
+    {
+      "columns": [
+        "game_id",
+        "player_id"
+      ],
+      "nameExplicit": false,
+      "name": "game_player_link_pkey",
+      "entityType": "pks",
+      "schema": "public",
+      "table": "game_player_link"
+    },
+    {
+      "columns": [
+        "selectable_lexical_keys_dummy",
+        "wiktionary_pos_tags_dummy",
+        "wink_pos_tags_dummy"
+      ],
+      "nameExplicit": false,
+      "name": "dummy_table_pkey",
+      "entityType": "pks",
+      "schema": "dictionary",
+      "table": "dummy_table"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "games_pkey",
+      "schema": "public",
+      "table": "games",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "players_pkey",
+      "schema": "public",
+      "table": "players",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "word"
+      ],
+      "nameExplicit": false,
+      "name": "dictionary_pkey",
+      "schema": "dictionary",
+      "table": "dictionary",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "dictionary_raw_pkey",
+      "schema": "dictionary",
+      "table": "dictionary_raw",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "word"
+      ],
+      "nameExplicit": false,
+      "name": "words_pkey",
+      "schema": "dictionary",
+      "table": "words",
+      "entityType": "pks"
+    },
+    {
+      "value": "\"start_word\" <> \"target_word\"",
+      "name": "unique_start_target",
+      "entityType": "checks",
+      "schema": "public",
+      "table": "games"
+    },
+    {
+      "value": "\"lexical_fields\" <> '{}'::jsonb",
+      "name": "at_least_one_lexical_field",
+      "entityType": "checks",
+      "schema": "public",
+      "table": "games"
+    },
+    {
+      "value": "word = lower(word)",
+      "name": "lowercase_word",
+      "entityType": "checks",
+      "schema": "dictionary",
+      "table": "dictionary"
+    },
+    {
+      "value": "\"word\" = lower(\"word\")",
+      "name": "lowercase_word",
+      "entityType": "checks",
+      "schema": "dictionary",
+      "table": "words"
+    }
+  ],
+  "renames": [
+    "dictionary.selectable_lexical_keys->dictionary.selectable_lexical_key",
+    "dictionary.wiktionary_pos_tags->dictionary.wiktionary_pos_tag"
+  ]
+}

@@ -1,0 +1,652 @@
+{
+    "adj": {
+        "derived": {
+            "l": [
+                "accusive"
+            ],
+            "w": [
+                "accusive"
+            ]
+        },
+        "related": {
+            "l": [
+                "accusable",
+                "accusatory"
+            ],
+            "w": [
+                "accusable",
+                "accusatory"
+            ]
+        },
+        "examples": {
+            "l": [
+                "extravagant",
+                "high",
+                "involved",
+                "legal",
+                "overweening",
+                "public",
+                "remote",
+                "u"
+            ],
+            "w": [
+                "extravagant",
+                "high",
+                "involved",
+                "legal",
+                "overweening",
+                "public",
+                "remote",
+                "u"
+            ]
+        }
+    },
+    "adv": {
+        "examples": {
+            "l": [
+                "back",
+                "else",
+                "false",
+                "meanwhile",
+                "northeast",
+                "now",
+                "often",
+                "rather",
+                "then",
+                "when"
+            ],
+            "w": [
+                "back",
+                "else",
+                "false",
+                "meanwhile",
+                "northeast",
+                "now",
+                "often",
+                "rather",
+                "then",
+                "when"
+            ]
+        }
+    },
+    "det": {
+        "glosses": {
+            "l": [
+                "a",
+                "an"
+            ],
+            "w": [
+                "a",
+                "an"
+            ]
+        },
+        "examples": {
+            "l": [
+                "a",
+                "another",
+                "neither",
+                "the",
+                "these",
+                "this",
+                "whose"
+            ],
+            "w": [
+                "a",
+                "another",
+                "neither",
+                "the",
+                "these",
+                "this",
+                "whose"
+            ]
+        },
+        "synonyms": {
+            "l": [
+                "the"
+            ],
+            "w": [
+                "the"
+            ]
+        }
+    },
+    "num": {
+        "examples": {
+            "l": [
+                "1958",
+                "1970-1975",
+                "1975",
+                "five",
+                "one",
+                "twelve"
+            ],
+            "w": [
+                "1958",
+                "1970-1975",
+                "1975",
+                "five",
+                "one",
+                "twelve"
+            ]
+        }
+    },
+    "conj": {
+        "glosses": {
+            "l": [
+                "or"
+            ],
+            "w": [
+                "or"
+            ]
+        },
+        "examples": {
+            "l": [
+                "and",
+                "or"
+            ],
+            "w": [
+                "and",
+                "or"
+            ]
+        }
+    },
+    "name": {
+        "glosses": {
+            "l": [
+                "accusation"
+            ],
+            "w": [
+                "accusation"
+            ]
+        },
+        "examples": {
+            "l": [
+                "austria",
+                "china",
+                "europe",
+                "hei",
+                "ling",
+                "powers",
+                "province",
+                "rightist",
+                "sardinia",
+                "shansi",
+                "ting",
+                "u.s.",
+                "york"
+            ],
+            "w": [
+                "austria",
+                "china",
+                "europe",
+                "hei",
+                "ling",
+                "powers",
+                "province",
+                "rightist",
+                "sardinia",
+                "shansi",
+                "ting",
+                "u.s.",
+                "york"
+            ]
+        }
+    },
+    "noun": {
+        "derived": {
+            "l": [
+                "accusal",
+                "accusee",
+                "accusement",
+                "accusor",
+                "counteraccuse",
+                "hackusate",
+                "misaccuse",
+                "reaccuse"
+            ],
+            "w": [
+                "accusal",
+                "accusee",
+                "accusement",
+                "accusor",
+                "counteraccuse",
+                "hackusate",
+                "misaccuse",
+                "reaccuse"
+            ]
+        },
+        "glosses": {
+            "l": [
+                "accusation",
+                "censure",
+                "charge",
+                "crime",
+                "fault",
+                "offense"
+            ],
+            "w": [
+                "accusation",
+                "censure",
+                "charge",
+                "crime",
+                "fault",
+                "offence"
+            ]
+        },
+        "related": {
+            "l": [
+                "accusation",
+                "accusative",
+                "accuser",
+                "excuse",
+                "ruse"
+            ],
+            "w": [
+                "accusation",
+                "accusative",
+                "accuser",
+                "excuse",
+                "ruse"
+            ]
+        },
+        "examples": {
+            "l": [
+                "al",
+                "arm",
+                "battle",
+                "business",
+                "can",
+                "chiang",
+                "chicken",
+                "company",
+                "contention",
+                "cost",
+                "creature",
+                "crime",
+                "difference",
+                "doth",
+                "face",
+                "farm",
+                "intellect",
+                "l",
+                "level",
+                "life",
+                "misanthropy",
+                "misdemeanor",
+                "moon",
+                "ng",
+                "patent",
+                "payouts",
+                "president",
+                "prison",
+                "property",
+                "saga",
+                "thing",
+                "thought",
+                "troll",
+                "victim",
+                "village",
+                "whereof",
+                "world",
+                "year"
+            ],
+            "w": [
+                "al",
+                "arm",
+                "arms",
+                "battle",
+                "business",
+                "can",
+                "chiang",
+                "chickens",
+                "companies",
+                "contention",
+                "costs",
+                "creatures",
+                "crime",
+                "differences",
+                "doth",
+                "face",
+                "farm",
+                "intellect",
+                "l",
+                "level",
+                "life",
+                "misanthropy",
+                "misdemeanor",
+                "moon",
+                "ng",
+                "patent",
+                "patents",
+                "payouts",
+                "president",
+                "prison",
+                "property",
+                "saga",
+                "things",
+                "thoughts",
+                "trolls",
+                "victims",
+                "village",
+                "whereof",
+                "world",
+                "years"
+            ]
+        },
+        "synonyms": {
+            "l": [
+                "accriminate",
+                "appeach",
+                "atwite",
+                "becry",
+                "blame",
+                "bone",
+                "censure",
+                "challenge",
+                "charge",
+                "cop",
+                "door",
+                "fault",
+                "finger",
+                "foot",
+                "point",
+                "reproach",
+                "shend",
+                "twit",
+                "wite"
+            ],
+            "w": [
+                "accriminate",
+                "appeach",
+                "atwite",
+                "becry",
+                "blame",
+                "bone",
+                "censure",
+                "challenge",
+                "charge",
+                "cop",
+                "door",
+                "fault",
+                "feet",
+                "finger",
+                "point",
+                "reproach",
+                "shend",
+                "twit",
+                "wite"
+            ]
+        }
+    },
+    "prep": {
+        "glosses": {
+            "l": [
+                "against",
+                "with"
+            ],
+            "w": [
+                "against",
+                "with"
+            ]
+        },
+        "examples": {
+            "l": [
+                "at",
+                "by",
+                "down",
+                "for",
+                "from",
+                "in",
+                "of",
+                "than",
+                "to",
+                "up"
+            ],
+            "w": [
+                "at",
+                "by",
+                "down",
+                "for",
+                "from",
+                "in",
+                "of",
+                "than",
+                "to",
+                "up"
+            ]
+        },
+        "synonyms": {
+            "l": [
+                "at",
+                "of",
+                "on",
+                "out",
+                "up"
+            ],
+            "w": [
+                "at",
+                "of",
+                "on",
+                "out",
+                "up"
+            ]
+        }
+    },
+    "pron": {
+        "glosses": {
+            "l": [
+                "someone"
+            ],
+            "w": [
+                "someone"
+            ]
+        },
+        "examples": {
+            "l": [
+                "he",
+                "i",
+                "me",
+                "my",
+                "she",
+                "that",
+                "their",
+                "them",
+                "there",
+                "they",
+                "we"
+            ],
+            "w": [
+                "he",
+                "i",
+                "me",
+                "my",
+                "she",
+                "that",
+                "their",
+                "them",
+                "there",
+                "they",
+                "we"
+            ]
+        },
+        "synonyms": {
+            "l": [
+                "it",
+                "someone",
+                "something"
+            ],
+            "w": [
+                "it",
+                "someone",
+                "something"
+            ]
+        }
+    },
+    "verb": {
+        "glosses": {
+            "l": [
+                "blame",
+                "commit",
+                "find",
+                "have",
+                "make"
+            ],
+            "w": [
+                "blame",
+                "committed",
+                "find",
+                "having",
+                "make"
+            ]
+        },
+        "related": {
+            "l": [
+                "recuse"
+            ],
+            "w": [
+                "recuse"
+            ]
+        },
+        "examples": {
+            "l": [
+                "accord",
+                "accuse",
+                "be",
+                "begin",
+                "being",
+                "buy",
+                "demand",
+                "disappear",
+                "dog",
+                "excuse",
+                "have",
+                "impeach",
+                "infringe",
+                "lie",
+                "live",
+                "might",
+                "must",
+                "pay",
+                "persuade",
+                "pluck",
+                "prove",
+                "raise",
+                "reach",
+                "roam",
+                "send",
+                "use",
+                "work"
+            ],
+            "w": [
+                "according",
+                "accuse",
+                "accused",
+                "accusing",
+                "are",
+                "be",
+                "began",
+                "being",
+                "buying",
+                "demand",
+                "disappeared",
+                "dogged",
+                "excusing",
+                "had",
+                "have",
+                "having",
+                "impeached",
+                "infringing",
+                "lay",
+                "live",
+                "might",
+                "must",
+                "pay",
+                "persuaded",
+                "plucked",
+                "prove",
+                "raising",
+                "reaches",
+                "roam",
+                "sent",
+                "using",
+                "was",
+                "worked"
+            ]
+        },
+        "synonyms": {
+            "l": [
+                "accuse",
+                "arraign",
+                "blame",
+                "bumble",
+                "criminate",
+                "decry",
+                "defame",
+                "denounce",
+                "have",
+                "impeach",
+                "incriminate",
+                "inculpate",
+                "indict",
+                "lie",
+                "patronize",
+                "put"
+            ],
+            "w": [
+                "accuse",
+                "arraign",
+                "blame",
+                "bumble",
+                "criminate",
+                "decry",
+                "defame",
+                "denounce",
+                "have",
+                "impeach",
+                "incriminate",
+                "inculpate",
+                "indict",
+                "lay",
+                "patronize",
+                "put"
+            ]
+        }
+    },
+    "symbol": {
+        "examples": {
+            "l": [
+                "/"
+            ],
+            "w": [
+                "/"
+            ]
+        }
+    },
+    "particle": {
+        "glosses": {
+            "l": [
+                "to"
+            ],
+            "w": [
+                "to"
+            ]
+        },
+        "examples": {
+            "l": [
+                "to"
+            ],
+            "w": [
+                "to"
+            ]
+        },
+        "synonyms": {
+            "l": [
+                "'s",
+                "to"
+            ],
+            "w": [
+                "'s",
+                "to"
+            ]
+        }
+    }
+}

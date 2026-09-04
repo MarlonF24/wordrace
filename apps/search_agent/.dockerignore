@@ -1,0 +1,13 @@
+**/__pycache__/
+**/*.py[codz]
+**/*.ipynb
+**/.env*
+.git/
+.venv/
+.pytest_cache/
+.ruff_cache/
+**/*.dump
+search/graph/*.parquet
+search/benchmark_results/
+search/deep_learn/data/
+tests/
