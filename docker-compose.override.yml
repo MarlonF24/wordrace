@@ -1,8 +1,4 @@
 services:
-  db:
-    ports:
-      - "127.0.0.1:${DB_HOST_PORT:-5432}:5432"
-
   nextjs_migrate:
     build:
       context: ./apps/nextjs_app

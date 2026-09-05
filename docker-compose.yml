@@ -16,6 +16,8 @@ services:
   db:
     image: pgvector/pgvector:0.8.6-pg16-bookworm
     restart: unless-stopped
+    ports:
+      - "127.0.0.1:${DB_HOST_PORT:-5432}:5432"
     environment:
       POSTGRES_USER: ${DB_USER:?Missing DB_USER environment variable}
       POSTGRES_PASSWORD: ${DB_PASSWORD:?Missing DB_PASSWORD environment variable}

@@ -113,6 +113,7 @@ The Next.js server resolves database, schema, seed, and search-service values th
 - `DICT_SCHEMA`: schema for dictionary tables.
 - `DATA_SCHEMA`: schema for game/player tables, defaulting to `public`.
 - Standard Postgres connection values used by the DB clients and seed scripts.
+- `DB_HOST_PORT`: loopback-only host port for PostgreSQL, defaulting to `5432`.
 - `SEED_DATA_PATH`: JSONL source path used by the dictionary seed script.
 - `SEARCH_AGENT_URL`: base URL for the optional FastAPI `search_agent` route-hint service.
 - `SEARCH_AGENT_PORT`: internal and optional local host port for the search API, defaulting to `8000`.
@@ -255,6 +256,14 @@ The two path-filtered workflows build ARM64 images in GHCR and update only their
 - `deploy-search-agent.yml` reacts to `apps/search_agent`, runs Alembic, and replaces only `search_agent_app`.
 
 Provision Docker with the Compose plugin on the Oracle instance, then create `~/wordrace/.env.production` from `.env.example`. Point `NEXTJS_APP_IMAGE` and `SEARCH_AGENT_APP_IMAGE` at this repository's GHCR `main` tags. Deploy Next.js once before the first search-agent deployment so the referenced dictionary schema exists.
+
+PostgreSQL is bound to `127.0.0.1:${DB_HOST_PORT:-5432}` on the Oracle host. To inspect production from a local database client without exposing PostgreSQL to the internet, open an SSH tunnel:
+
+```bash
+ssh -N -L 15432:127.0.0.1:5432 ORACLE_USER@ORACLE_HOST
+```
+
+While that command is running, connect pgAdmin to `127.0.0.1:15432` with the production database name, user, and password. Keep TCP port `5432` closed in Oracle's public ingress rules.
 
 Configure the GitHub `production` environment with these secrets:
 
