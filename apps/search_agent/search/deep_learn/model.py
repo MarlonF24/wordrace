@@ -9,9 +9,6 @@ import torch as t
 from torch.utils.data import DataLoader
 from tqdm.auto import tqdm
 
-from search_agent.search.deep_learn.dataset import FeatureBatch, LabelBatch
-
-
 @dataclass(slots=True)
 class EvaluationMetrics:
     """Base for typed metric bundles returned by ``eval_fn``.
@@ -55,7 +52,7 @@ MODEL_DIR = FILE_DIR / "models"
 MODEL_DIR.mkdir(exist_ok=True)
 
 
-class MyModel[TF: FeatureBatch, TL: LabelBatch, TP, TE: EvaluationMetrics](
+class MyModel[TF: t.Tensor, TL: t.Tensor, TP, TE: EvaluationMetrics](
     t.nn.Module, ABC
 ):
     """Base model for loaders that yield already-collated tensor batches.

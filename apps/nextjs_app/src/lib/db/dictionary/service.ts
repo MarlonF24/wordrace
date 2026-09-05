@@ -1,4 +1,5 @@
 import { db } from './db';
+import { DictionaryRecordError } from './errors';
 
 import {
     type SelectableExclusiveEntryLexicalKey,
@@ -42,7 +43,9 @@ export async function getWordRecord(
     });
 
     if (!result) {
-        throw new Error(`Word "${queryWord}" does not exist in the dictionary`);
+        throw new DictionaryRecordError(
+            `Word "${queryWord}" is not in the dictionary. Choose another word.`
+        );
     }
 
     const selectedEntryLexicalFields = { ...sharedLexicalFields, ...exclusiveEntryLexicalFields };
@@ -79,8 +82,8 @@ export async function getWordRecord(
 
     // A record must expose at least one selected field to be playable/displayable.
     if (noEntryLexicalFieldsFound && noSenseLexicalFieldsFound) {
-        throw new Error(
-            `For word "${queryWord}", none of the requested lexical fields (${[...Object.keys(sharedLexicalFields), ...Object.keys(exclusiveSenseLexicalFields)].join(', ')}) were found on the entries or their senses`
+        throw new DictionaryRecordError(
+            `Word "${queryWord}" has no content for the selected dictionary fields. Choose another word.`
         );
     }
 

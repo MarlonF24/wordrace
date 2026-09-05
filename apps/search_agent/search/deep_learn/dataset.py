@@ -34,20 +34,11 @@ from search_agent.db import (
     WinkPosTag,
 )
 from search_agent.search.igraph import IgraphSearch
-from search_agent.search.scoring import COSINE_NORM_EPSILON
 
 DATASET_FORMAT_VERSION = 2
 
 SELECTABLE_LEXICAL_KEYS = tuple(SelectableLexicalKey)
 WINK_POS_TAGS = tuple(WinkPosTag)
-
-
-PAIR_INTERACTION_FEATURE_COUNT = 2 * EMBEDDING_DIMENSION + 3
-
-UNREACHABLE_COST_LABEL = -1.0
-# Shortest-path costs are non-negative, so negative labels are reserved for
-# unreachable pairs and can be masked out of cost-regression terms.
-REACHABLE_COST_LABEL_MIN = 0.0
 
 
 class EmbeddingCache(NamedTuple):
@@ -187,50 +178,6 @@ def sample_cost_search_settings(
         pos_mask=pos_mask,
         available_pos=available_pos,
     )
-
-
-def write_pair_interactions(
-    features: Float[np.ndarray, "batch_size n_features"],
-    offset: int,
-    left_embedding: Float[np.ndarray, f"batch_size {EMBEDDING_DIMENSION}"],
-    right_embedding: Float[np.ndarray, f"batch_size {EMBEDDING_DIMENSION}"],
-) -> int:
-    """Append pairwise embedding features into a caller-owned feature matrix.
-
-    Args:
-        features: Feature matrix whose columns after ``offset`` are writable.
-        offset: First free column in ``features``.
-        left_embedding: Left endpoint embedding for each row.
-        right_embedding: Right endpoint embedding for each row.
-
-    Returns:
-        First free column after the written difference, product, cosine,
-        Euclidean distance, and dot-product features.
-    """
-    left = np.asarray(left_embedding, dtype=np.float32)
-    right = np.asarray(right_embedding, dtype=np.float32)
-
-    # Fill the caller-owned feature matrix in fixed-width blocks.
-    difference = features[:, offset : offset + EMBEDDING_DIMENSION]
-    np.subtract(right, left, out=difference)
-    offset += EMBEDDING_DIMENSION
-
-    product = features[:, offset : offset + EMBEDDING_DIMENSION]
-    np.multiply(left, right, out=product)
-    offset += EMBEDDING_DIMENSION
-
-    # Scalar pair features complement the raw embedding-vector interactions.
-    dot_product = product.sum(axis=1)
-    features[:, offset] = dot_product / (
-        np.sqrt(np.einsum("ij,ij->i", left, left))
-        * np.sqrt(np.einsum("ij,ij->i", right, right))
-        + COSINE_NORM_EPSILON
-    )
-    offset += 1
-    features[:, offset] = np.sqrt(np.einsum("ij,ij->i", difference, difference))
-    offset += 1
-    features[:, offset] = dot_product
-    return offset + 1
 
 
 def get_worker_rng_seed(rng_seed: int | None) -> int | None:

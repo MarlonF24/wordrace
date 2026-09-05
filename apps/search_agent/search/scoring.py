@@ -24,7 +24,7 @@ from search_agent.logger import logger
 from search_agent.search.contracts import EdgeConstraints
 
 if TYPE_CHECKING:
-    from search_agent.search.deep_learn.cost_apprx import CostApproximation
+    from search_agent.search.deep_learn.cost_model import CostApproximation
 
 
 type SimilarityFunc = Callable[
@@ -468,7 +468,7 @@ class LearnedCostHeuristic(Heuristic):
 
         # Import lazily so ordinary search imports do not initialize the
         # deep-learning package or create a package import cycle.
-        from search_agent.search.deep_learn.cost_apprx import (
+        from search_agent.search.deep_learn.cost_model import (
             CostApproximation,
             CostApproximationEval,
             CostApproximationLoss,
@@ -548,7 +548,7 @@ class LearnedCostHeuristic(Heuristic):
 
         if rows:
             # The feature builder defines the exact training/inference layout.
-            from search_agent.search.deep_learn.cost_apprx import IterCostDataset
+            from search_agent.search.deep_learn.cost_model import build_cost_features
 
             found_words, found_embeddings = zip(*rows)
             current_embeddings = np.asarray(
@@ -559,7 +559,7 @@ class LearnedCostHeuristic(Heuristic):
                 target_embedding,
                 current_embeddings.shape,
             )
-            features = IterCostDataset.build_cost_features(
+            features = build_cost_features(
                 current_embedding=current_embeddings,
                 target_embedding=target_embeddings,
                 lemmatized=edge_constraints.lemmatized,

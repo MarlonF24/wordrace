@@ -69,9 +69,13 @@ export function WordButton({
                 setError(null);
                 startTransition(async () => {
                     try {
-                        await addRaceStepAction(game.id, player.id, token, side);
+                        const result = await addRaceStepAction(game.id, player.id, token, side);
+                        if (!result.success) {
+                            setError(result.error);
+                        }
                     } catch (e) {
-                        setError(e instanceof Error ? e.message : "An unexpected error occurred.");
+                        console.error("Could not add race step:", e);
+                        setError("An unexpected error occurred. Please try again.");
                     }
                 });
             }}

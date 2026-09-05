@@ -1,8 +1,9 @@
 import { DATA_DB } from '@/lib/db';
 import { getPlayerId } from '@/lib/server/utils';
+import Link from 'next/link';
 import { RaceLane } from './race-lane';
 import { RaceStep, getRecordForGame } from '@/lib/db/data';
-import { type WordRecord } from '@/lib/db/dictionary';
+import { isDictionaryRecordError, type WordRecord } from '@/lib/db/dictionary';
 import { FoundPopup } from './foundPopup';
 import { ErrorDisplay } from './error-display';
 import { RouteHintPanel } from './route-hint-panel';
@@ -47,15 +48,30 @@ export default async function GamePage({ params }: { params: Promise<{ gameId: s
 
     const startRecordPromise = getRecordForGame(game, currStartWord);
 
+    let startRecord: WordRecord;
+    let targetRecord: WordRecord | undefined;
+    try {
+        if (game.mode === 'collide') {
+            const targetWord = currTargetStep.word;
+            const targetRecordPromise = getRecordForGame(game, targetWord);
+            [startRecord, targetRecord] = await Promise.all([startRecordPromise, targetRecordPromise]);
+        } else {
+            startRecord = await startRecordPromise;
+        }
+    } catch (error) {
+        // Persisted games can outlive dictionary imports; show a recoverable
+        // state for that expected mismatch while preserving real exceptions.
+        if (isDictionaryRecordError(error)) {
+            return <UnavailableDictionaryRecord message={error.message} />;
+        }
+        throw error;
+    }
+
     let raceLanes;
-
     if (game.mode === 'collide') {
-        const targetWord = currTargetStep.word;
-
-        const targetRecordPromise = getRecordForGame(game, targetWord);
-
-        const [startRecord, targetRecord] = await Promise.all([startRecordPromise, targetRecordPromise]);
-
+        if (!targetRecord) {
+            throw new Error('Collide mode requires a loaded target dictionary record');
+        }
         raceLanes = (
             <DoubleLane
                 startLinks={startLinks}
@@ -65,8 +81,6 @@ export default async function GamePage({ params }: { params: Promise<{ gameId: s
             />
         );
     } else {
-        const startRecord = await startRecordPromise;
-
         raceLanes = (
             <div className="w-full h-full">
                 <RaceLane
@@ -126,6 +140,24 @@ export default async function GamePage({ params }: { params: Promise<{ gameId: s
 
             <div className="flex-1 min-h-0 flex flex-row overflow-hidden relative">{raceLanes}</div>
         </div>
+    );
+}
+
+/** Explain that a persisted game can no longer load its current dictionary row. */
+function UnavailableDictionaryRecord({ message }: { message: string }) {
+    return (
+        <main className="min-h-[calc(100vh-3.5rem)] grid place-items-center p-6">
+            <section className="max-w-lg rounded-lg border bg-card p-6 text-center shadow-sm">
+                <h1 className="text-xl font-bold">Current word unavailable</h1>
+                <p className="mt-3 text-muted-foreground">{message}</p>
+                <Link
+                    href="/"
+                    className="mt-6 inline-flex rounded-md bg-primary px-4 py-2 font-semibold text-primary-foreground"
+                >
+                    Start a new game
+                </Link>
+            </section>
+        </main>
     );
 }
 

@@ -1,96 +1,34 @@
-"""Cost-approximation dataset, loss, metrics, and model definitions."""
+"""Generated and persisted datasets for cost-approximation training."""
 
 import math
-from dataclasses import dataclass
 from itertools import chain
 from pathlib import Path
-from typing import Callable, NamedTuple, Self, Literal
+from typing import NamedTuple, Self, Literal
 
 import numpy as np
 import torch as t
-import torch.nn as nn
 from jaxtyping import Float
 from tqdm.auto import tqdm
 
-from search_agent.db import (
-    EMBEDDING_DIMENSION,
-    NUM_SELECTABLE_LEXICAL_KEYS,
-    NUM_WINK_POS_TAGS,
-)
+from search_agent.db import EMBEDDING_DIMENSION
 from search_agent.search.deep_learn.dataset import (
-    PAIR_INTERACTION_FEATURE_COUNT,
-    REACHABLE_COST_LABEL_MIN,
-    UNREACHABLE_COST_LABEL,
     CostSearchSettings,
     EmbeddingCache,
     GeneratedIterTensorDataset,
     MapTensorDataset,
-    write_pair_interactions,
 )
-from search_agent.search.deep_learn.model import EvaluationMetrics, MyModel
+from search_agent.search.deep_learn.cost_model import (
+    COST_FEATURE_COUNT,
+    REACHABLE_COST_LABEL_MIN,
+    UNREACHABLE_COST_LABEL,
+    CostFeatureBatch,
+    CostLabelBatch,
+    build_cost_features,
+)
 from search_agent.search.contracts import EdgeConstraints
 from search_agent.search.igraph import IgraphSearch
 
-
-COST_FEATURE_COUNT = (
-    2 * EMBEDDING_DIMENSION
-    + PAIR_INTERACTION_FEATURE_COUNT
-    + NUM_SELECTABLE_LEXICAL_KEYS
-    + NUM_WINK_POS_TAGS
-    + 1
-)
-
 type SamplingStrategy = Literal["random", "neighbors"]
-
-type CostFeatureBatch = Float[t.Tensor, f"batch_size {COST_FEATURE_COUNT}"]
-type CostLabelBatch = Float[t.Tensor, "batch_size"]
-
-
-class CostPrediction(NamedTuple):
-    """Per-row outputs for the two cost-approximation tasks.
-
-    ``cost`` is trained only on reachable rows. ``reachable_logit`` is the raw
-    pre-sigmoid score for the positive class, where positive means reachable.
-    The model intentionally does not apply sigmoid internally because training
-    uses ``binary_cross_entropy_with_logits``, which combines sigmoid and BCE
-    in one numerically stable operation. Inference code should apply sigmoid
-    only when it needs a probability rather than a thresholded logit.
-    """
-
-    cost: CostLabelBatch
-    reachable_logit: CostLabelBatch
-
-
-@dataclass(slots=True)
-class CostEvaluation(EvaluationMetrics):
-    """Validation metrics for the cost and reachability heads.
-
-    ``reachable_cost_mae`` is the mean absolute cost residual on reachable
-    rows only. ``reachable_cost_residual_std`` is the standard deviation of the
-    signed reachable-row residual ``predicted_cost - true_cost``.
-    ``reachability_precision`` is true positives divided by rows predicted
-    reachable. ``reachability_recall`` is true positives divided by reachable
-    rows. ``reachability_specificity`` is true negatives divided by unreachable
-    rows. Accuracy and F1 are intentionally omitted because accuracy is weak
-    under class imbalance and F1 is derived from precision and recall.
-    ``MyModel.evaluate`` reports the mean of these batch-level values.
-    """
-
-    reachable_cost_mae: float
-    reachable_cost_residual_std: float
-    reachable_cost_r2: float
-    reachability_precision: float
-    reachability_recall: float
-    reachability_specificity: float
-
-    @property
-    def eval_score(self) -> float:
-        """Primary checkpoint metric: reachable-row cost error in cost units."""
-        return self.reachable_cost_mae
-
-
-type CostLossFn = Callable[[CostPrediction, CostLabelBatch], t.Tensor]
-type CostEvalFn = Callable[[CostPrediction, CostLabelBatch], CostEvaluation]
 
 
 class IterCostDataset(GeneratedIterTensorDataset[CostFeatureBatch, CostLabelBatch]):
@@ -166,39 +104,6 @@ class IterCostDataset(GeneratedIterTensorDataset[CostFeatureBatch, CostLabelBatc
     def embedding_rows_per_batch(self) -> int:
         """Return cached embedding rows needed for one source-target matrix."""
         return self.source_batch_size + self.target_batch_size
-
-    @staticmethod
-    def build_cost_features(
-        current_embedding: Float[np.ndarray, f"batch_size {EMBEDDING_DIMENSION}"],
-        target_embedding: Float[np.ndarray, f"batch_size {EMBEDDING_DIMENSION}"],
-        lemmatized: bool,
-        lexical_field_mask: Float[np.ndarray, f"{NUM_SELECTABLE_LEXICAL_KEYS}"],
-        pos_mask: Float[np.ndarray, f"{NUM_WINK_POS_TAGS}"],
-    ) -> Float[t.Tensor, "batch_size n_features"]:
-        """Build one feature row per current-target pair.
-
-        The row contains both endpoint embeddings, pair geometry, and the graph
-        settings used by the search that produced the label. Constraint masks
-        follow the enum declaration order shared with inference.
-        """
-        current = np.asarray(current_embedding, dtype=np.float32)
-        target = np.asarray(target_embedding, dtype=np.float32)
-        features = np.empty((current.shape[0], COST_FEATURE_COUNT), dtype=np.float32)
-        offset = 0
-
-        # Keep raw endpoints first so the network can learn absolute-position effects.
-        features[:, offset : offset + EMBEDDING_DIMENSION] = current
-        offset += EMBEDDING_DIMENSION
-        features[:, offset : offset + EMBEDDING_DIMENSION] = target
-        offset += EMBEDDING_DIMENSION
-        # Add pairwise geometry and the graph settings used to create the label.
-        offset = write_pair_interactions(features, offset, current, target)
-        features[:, offset] = float(lemmatized)
-        offset += 1
-        features[:, offset : offset + NUM_SELECTABLE_LEXICAL_KEYS] = lexical_field_mask
-        offset += NUM_SELECTABLE_LEXICAL_KEYS
-        features[:, offset:] = pos_mask
-        return t.from_numpy(features)
 
     def sample_embeddings(
         self,
@@ -362,7 +267,7 @@ class IterCostDataset(GeneratedIterTensorDataset[CostFeatureBatch, CostLabelBatc
                 (embedding_batch.start_embeddings.shape[0], 1),
             )
         )
-        features = self.build_cost_features(
+        features = build_cost_features(
             current_embedding=current_embedding,
             target_embedding=target_embedding,
             lemmatized=search_settings.lemmatized,
@@ -561,240 +466,6 @@ class MapCostDataset(MapTensorDataset[CostFeatureBatch, CostLabelBatch]):
             n_examples=n_examples,
             path=path,
             description="Generate cost dataset",
-        )
-
-
-class CostApproximationLoss(nn.Module):
-    """Combine reachable-cost regression with reachability classification.
-
-    ``reachability_weight`` multiplies the BCE term before it is added to the
-    cost term. ``balance_reachability`` recomputes BCE ``pos_weight`` per batch
-    as unreachable/reachable, which compensates when reachable rows are the
-    minority class. Reachability predictions are raw logits, not probabilities;
-    this keeps the sigmoid inside ``binary_cross_entropy_with_logits`` for
-    stable training.
-    """
-
-    def __init__(
-        self, reachability_weight: float = 0.5, balance_reachability: bool = True
-    ):
-        """Configure the two-task loss.
-
-        Args:
-            reachability_weight: Multiplier applied to the BCE reachability
-                loss before adding it to reachable-row cost regression.
-            balance_reachability: Whether to derive BCE positive-class weight
-                from the current batch's reachable/unreachable counts.
-        """
-        super().__init__()
-        # This controls the tradeoff between accurate costs and detecting
-        # whether a finite path exists at all.
-        self.reachability_weight = reachability_weight
-        # When enabled, reachable mistakes receive more BCE weight in batches
-        # dominated by unreachable pairs.
-        self.balance_reachability = balance_reachability
-        # SmoothL1 keeps the cost head robust to rare long-path outliers.
-        self.cost_loss_fn = nn.SmoothL1Loss(reduction="none")
-
-    def forward(self, prediction: CostPrediction, labels: CostLabelBatch) -> t.Tensor:
-        """Return the scalar training loss for one cost batch.
-
-        Args:
-            prediction: Model outputs for cost and reachability.
-            labels: Non-negative path costs for reachable pairs and
-                ``UNREACHABLE_COST_LABEL`` for unreachable pairs.
-
-        Returns:
-            Weighted sum of reachable-only SmoothL1 cost loss and BCE
-            reachability loss.
-        """
-        # Split labels into the two supervised tasks. Non-negative labels are
-        # real path costs; the negative sentinel means unreachable.
-        reachable = labels >= REACHABLE_COST_LABEL_MIN
-
-        # Average the cost loss over reachable rows only. Clamping handles the
-        # rare all-unreachable batch by making the masked numerator divide by 1.
-        reachable_count = reachable.sum().clamp_min(1)
-
-        # Compute cost error before masking so tensor shapes stay unchanged.
-        # Sentinel rows are then zeroed because -1 is a class marker, not cost.
-        cost_error = self.cost_loss_fn(prediction.cost, labels)
-        cost_loss = cost_error.masked_fill(~reachable, 0.0).sum() / reachable_count
-
-        # BCEWithLogitsLoss consumes raw logits and internally applies the
-        # stable sigmoid+BCE formula.
-        reachability_target = reachable.to(dtype=prediction.reachable_logit.dtype)
-        reachable_examples = reachable.sum().to(dtype=prediction.reachable_logit.dtype)
-        unreachable_examples = (
-            (~reachable).sum().to(dtype=prediction.reachable_logit.dtype)
-        )
-
-        # pos_weight scales positive-class BCE terms. With labels
-        # positive=reachable, unreachable/reachable gives each class similar
-        # total influence when unreachable rows are more common.
-        pos_weight = (
-            (unreachable_examples / reachable_examples.clamp_min(1)).clamp_min(1.0)
-            if self.balance_reachability
-            else None
-        )
-        reachability_loss = nn.functional.binary_cross_entropy_with_logits(
-            prediction.reachable_logit,
-            reachability_target,
-            pos_weight=pos_weight,
-        )
-
-        # Ordinary backprop still sees one scalar loss and routes gradients to
-        # the shared trunk plus the two task-specific heads.
-        return cost_loss + self.reachability_weight * reachability_loss
-
-
-class CostApproximationEval(nn.Module):
-    """Compute validation metrics for the trained tasks.
-
-    Reachability is evaluated directly in logit space. A threshold of ``0.0``
-    is equivalent to ``sigmoid(logit) >= 0.5`` without doing the sigmoid work.
-    Cost metrics ignore unreachable sentinel rows because those rows have no
-    finite shortest-path target for the regression head.
-    """
-
-    def __init__(self, reachability_threshold: float = 0.0):
-        """Configure the reachability threshold used for validation metrics.
-
-        Args:
-            reachability_threshold: Logit cutoff used to convert reachability
-                scores into predicted classes.
-        """
-        super().__init__()
-        # Logit threshold used to convert reachability scores into a class.
-        self.reachability_threshold = reachability_threshold
-
-    def forward(
-        self, prediction: CostPrediction, labels: CostLabelBatch
-    ) -> CostEvaluation:
-        """Compute non-redundant cost and reachability metrics for one batch.
-
-        Args:
-            prediction: Model outputs for cost and reachability.
-            labels: Non-negative path costs or the unreachable sentinel.
-
-        Returns:
-            Batch-level cost MAE and binary reachability metrics.
-        """
-        # Use the same target split as training so validation measures the
-        # learned tasks rather than a different post-processing rule.
-        reachable = labels >= REACHABLE_COST_LABEL_MIN
-        metric_dtype = prediction.reachable_logit.dtype
-
-        # Cost residuals ignore sentinel rows for the same reason as the loss:
-        # unreachable pairs have no numeric shortest-path cost.
-        reachable_count = reachable.sum().clamp_min(1)
-        cost_residual = prediction.cost.sub(labels).masked_fill(~reachable, 0.0)
-        reachable_cost_mae = cost_residual.abs().sum() / reachable_count
-        reachable_cost_bias = cost_residual.sum() / reachable_count
-        reachable_cost_residual_variance = (
-            cost_residual.square().sum() / reachable_count - reachable_cost_bias.square()
-        ).clamp_min(0.0)
-        reachable_cost_residual_std = reachable_cost_residual_variance.sqrt()
-
-        # The default logit threshold 0 is equivalent to sigmoid(logit) >= 0.5.
-        predicted_reachable = prediction.reachable_logit >= self.reachability_threshold
-
-        # reachability_recall asks "of reachable rows, how many were found?", and
-        # reachability_specificity asks "of unreachable rows, how many were rejected?".
-        reachable_labels = labels.masked_select(reachable)
-        reachable_mean = reachable_labels.mean()
-        ss_tot = reachable_labels.sub(reachable_mean).square().sum().clamp_min(1e-6)
-        ss_res = cost_residual.square().sum()
-        reachable_cost_r2 = 1.0 - ss_res / ss_tot
-
-        true_positive = (
-            predicted_reachable.logical_and(reachable).sum().to(dtype=metric_dtype)
-        )
-        predicted_count = predicted_reachable.sum().clamp_min(1).to(dtype=metric_dtype)
-        true_negative = (
-            (~predicted_reachable).logical_and(~reachable).sum().to(dtype=metric_dtype)
-        )
-        unreachable_count = (~reachable).sum().clamp_min(1).to(dtype=metric_dtype)
-        reach_precision = true_positive / predicted_count
-        reach_recall = true_positive / reachable_count
-        reach_specificity = true_negative / unreachable_count
-
-        return CostEvaluation(
-            reachable_cost_mae=float(reachable_cost_mae.detach()),
-            reachable_cost_residual_std=float(reachable_cost_residual_std.detach()),
-            reachable_cost_r2=float(reachable_cost_r2.detach()),
-            reachability_precision=float(reach_precision.detach()),
-            reachability_recall=float(reach_recall.detach()),
-            reachability_specificity=float(reach_specificity.detach()),
-        )
-
-
-# NOTE: maybe have to look into making the loss function penalize
-# cost-overestimation more than underestimation, to make the heuristic more optimistic.
-class CostApproximation(
-    MyModel[CostFeatureBatch, CostLabelBatch, CostPrediction, CostEvaluation]
-):
-    """Two-head model for current-target reachability and reachable cost.
-
-    The reachability head returns raw logits. Keeping sigmoid out of
-    ``forward`` lets training use ``binary_cross_entropy_with_logits`` and lets
-    evaluation compare logits directly against an equivalent threshold.
-    The shared trunk is intentionally shorter than the task heads, so cost and
-    reachability can specialize after a compact common representation.
-    """
-
-    SHARED_WIDTH_FLOOR = 256
-    HEAD_WIDTH_FLOOR = 64  # Minimum width of the first hidden layer in each task head.
-    WIDTH_SHRINK_FACTOR = (
-        2  # Factor by which each hidden layer is narrower than the previous one.
-    )
-    OUTPUT_WIDTH = 1
-
-    def __init__(self, loss_fn: CostLossFn, eval_fn: CostEvalFn):
-        """Build the shared trunk and two task-specific heads.
-
-        Args:
-            loss_fn: Callable used by ``fit_batch`` to train predictions.
-            eval_fn: Callable used by ``evaluate`` to produce typed metrics.
-        """
-        super().__init__(loss_fn=loss_fn, eval_fn=eval_fn)
-        shared_widths = self._halving_widths(COST_FEATURE_COUNT, self.SHARED_WIDTH_FLOOR)
-        shared_output_width = shared_widths[-1]
-        head_widths = self._halving_widths(shared_output_width, self.HEAD_WIDTH_FLOOR)
-
-        self.model = self._mlp(COST_FEATURE_COUNT, shared_widths)
-        self.cost_head = self._mlp(
-            shared_output_width, [*head_widths[1:], self.OUTPUT_WIDTH]
-        )
-        self.reachable_head = self._mlp(
-            shared_output_width, [*head_widths[1:], self.OUTPUT_WIDTH]
-        )
-
-    @classmethod
-    def _halving_widths(cls, input_width: int, floor: int) -> list[int]:
-        """Return monotonically shrinking hidden widths down to ``floor``."""
-        widths = [input_width]
-        while widths[-1] > floor:
-            widths.append(widths[-1] // cls.WIDTH_SHRINK_FACTOR)
-        return widths
-
-    @staticmethod
-    def _mlp(input_width: int, output_widths: list[int]) -> nn.Sequential:
-        """Build a ReLU MLP ending at the last requested width."""
-        layers: list[nn.Module] = []
-        for width in output_widths:
-            layers.append(nn.Linear(input_width, width))
-            if width != output_widths[-1]:
-                layers.append(nn.ReLU())
-            input_width = width
-        return nn.Sequential(*layers)
-
-    def forward(self, input: t.Tensor) -> CostPrediction:
-        """Return one cost estimate and one raw reachability logit per row."""
-        features = self.model(input)
-        return CostPrediction(
-            cost=self.cost_head(features).squeeze(-1),
-            reachable_logit=self.reachable_head(features).squeeze(-1),
         )
 
 

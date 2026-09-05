@@ -1,5 +1,13 @@
-"""Public deep-learning API for generated graph datasets and models."""
+"""Inference-safe public API for the learned cost model."""
 
-from search_agent.search.deep_learn.cost_apprx import *
-from search_agent.search.deep_learn.dataset import *
-from search_agent.search.deep_learn.model import *
+from search_agent.search.deep_learn.cost_model import (
+    CostApproximation,
+    CostApproximationEval,
+    CostApproximationLoss,
+)
+
+__all__ = [
+    "CostApproximation",
+    "CostApproximationEval",
+    "CostApproximationLoss",
+]
