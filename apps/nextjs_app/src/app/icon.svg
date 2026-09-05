@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- The square field uses the navigation color from the WordRace theme. -->
+  <rect width="32" height="32" fill="#476d8f" />
+
+  <!-- A dark under-stroke keeps the route legible at favicon sizes. -->
+  <path
+    d="M13 23h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H19"
+    fill="none"
+    stroke="#1a1a1a"
+    stroke-linecap="round"
+    stroke-width="5"
+  />
+
+  <!-- The foreground and endpoints use the app's primary yellow. -->
+  <path
+    d="M13 23h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H19"
+    fill="none"
+    stroke="#e8b25d"
+    stroke-linecap="round"
+    stroke-width="2.5"
+  />
+  <circle cx="10" cy="23" r="3.5" fill="#e8b25d" stroke="#1a1a1a" stroke-width="2" />
+  <circle cx="22" cy="9" r="3.5" fill="#e8b25d" stroke="#1a1a1a" stroke-width="2" />
+</svg>
