@@ -5,7 +5,7 @@ from __future__ import annotations
 import math
 import unittest
 from collections.abc import Collection, Sequence
-from unittest.mock import patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -25,6 +25,7 @@ from search_agent.search.search import (
     LinkReader,
     NodePair,
     SearchEdge,
+    get_links,
     make_budgeted_link_reader,
 )
 
@@ -66,6 +67,43 @@ class StaticPriorityScorer(Scorer):
 
 class SearchInvariantTests(unittest.IsolatedAsyncioTestCase):
     """Verify frontier invariants on small deterministic weighted graphs."""
+
+    async def test_database_links_are_normalized_before_deduplication(self) -> None:
+        """Raw surface variants resolve to the lowercase dictionary vertex."""
+        # Reproduce display-oriented raw targets that differ only by case.
+        session = AsyncMock(spec=AsyncSession)
+        db_result = MagicMock()
+        db_result.tuples.return_value = (
+            (
+                "source",
+                {
+                    "w": {
+                        "glosses": {
+                            "NOUN": ("Having", "having", "Related"),
+                        }
+                    }
+                },
+            ),
+        )
+        session.execute.return_value = db_result
+
+        # The database adapter establishes canonical vertex identity.
+        links = await get_links(
+            {"source"},
+            session,
+            EdgeConstraints(lemmatized=False),
+        )
+
+        # Case variants collapse before sorted SearchEdge construction.
+        self.assertEqual(
+            links,
+            {
+                "source": (
+                    SearchEdge("having"),
+                    SearchEdge("related"),
+                )
+            },
+        )
 
     @staticmethod
     def make_reader(

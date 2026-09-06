@@ -274,6 +274,10 @@ applies the lemmatization rule once before lexical-field and POS filtering.
 vocabulary carried by rich tokens; lowercase Wiktionary entry POS remains a
 separate display/source-data field.
 
+Dictionary vertices are lowercase. Database traversal and graph export both
+lowercase link targets before resolving them to vertices, so capitalization in
+display-oriented raw tokens cannot create a separate terminal or collision.
+
 After reseeding processed dictionary data or changing
 `flatten_lexical_blob_mapped`, regenerate `apps/search_agent/search/graph/*.parquet`
 before using `IgraphSearch`:

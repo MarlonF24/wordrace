@@ -470,8 +470,6 @@ class LearnedCostHeuristic(Heuristic):
         # deep-learning package or create a package import cycle.
         from search_agent.search.deep_learn.cost_model import (
             CostApproximation,
-            CostApproximationEval,
-            CostApproximationLoss,
         )
 
         logger.info(
@@ -479,12 +477,7 @@ class LearnedCostHeuristic(Heuristic):
             self.model_path,
             self.device,
         )
-        model = CostApproximation(
-            loss_fn=CostApproximationLoss(),
-            eval_fn=CostApproximationEval(),
-        )
-        model.load_state_dict(t.load(self.model_path, map_location=self.device))
-        model.to(self.device)
+        model = CostApproximation.load_model(self.model_path, self.device)
         model.eval()
         self.model = model
         return model

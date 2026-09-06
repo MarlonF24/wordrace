@@ -40,6 +40,8 @@ dev = [
     "pytest>=8.4.2",
     "sqlacodegen[pgvector]>=4.0.3",
     "pyright[nodejs]",
+    "captum>=0.9.0",
+    "ipywidgets>=8.1.9",
 ]
 [tool.fastapi]
 entrypoint = "search_agent.api:app"

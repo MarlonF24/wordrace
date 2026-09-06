@@ -6,7 +6,7 @@ import warnings
 from collections.abc import Sequence
 from pathlib import Path
 
-import search_agent.search.igraph as ig
+import igraph as ig
 from jaxtyping import Float
 import numpy as np
 import polars as pl

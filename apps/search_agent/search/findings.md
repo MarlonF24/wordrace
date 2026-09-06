@@ -128,14 +128,14 @@ length.
 | Raw | `embedding-a-star-w1` | 100 / 100* | 102.9%* | 423 |
 | Raw | `learned-a-star-w1-p1` | 100 / 100* | 102.9%* | 568 |
 
-The raw-link values marked `*` are not evidence of super-optimal search. In nine
-of the 100 raw final cases, both database lanes met at the same capitalized link
-token, such as `"Having"`, even though only its lowercase form is a dictionary
-vertex. The exported exact graph excludes such dangling targets. The remaining
-91 raw cases matched the exact link count for every finalist. Until the database
-reader and graph export use the same vertex-normalization rule, raw collide
-success and optimality are not strictly comparable with the exact baseline. One
-screening case had the same issue.
+The raw-link values marked `*` are archived measurements from a normalization
+mismatch, not evidence of super-optimal search. In nine of the 100 raw final
+cases, both database lanes met at the same capitalized link token even though
+dictionary vertices are lowercase. Database traversal and graph export resolve
+link targets through the same lowercase vertex identity. Regenerate the graph
+snapshot and benchmark outputs before replacing the archived table. The other
+91 raw cases already matched the exact link count for every finalist. One
+screening case had the same historical mismatch.
 
 ## Focused regular tuning
 

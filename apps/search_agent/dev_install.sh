@@ -5,7 +5,7 @@ if [[ -z "$VIRTUAL_ENV" ]]; then
     exit 1
 fi
 
-uv add nbstripout
+uv add --dev nbstripout
 
 nbstripout --install --attributes .gitattributes
 

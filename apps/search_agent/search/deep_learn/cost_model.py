@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from pathlib import Path
 from typing import NamedTuple
 
 import numpy as np
@@ -45,6 +46,8 @@ class CostPrediction(NamedTuple):
 
     cost: CostLabelBatch
     reachable_logit: CostLabelBatch
+
+   
 
 
 @dataclass(slots=True)
@@ -275,7 +278,15 @@ class CostApproximation(
     WIDTH_SHRINK_FACTOR = 2
     OUTPUT_WIDTH = 1
 
-    def __init__(self, loss_fn: CostLossFn, eval_fn: CostEvalFn):
+    @classmethod
+    def load_model(cls, model_path: Path, device: t.device) -> "CostApproximation":
+        model = cls()
+        parameters = t.load(model_path, map_location=device)
+        model.load_state_dict(parameters)
+        model.to(device)
+        return model
+
+    def __init__(self, loss_fn: CostLossFn = CostApproximationLoss(), eval_fn: CostEvalFn = CostApproximationEval()):
         """Build the shared trunk and task-specific heads.
 
         Args:
@@ -338,3 +349,4 @@ class CostApproximation(
             cost=self.cost_head(features).squeeze(-1),
             reachable_logit=self.reachable_head(features).squeeze(-1),
         )
+

@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-import search_agent.search.igraph as ig
+import igraph as ig
 import polars as pl
 from sqlalchemy import func, select
 
@@ -48,8 +48,8 @@ def export_edges(out_dir: Path) -> None:
     enum_type = f"{lexical_key_column.type.schema}.{lexical_key_column.type.name}"
 
     # The generated JSONB is rooted by word/lemma mode, then relation and POS.
-    # Joining every target back to the node CTE excludes links that cannot be
-    # traversed by the exported graph.
+    # Normalize each target before joining it to the canonical vertex set so
+    # export and database traversal expose the same edges.
     edges_query = f"""
     WITH nodes AS (
         SELECT
@@ -74,8 +74,9 @@ def export_edges(out_dir: Path) -> None:
     CROSS JOIN LATERAL jsonb_each(link_mode.lexical_fields) AS links(rel, pos_values)
     JOIN enum_map em ON em.name = links.rel
     CROSS JOIN LATERAL jsonb_each(links.pos_values) AS pos_links(pos, targets)
-    CROSS JOIN LATERAL jsonb_array_elements_text(pos_links.targets) AS target_word
-    JOIN nodes n2 ON n2.word = target_word
+    CROSS JOIN LATERAL jsonb_array_elements_text(pos_links.targets)
+        AS target_words(word)
+    JOIN nodes n2 ON n2.word = lower(target_words.word)
     """
     print("Exporting edges...")
     edges_df = pl.read_database_uri(query=edges_query, uri=ENV.database_url(driver=""))

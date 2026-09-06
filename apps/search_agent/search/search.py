@@ -62,8 +62,8 @@ async def get_links(
             buckets admitted by the traversal.
 
     Returns:
-        Found source words mapped to deduplicated, target-sorted, unit-cost
-        edges. Missing dictionary words are omitted.
+        Found source words mapped to lowercase, deduplicated, target-sorted,
+        unit-cost edges. Missing dictionary words are omitted.
     """
     if not words:
         return {}
@@ -82,7 +82,11 @@ async def get_links(
         for lexical_field in edge_constraints.available_lexical_fields:
             pos_links = lexical_fields.get(lexical_field.value, {})
             for pos in edge_constraints.available_pos:
-                links.update(pos_links.get(pos.value, ()))
+                # Resolve display-oriented surface forms to canonical vertices
+                # before deduplication and later dictionary lookups.
+                links.update(
+                    target.lower() for target in pos_links.get(pos.value, ())
+                )
 
         links_by_word[word] = tuple(SearchEdge(target) for target in sorted(links))
 
