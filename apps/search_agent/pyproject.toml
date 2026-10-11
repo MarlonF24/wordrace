@@ -35,5 +35,17 @@ dev = [
     "captum>=0.9.0",
     "ipywidgets>=8.1.9",
 ]
+
+[tool.uv.sources]
+# The ARM production server is CPU-only; keep CUDA builds available on other platforms.
+torch = [
+    { index = "pytorch-cpu", marker = "sys_platform == 'linux' and platform_machine == 'aarch64'" },
+]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
 [tool.fastapi]
 entrypoint = "search_agent.api:app"
