@@ -5,32 +5,33 @@ from typing import Literal
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
+from search_agent.ENV import ENV
 from search_agent.logger import logger
 from search_agent.search import (
     AStarScorer,
     CollideSearchResult,
     EdgeConstraints,
     GeneralizedShortestPathSearch,
+    IgraphSearch,
     LearnedCostHeuristic,
     RegularSearchResult,
     SearchAlgorithm,
 )
 
 
-regular_search_algorithm: SearchAlgorithm = (
-    GeneralizedShortestPathSearch.best_first_search(
+def _build_search_algorithm() -> SearchAlgorithm:
+    """Construct the configured route search implementation."""
+    if ENV.search_algorithm == "igraph":
+        return IgraphSearch()
+
+    return GeneralizedShortestPathSearch.best_first_search(
         scorer=AStarScorer(
             heuristic=LearnedCostHeuristic(device="cpu"),
         ),
     )
-)
-collide_search_algorithm: SearchAlgorithm = (
-    GeneralizedShortestPathSearch.best_first_search(
-        scorer=AStarScorer(
-            heuristic=LearnedCostHeuristic(device="cpu"),
-        ),
-    )
-)
+
+
+search_algorithm = _build_search_algorithm()
 
 app = FastAPI()
 
@@ -63,7 +64,7 @@ def health() -> HealthResponse:
 )
 async def search(request: SearchRequest) -> RegularSearchResult:
     """Return a regular route or HTTP 404 when no legal route is found."""
-    result = await regular_search_algorithm.search_regular(
+    result = await search_algorithm.search_regular(
         request.start,
         request.target,
         edge_constraints=request.constraints,
@@ -91,7 +92,7 @@ async def search(request: SearchRequest) -> RegularSearchResult:
 )
 async def collide_search(request: SearchRequest) -> CollideSearchResult:
     """Return two meeting routes or HTTP 404 when no collision is found."""
-    result = await collide_search_algorithm.search_collide(
+    result = await search_algorithm.search_collide(
         request.start,
         request.target,
         edge_constraints=request.constraints,

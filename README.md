@@ -120,7 +120,7 @@ The Next.js server resolves database, schema, seed, and search-service values th
 
 ## Containers
 
-Copy `.env.example` to `.env` for local Compose use. Local builds use the ignored checkpoint under `apps/search_agent/search`; production builds download it from a pinned Hugging Face Model revision.
+Copy `.env.example` to `.env` for local Compose use. Search-agent builds include both the learned checkpoint and the graph snapshot. Production builds download them from pinned Hugging Face Model and Dataset revisions; set `SEARCH_ALGORITHM` to `igraph` or `learned` to select the active implementation.
 
 ```bash
 docker compose config
@@ -138,11 +138,11 @@ Hugging Face stores two private repositories with distinct responsibilities:
 
 Matching release tags are convenient labels, while full commit IDs provide strict immutability. A Hugging Face Collection may group the repositories for navigation but is not part of deployment.
 
-Local source runs and local Docker builds read the ignored checkpoint from `apps/search_agent`. Production image builds download that checkpoint from the Model repository and copy it into the image. The API traverses dictionary edges and loads embeddings from PostgreSQL, so it does not use the Parquet graph; those files remain Dataset-repository inputs for local training, benchmarking, and exact evaluation. Database dumps are downloaded onto Oracle only for bootstrap and restored into PostgreSQL. Running applications therefore use the image-local checkpoint and PostgreSQL without Hugging Face credentials or network access.
+Search-agent images contain both `best_CostApproximation.pt` and the graph Parquets. Production image builds download them from pinned Model and Dataset revisions, so the active implementation can be changed with `SEARCH_ALGORITHM` without uploading artifacts to Oracle. `igraph` searches the packaged graph snapshot; `learned` traverses dictionary edges and loads embeddings from PostgreSQL. Keep the graph revision aligned with the dictionary data it represents. Database dumps are downloaded onto Oracle for initial PostgreSQL bootstrap and restored into the persistent database; normal deployments do not upload or restore them. Running applications need neither Hugging Face credentials nor network access.
 
 ### Export database data
 
-`pg_dump` accepts a libpq connection URI, so the same commands work with a local service, a Compose container, or a remote PostgreSQL instance. Export only the two processed dictionary tables required at runtime; `dictionary_raw` remains an ingestion intermediate:
+`pg_dump` accepts a libpq connection URI, so the same commands work with a local service, a Compose container, or a remote PostgreSQL instance. Export the processed dictionary tables for the web app and the embeddings table for learned search; `dictionary_raw` remains an ingestion intermediate:
 
 ```bash
 WORDRACE_DATABASE_URL='postgresql://user:password@localhost:5432/wordrace'
@@ -197,9 +197,10 @@ uvx --from huggingface-hub hf repos tag create \
 
 Configure the GitHub `production` environment with these repository variables:
 
-- `SEARCH_MODEL_REPOSITORY` and `SEARCH_MODEL_REVISION`.
+- `SEARCH_MODEL_REPOSITORY` and `SEARCH_MODEL_REVISION` for the learned checkpoint.
+- `SEARCH_GRAPH_REPOSITORY` and `SEARCH_GRAPH_REVISION` for the Dataset repository containing `graph/wiktionary_nodes.parquet` and `graph/wiktionary_edges.parquet`.
 
-The repository value uses `OWNER/name`; its revision uses a tag or full commit ID. Give the GitHub `HF_TOKEN` secret fine-grained read access to the private Model repository. GitHub Actions receives it only while building the image.
+Repository values use `OWNER/name`; revisions use a tag or full commit ID. Give the GitHub `HF_TOKEN` secret fine-grained read access to both private repositories. GitHub Actions receives it only while building the image. A manual search-agent workflow run can override either revision; ordinary runs use the configured repository variables.
 
 Developers who need the exact graph release can download it into the local paths expected by training and benchmark commands:
 
@@ -255,7 +256,7 @@ The two path-filtered workflows build ARM64 images in GHCR and update only their
 - `deploy-nextjs.yml` reacts to `apps/nextjs_app`, runs web migrations, replaces `nextjs_app`, and reconciles Caddy.
 - `deploy-search-agent.yml` reacts to `apps/search_agent`, runs Alembic, and replaces only `search_agent_app`.
 
-Provision Docker with the Compose plugin on the Oracle instance, then create `~/wordrace/.env.production` from `.env.example`. Point `NEXTJS_APP_IMAGE` and `SEARCH_AGENT_APP_IMAGE` at this repository's GHCR `main` tags. Deploy Next.js once before the first search-agent deployment so the referenced dictionary schema exists.
+Provision Docker with the Compose plugin on the Oracle instance, then create `~/wordrace/.env.production` from `.env.example`. Point `NEXTJS_APP_IMAGE` and `SEARCH_AGENT_APP_IMAGE` at this repository's GHCR `main` tags. `SEARCH_ALGORITHM` defaults to `igraph`; set it to `learned` in `.env.production` to switch implementations, then deploy the search-agent service. Deploy Next.js once before the first search-agent deployment so the referenced dictionary schema exists.
 
 PostgreSQL is bound to `127.0.0.1:${DB_HOST_PORT:-5432}` on the Oracle host. To inspect production from a local database client without exposing PostgreSQL to the internet, open an SSH tunnel:
 
@@ -269,7 +270,7 @@ Configure the GitHub `production` environment with these secrets:
 
 - `ORACLE_HOST`, `ORACLE_USER`, and `ORACLE_SSH_KEY` for deployment access.
 - `ORACLE_HOST_FINGERPRINT`, containing the verified SHA-256 fingerprint of the Oracle SSH host key.
-- `HF_TOKEN` with read access to the private Hugging Face Model repository.
+- `HF_TOKEN` with read access to the private Hugging Face Model and Dataset repositories.
 
 Each workflow updates one `main` image tag and invokes Compose with `--no-deps` for that application. SHA image tags remain in GHCR for traceability and manual rollback; deploying one application does not restart the other.
 
@@ -278,7 +279,7 @@ The search Dockerfile uses uv to install the locked Python environment and Docke
 ## Operational Notes
 
 - Reseed processed dictionary data after changing `RichToken`, lexical-field processing, or tokenization behavior.
-- Regenerate `apps/search_agent/search/graph/*.parquet` after reseeding dictionary data that changes `all_links`.
+- Regenerate and publish `apps/search_agent/search/graph/*.parquet` after reseeding dictionary data that changes `all_links`, then update `SEARCH_GRAPH_REVISION` to that dataset release.
 - If `drizzle push` makes dictionary performance worse, reseed the dictionary data; the local note in `apps/nextjs_app/src/lib/db/dictionary/README.md` records this failure mode.
 - Avoid adding compatibility layers for old rich-token JSON shapes unless there is an explicit migration requirement.
 

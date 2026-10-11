@@ -14,6 +14,10 @@ on:
         description: Hugging Face model tag or full commit (defaults to the repository variable)
         required: false
         type: string
+      graph_revision:
+        description: Hugging Face dataset tag or full commit (defaults to the repository variable)
+        required: false
+        type: string
 
 concurrency:
   group: wordrace-production
@@ -22,6 +26,7 @@ concurrency:
 env:
   REGISTRY: ghcr.io
   SEARCH_MODEL_REVISION: ${{ inputs.model_revision || vars.SEARCH_MODEL_REVISION }}
+  SEARCH_GRAPH_REVISION: ${{ inputs.graph_revision || vars.SEARCH_GRAPH_REVISION }}
 
 jobs:
   build-and-deploy:
@@ -31,12 +36,15 @@ jobs:
       contents: read
       packages: write
     steps:
-      - name: Validate model configuration
+      - name: Validate search artifact configuration
         env:
           SEARCH_MODEL_REPOSITORY: ${{ vars.SEARCH_MODEL_REPOSITORY }}
+          SEARCH_GRAPH_REPOSITORY: ${{ vars.SEARCH_GRAPH_REPOSITORY }}
         run: |
           test -n "$SEARCH_MODEL_REPOSITORY"
           test -n "$SEARCH_MODEL_REVISION"
+          test -n "$SEARCH_GRAPH_REPOSITORY"
+          test -n "$SEARCH_GRAPH_REVISION"
 
       - name: Check out repository
         uses: actions/checkout@v6
@@ -65,6 +73,8 @@ jobs:
           build-args: |
             SEARCH_MODEL_REPOSITORY=${{ vars.SEARCH_MODEL_REPOSITORY }}
             SEARCH_MODEL_REVISION=${{ env.SEARCH_MODEL_REVISION }}
+            SEARCH_GRAPH_REPOSITORY=${{ vars.SEARCH_GRAPH_REPOSITORY }}
+            SEARCH_GRAPH_REVISION=${{ env.SEARCH_GRAPH_REVISION }}
           secrets: |
             hf_token=${{ secrets.HF_TOKEN }}
           tags: |

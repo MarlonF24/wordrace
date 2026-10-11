@@ -1,5 +1,7 @@
 """Typed runtime configuration for the search service."""
 
+from typing import Literal
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy.engine import URL
 
@@ -14,6 +16,7 @@ class Settings(BaseSettings):
     db_password: str = "12345678"
     api_host: str = "127.0.0.1"
     api_port: int = 8000
+    search_algorithm: Literal["igraph", "learned"] = "igraph"
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 

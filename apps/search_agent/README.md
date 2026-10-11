@@ -1,6 +1,6 @@
 # WordRace Search Agent
 
-Search and learned-cost services for the WordRace dictionary graph.
+Search services for the WordRace dictionary graph. The API can use exact igraph search or learned-cost search, selected with `SEARCH_ALGORITHM`.
 
 ## Running the API
 
@@ -14,9 +14,9 @@ uv run --directory apps --project search_agent python -m search_agent.main serve
 
 ## Runtime Artifacts
 
-The search image reads its checkpoint from a local filesystem path. A local build copies ignored weights from this project; a production build downloads the checkpoint from a private Hugging Face Model repository. The download happens during the image build, so running containers require neither Hub credentials nor network access.
+The search image includes the learned checkpoint and the exact-search graph snapshot. Production builds download them from pinned Hugging Face Model and Dataset revisions. The downloads happen during image builds, so running containers require neither Hub credentials nor network access. Local builds use the artifacts already downloaded under `search/deep_learn/models` and `search/graph`.
 
-The API traverses dictionary edges and loads embeddings from PostgreSQL. It does not read the Parquet graph; those files live in the Dataset repository for local training, benchmarking, and exact evaluation.
+`SEARCH_ALGORITHM=igraph` selects exact unweighted shortest-path search over the packaged Parquet graph. `SEARCH_ALGORITHM=learned` selects the learned A-star search over dictionary links and PostgreSQL embeddings. Both artifacts are included in each production image so changing the setting does not require a server-side file upload. Publish graph snapshots when dictionary links change, and keep their Dataset revision aligned with the database release.
 
 Database embeddings and the processed dictionary live in PostgreSQL rather than the image. Export their runtime tables from any reachable PostgreSQL instance using portable custom-format dumps:
 
@@ -67,7 +67,7 @@ uvx --from huggingface-hub hf repos tag create \
   OWNER/wordrace-data v1 --repo-type dataset
 ```
 
-Production builds select the checkpoint through `SEARCH_MODEL_REPOSITORY` and `SEARCH_MODEL_REVISION`. Database dumps are one-time bootstrap inputs, while graph Parquets are development and evaluation inputs; none are copied into the production image. The root README contains graph download and Oracle bootstrap commands.
+Production builds select the checkpoint through `SEARCH_MODEL_REPOSITORY` and `SEARCH_MODEL_REVISION`, and the graph through `SEARCH_GRAPH_REPOSITORY` and `SEARCH_GRAPH_REVISION`. Database dumps are one-time PostgreSQL bootstrap inputs and are not needed for routine app deployments. The root README contains release and Oracle bootstrap commands.
 
 uv installs the locked Python environment inside the image with `uv sync`. `uv build` is not used because it produces Python distribution archives rather than deployable OCI images, and this service is not published as a Python library.
 
@@ -108,9 +108,9 @@ A valid request with no legal path returns HTTP 404. Operational failures remain
 service errors. Link counts are derived from the returned paths rather than
 duplicated in the response.
 
-The endpoints use separate `GeneralizedShortestPathSearch` instances, allowing regular
-and collide defaults to be configured independently. Both API instances use
-learned A-star ordering with weight `1.0` and unreachable penalty `0`.
+Both endpoints use the configured `SEARCH_ALGORITHM`. Set it to `igraph` for exact
+unweighted shortest paths, or to `learned` for learned A-star ordering with weight
+`1.0` and unreachable penalty `0`.
 
 ## Search Model
 

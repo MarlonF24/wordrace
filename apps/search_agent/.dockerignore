@@ -7,7 +7,6 @@
 .pytest_cache/
 .ruff_cache/
 **/*.dump
-search/graph/*.parquet
 search/benchmark_results/
 search/deep_learn/data/
 tests/

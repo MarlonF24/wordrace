@@ -83,6 +83,7 @@ services:
       <<: *database-environment
       API_HOST: 0.0.0.0
       API_PORT: ${SEARCH_AGENT_PORT:-8000}
+      SEARCH_ALGORITHM: ${SEARCH_ALGORITHM:-igraph}
     depends_on:
       search_agent_migrate:
         condition: service_completed_successfully
